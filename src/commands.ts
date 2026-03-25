@@ -1,5 +1,7 @@
-import { execSync } from "child_process";
-import { loadPool, loadCron, saveCron } from "./config.js";
+import { execSync, spawn } from "child_process";
+import { join } from "path";
+import { loadPool, loadCron, saveCron, STATE_DIR } from "./config.js";
+import { log } from "./logger.js";
 import { updateDashboard } from "./dashboard.js";
 
 export function handleMasterCommand(
@@ -16,7 +18,8 @@ export function handleMasterCommand(
       `  \u2022 help \u2014 \u672c\u5e2e\u52a9\n` +
       `  \u2022 status \u2014 \u5237\u65b0\u9879\u76ee\u770b\u677f\n` +
       `  \u2022 cron list / add / del\n` +
-      `  \u2022 search \u5173\u952e\u8bcd \u2014 \u641c\u7d22\u6240\u6709\u9879\u76ee\n\n` +
+      `  \u2022 search \u5173\u952e\u8bcd \u2014 \u641c\u7d22\u6240\u6709\u9879\u76ee\n` +
+      `  \u2022 restart \u2014 \u91cd\u542f daemon\n\n` +
       `\ud83d\udcc2 \u9879\u76ee Bot\n` +
       `  \u2022 @bot \u4f60\u7684\u9700\u6c42\n` +
       `  \u2022 \u56de\u590d bot \u6d88\u606f\u7ee7\u7eed\u5bf9\u8bdd\n\n` +
@@ -31,6 +34,18 @@ export function handleMasterCommand(
   if (/^status$/i.test(stripped)) {
     void updateDashboard();
     return null;
+  }
+
+  if (/^restart$/i.test(stripped)) {
+    log("RESTART: triggered via Telegram command");
+    const daemonSh = join(STATE_DIR, "daemon.sh");
+    setTimeout(() => {
+      spawn(daemonSh, ["restart"], {
+        detached: true,
+        stdio: "ignore",
+      }).unref();
+    }, 2000);
+    return "\ud83d\udd04 Daemon \u6b63\u5728\u91cd\u542f...";
   }
 
   if (/^cron\s+list$/i.test(stripped)) {

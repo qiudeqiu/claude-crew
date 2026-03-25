@@ -114,6 +114,7 @@ case "${1:-help}" in
     echo "  help                          帮助信息"
     echo "  status                        刷新项目看板"
     echo "  search <关键词>               搜索所有项目代码"
+    echo "  restart                       重启 daemon"
     echo "  cron list                     查看定时任务"
     echo "  cron add @bot HH:MM 任务      每天定时执行"
     echo "  cron add @bot */N 任务        每 N 分钟执行"

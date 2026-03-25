@@ -189,6 +189,7 @@ When you reply to a message while @mentioning a bot, the quoted content is autom
 | `@master help` | Show all commands and project list |
 | `@master status` | Force-refresh project dashboard |
 | `@master search <keyword>` | Grep across all projects |
+| `@master restart` | Restart daemon (reloads config) |
 | `@master cron list` | List scheduled tasks |
 | `@master cron add @bot HH:MM task` | Daily task at HH:MM |
 | `@master cron add @bot */N task` | Every N minutes |

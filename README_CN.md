@@ -187,6 +187,7 @@ bash scripts/daemon.sh status   # 确认所有机器人在线
 | `@主控 help` | 显示所有命令和项目列表 |
 | `@主控 status` | 强制刷新项目看板 |
 | `@主控 search <关键词>` | 跨项目搜索代码 |
+| `@主控 restart` | 重启 daemon（重新加载配置） |
 | `@主控 cron list` | 查看定时任务 |
 | `@主控 cron add @bot HH:MM 任务` | 每天定时执行 |
 | `@主控 cron add @bot */N 任务` | 每 N 分钟执行 |
