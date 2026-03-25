@@ -372,16 +372,24 @@ export async function invokeClaudeAndReply(
           steps.length = 0;
           result = await runClaude(
             dir,
-            "\u5de5\u5177\u5df2\u6388\u6743\uff0c\u8bf7\u7ee7\u7eed\u5b8c\u6210\u4efb\u52a1\u5e76\u56de\u590d\u6267\u884c\u7ed3\u679c\u3002",
+            prompt +
+              "\n\n\u5de5\u5177\u5df2\u6388\u6743\u3002\u8bf7\u6267\u884c\u5b8c\u6bd5\u540e\u7528\u6587\u5b57\u56de\u590d\u6267\u884c\u7ed3\u679c\uff0c\u4e0d\u8981\u53ea\u8fd4\u56de\u5de5\u5177\u8c03\u7528\u3002",
             {
               allowedTools: approved,
               appendSystemPrompt: systemPrompt,
               onProgress,
+              resume: false,
             },
           );
-          // Fall back to first run's text if retry produced nothing
+          // Fall back chain: retry text → first run text → completion notice
           if (!result.text && firstResultText) {
             result = { ...result, text: firstResultText };
+          }
+          if (!result.text && result.numTurns > 0) {
+            result = {
+              ...result,
+              text: "\u2705 \u4efb\u52a1\u5df2\u6267\u884c\uff08Claude \u8c03\u7528\u4e86\u5de5\u5177\u4f46\u672a\u751f\u6210\u6587\u5b57\u56de\u590d\uff09",
+            };
           }
         }
       }
