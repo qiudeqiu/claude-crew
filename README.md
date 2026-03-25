@@ -37,26 +37,26 @@ Pull all bots into one group. @mention to switch between projects — no context
 
 ```
 Telegram Group "My Projects"
-┌──────────────────────────────────────┐
-│  🏠 Master     📂 Proj-A   📂 Proj-B │
-│                                      │
-│  You: @proj_a_bot fix the login bug  │
-│  Proj-A: 👀                          │
-│  Proj-A: ⚙️ working... (12s)        │
-│    → 🔧 Read: auth.ts               │
-│    → 🔧 Edit: auth.ts               │
-│  Proj-A: Fixed. Changed auth.ts ... │
-│                                      │
-│  📊 Project Dashboard (pinned)       │
-│  ┌────────────────────────────────┐  │
-│  │ proj-a  🌿 main · 2m ago      │  │
-│  │   📊 [opus-4-6] ████░░░░ 38%  │  │
-│  │ proj-b  🌿 feat/x · 1h ago    │  │
-│  │   📊 [sonnet-4-6] ██░░░░ 15%  │  │
-│  │ 3 calls | 2m15s | $0.45      │  │
-│  │ ⏱ Reset: 2h34m (five_hour)  │  │
-│  └────────────────────────────────┘  │
-└──────────────────────────────────────┘
++-----------------------------------------+
+|  Master      Proj-A      Proj-B         |
+|                                         |
+|  You: @proj_a_bot fix the login bug     |
+|  Proj-A: 👀                             |
+|  Proj-A: working... (12s)               |
+|    -> Read: auth.ts                     |
+|    -> Edit: auth.ts                     |
+|  Proj-A: Fixed. Changed auth.ts ...    |
+|                                         |
+|  Project Dashboard (pinned)             |
+|  +-----------------------------------+ |
+|  | proj-a   main · 2m ago            | |
+|  |   [opus-4-6] ████░░░░ 38%        | |
+|  | proj-b   feat/x · 1h ago         | |
+|  |   [sonnet-4-6] ██░░░░ 15%        | |
+|  | 3 calls | 2m15s | $0.45          | |
+|  | Reset: 2h34m (five_hour)          | |
+|  +-----------------------------------+ |
++-----------------------------------------+
 ```
 
 ## ✨ Features
