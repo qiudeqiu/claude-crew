@@ -244,7 +244,7 @@ daemon.sh logs 200   # 最近 200 行
 
 所有配置集中在一个文件 — `~/.claude/channels/telegram/bot-pool.json`。
 
-**最小配置**（安装向导自动生成）：
+安装向导生成完整配置，所有默认值均可见。示例：
 
 ```json
 {
@@ -252,20 +252,6 @@ daemon.sh logs 200   # 最近 200 行
   "bots": [
     { "token": "123:AAH...", "username": "master_bot", "role": "master" },
     { "token": "456:AAH...", "username": "proj_bot", "role": "project",
-      "assignedProject": "my-project", "assignedPath": "/home/user/my-project" }
-  ],
-  "sharedGroupId": "-100123456789"
-}
-```
-
-**完整配置**（所有选项及默认值）：
-
-```json
-{
-  "admins": ["123456789"],
-  "bots": [
-    { "token": "123:AAH...", "role": "master" },
-    { "token": "456:AAH...", "role": "project",
       "assignedProject": "my-app", "assignedPath": "/home/user/my-app",
       "accessLevel": "readWrite",
       "permissionMode": "approve",
@@ -274,12 +260,12 @@ daemon.sh logs 200   # 最近 200 行
   "sharedGroupId": "-100123456789",
   "accessLevel": "readWrite",
   "permissionMode": "allowAll",
-  "memoryIntervalMinutes": 120,
   "masterExecute": false,
   "maxConcurrent": 3,
   "rateLimitSeconds": 5,
   "sessionTimeoutMinutes": 10,
   "dashboardIntervalMinutes": 30,
+  "memoryIntervalMinutes": 120,
   "whisperLanguage": ""
 }
 ```

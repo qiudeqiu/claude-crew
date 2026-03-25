@@ -56,7 +56,16 @@ if [ ! -f "$INSTALL_DIR/bot-pool.json" ]; then
 {
   "admins": ["$OWNER_ID"],
   "bots": [],
-  "permissionMode": "$PERM_MODE"
+  "sharedGroupId": "",
+  "accessLevel": "readWrite",
+  "permissionMode": "$PERM_MODE",
+  "masterExecute": false,
+  "maxConcurrent": 3,
+  "rateLimitSeconds": 5,
+  "sessionTimeoutMinutes": 10,
+  "dashboardIntervalMinutes": 30,
+  "memoryIntervalMinutes": 120,
+  "whisperLanguage": ""
 }
 POOLJSON
   chmod 600 "$INSTALL_DIR/bot-pool.json"

@@ -246,7 +246,7 @@ Combined with access control:
 
 All configuration lives in a single file — `~/.claude/channels/telegram/bot-pool.json`.
 
-**Minimal config** (setup wizard generates this):
+The setup wizard generates a complete config with all defaults visible. Example:
 
 ```json
 {
@@ -254,20 +254,6 @@ All configuration lives in a single file — `~/.claude/channels/telegram/bot-po
   "bots": [
     { "token": "123:AAH...", "username": "master_bot", "role": "master" },
     { "token": "456:AAH...", "username": "proj_bot", "role": "project",
-      "assignedProject": "my-project", "assignedPath": "/home/user/my-project" }
-  ],
-  "sharedGroupId": "-100123456789"
-}
-```
-
-**Full config** (all options with defaults shown):
-
-```json
-{
-  "admins": ["123456789"],
-  "bots": [
-    { "token": "123:AAH...", "role": "master" },
-    { "token": "456:AAH...", "role": "project",
       "assignedProject": "my-app", "assignedPath": "/home/user/my-app",
       "accessLevel": "readWrite",
       "permissionMode": "approve",
@@ -276,12 +262,12 @@ All configuration lives in a single file — `~/.claude/channels/telegram/bot-po
   "sharedGroupId": "-100123456789",
   "accessLevel": "readWrite",
   "permissionMode": "allowAll",
-  "memoryIntervalMinutes": 120,
   "masterExecute": false,
   "maxConcurrent": 3,
   "rateLimitSeconds": 5,
   "sessionTimeoutMinutes": 10,
   "dashboardIntervalMinutes": 30,
+  "memoryIntervalMinutes": 120,
   "whisperLanguage": ""
 }
 ```
