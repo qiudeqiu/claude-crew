@@ -336,7 +336,7 @@ daemon.sh logs 200   # 最近 200 行
 | **成员**（bot 级 `allowedUsers`） | 仅配置了的 bot | 否 |
 | **其他人** | 无 — 静默忽略 | 否 |
 
-> 配置修改后无需重启 daemon — 每次调用时自动重新读取。
+> 大部分配置修改后立即生效（权限、限流、超时等）。**需要 `daemon.sh restart` 的例外：**`dashboardIntervalMinutes` 和 `bots` 数组的增删。
 >
 
 ### manage-pool.sh 命令

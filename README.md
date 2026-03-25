@@ -338,7 +338,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | **Member** (per-bot `allowedUsers`) | Only bots that list them | No |
 | **Others** | None — silently ignored | No |
 
-> Configuration changes take effect immediately — no daemon restart needed.
+> Most configuration changes take effect immediately (permissions, rate limits, timeouts, etc.). **Exceptions that require `daemon.sh restart`:** `dashboardIntervalMinutes` and adding/removing bots in the `bots` array.
 >
 
 ### manage-pool.sh Commands
