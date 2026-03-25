@@ -1,0 +1,13 @@
+node_modules/
+.env
+*.log
+bot-pool.json
+cron.json
+dashboard-msg.json
+daemon.pid
+inbox/
+bun.lock
+restart-note.json
+progress.jsonl
+hook-progress.json
+access.json

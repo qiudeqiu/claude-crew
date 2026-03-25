@@ -1,0 +1,104 @@
+#!/bin/bash
+# telegram-pool setup script
+# Installs the bot pool system into ~/.claude/channels/telegram/
+
+set -e
+
+INSTALL_DIR="$HOME/.claude/channels/telegram"
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+echo "🤖 Telegram Pool — 安装向导"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# 1. Check dependencies
+echo "检查依赖..."
+command -v bun >/dev/null 2>&1 || { echo "❌ 需要 bun (https://bun.sh)"; exit 1; }
+command -v claude >/dev/null 2>&1 || { echo "❌ 需要 claude CLI (Claude Code)"; exit 1; }
+command -v ffmpeg >/dev/null 2>&1 || echo "⚠️  未检测到 ffmpeg — 语音功能需要它 (brew install ffmpeg)"
+command -v whisper >/dev/null 2>&1 || echo "⚠️  未检测到 whisper — 语音功能需要它 (pipx install openai-whisper)"
+echo "✅ 基础依赖检查通过"
+echo ""
+
+# 2. Create state directory
+mkdir -p "$INSTALL_DIR"
+chmod 700 "$INSTALL_DIR"
+
+# 3. Install node dependencies
+echo "安装依赖..."
+cd "$PROJECT_DIR"
+bun install --production 2>&1 | tail -2
+echo ""
+
+# 4. Get Owner ID
+read -p "📱 你的 Telegram User ID (从 @userinfobot 获取): " OWNER_ID
+if [ -z "$OWNER_ID" ]; then
+  echo "❌ User ID 不能为空"
+  exit 1
+fi
+echo ""
+
+# 5. Permission mode
+echo "权限模式:"
+echo "  1. allowAll — 预授权所有工具（默认，响应快）"
+echo "  2. approve  — 写操作需要审批后执行（更安全）"
+read -p "选择 [1/2，默认 1]: " PERM_CHOICE
+PERM_MODE="allowAll"
+if [ "$PERM_CHOICE" = "2" ]; then
+  PERM_MODE="approve"
+fi
+echo "✅ 权限模式: $PERM_MODE"
+echo ""
+
+# 6. Initialize bot-pool.json (single config file for everything)
+if [ ! -f "$INSTALL_DIR/bot-pool.json" ]; then
+  cat > "$INSTALL_DIR/bot-pool.json" << POOLJSON
+{
+  "admins": ["$OWNER_ID"],
+  "bots": [],
+  "permissionMode": "$PERM_MODE"
+}
+POOLJSON
+  chmod 600 "$INSTALL_DIR/bot-pool.json"
+  echo "✅ bot-pool.json 已创建"
+else
+  # Ensure admins is set
+  POOL="$INSTALL_DIR/bot-pool.json" OID="$OWNER_ID" python3 -c "
+import json, os
+pool = json.load(open(os.environ['POOL']))
+admins = pool.get('admins', [])
+oid = os.environ['OID']
+if not admins and not pool.get('ownerId'):
+    pool['admins'] = [oid]
+    json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+" 2>/dev/null
+  echo "✅ bot-pool.json 已存在，已确认管理员"
+fi
+echo ""
+
+# 6. Link scripts
+echo "链接脚本..."
+ln -sf "$PROJECT_DIR/scripts/manage-pool.sh" "$INSTALL_DIR/manage-pool.sh"
+ln -sf "$PROJECT_DIR/scripts/daemon.sh" "$INSTALL_DIR/daemon.sh"
+ln -sf "$PROJECT_DIR/scripts/watchdog.sh" "$INSTALL_DIR/watchdog.sh"
+ln -sf "$PROJECT_DIR/src/daemon.ts" "$INSTALL_DIR/daemon.ts"
+echo "✅ 脚本已链接"
+echo ""
+
+# 7. Summary
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ 安装完成！"
+echo ""
+echo "下一步:"
+echo "  1. 在 Telegram @BotFather 创建 bot"
+echo "  2. $INSTALL_DIR/manage-pool.sh add <token> --master  (主控 bot)"
+echo "  3. $INSTALL_DIR/manage-pool.sh add <token>           (项目 bot)"
+echo "  4. 创建 Telegram 私密群组，把所有 bot 拉进去"
+echo "  5. 每个 bot 在 @BotFather 关闭 Group Privacy"
+echo "  6. $INSTALL_DIR/manage-pool.sh set-group <group_id>"
+echo "  7. $INSTALL_DIR/daemon.sh start"
+echo ""
+echo "管理命令:"
+echo "  manage-pool.sh list     查看 bot 池"
+echo "  daemon.sh status        查看 daemon 状态"
+echo "  daemon.sh logs          查看日志"

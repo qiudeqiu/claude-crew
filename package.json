@@ -1,0 +1,33 @@
+{
+  "name": "claude-telegram-bots",
+  "version": "0.1.0",
+  "description": "Multi-project Claude Code orchestration via Telegram bot pool",
+  "type": "module",
+  "scripts": {
+    "daemon": "bun run src/daemon.ts",
+    "setup": "bash scripts/setup.sh",
+    "pool": "bash scripts/manage-pool.sh"
+  },
+  "bin": {
+    "claude-telegram-bots": "scripts/cli.sh"
+  },
+  "dependencies": {
+    "grammy": "^1.41.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qiudeqiu/claude-telegram-bots"
+  },
+  "keywords": [
+    "claude-code",
+    "telegram",
+    "multi-agent",
+    "bot-pool",
+    "orchestration",
+    "ai-agents"
+  ]
+}
