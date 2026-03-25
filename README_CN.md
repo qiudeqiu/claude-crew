@@ -23,8 +23,11 @@ Telegram 群组 "我的项目"
 │  📊 项目状态看板 (置顶)              │
 │  ┌────────────────────────────────┐  │
 │  │ 项目A  🌿 main · 2分钟前      │  │
+│  │   📊 [opus-4-6] ████░░░░ 38%  │  │
 │  │ 项目B  🌿 feat/x · 1小时前    │  │
-│  │ 今日: 234消息 | 12会话         │  │
+│  │   📊 [sonnet-4-6] ██░░░░ 15%  │  │
+│  │ 3 次调用 | 2m15s | $0.45      │  │
+│  │ ⏱ 额度重置: 2h34m            │  │
 │  └────────────────────────────────┘  │
 └──────────────────────────────────────┘
 ```
@@ -32,23 +35,25 @@ Telegram 群组 "我的项目"
 ## 功能特性
 
 - **一个项目一个机器人** —— 每个代码仓库对应一个专属 Telegram 机器人
-- **@提及 = 执行** —— `@bot 做某事` 在该项目目录运行 Claude Code
+- **@提及 = 执行** —— `@bot 修复登录bug` 在该项目目录运行 Claude Code
 - **回复继续对话** —— 回复机器人的消息即可延续上下文
-- **引用任意内容** —— 回复消息（文字/图片/语音）的同时 @机器人，引用内容会一并传给 Claude
-- **实时进度** —— 可以看到 Claude 正在使用哪些工具
-- **主控机器人** —— 看板、跨项目搜索、定时任务
-- **项目看板** —— 自动更新的置顶消息，显示各项目 git 状态
-- **定时任务** —— `cron add @bot 09:00 每日总结`
-- **语音指令** —— 发送语音消息，通过 Whisper 自动转文字
-- **图片分析** —— 发送截图，Claude 用视觉能力分析
-- **权限模式** —— 可选全部预授权或逐个按钮确认
-- **仅所有者** —— 所有操作通过 Telegram 用户 ID 验证
+- **引用任意内容** —— 回复文字、图片或语音的同时 @机器人
+- **实时进度** —— 工作中实时显示 Claude 正在使用的工具
+- **主控机器人** —— 看板、搜索、定时任务、重启/记忆通知（必须配置）
+- **项目看板** —— 置顶消息：git 状态、context 用量、费用、额度倒计时
+- **定时任务** —— 为每个 bot 配置定时执行的任务
+- **定时记忆** —— 自动保存活跃项目的对话上下文
+- **语音 & 图片** —— Whisper 语音转文字，视觉能力分析截图
+- **两层权限** —— 访问级别（读写/只读）+ 权限模式（预授权/按钮确认）
+- **多用户访问** —— 管理员 + 按 bot 配置成员权限
 
 ## 前置要求
 
-- [Bun](https://bun.sh) >= 1.0
-- [Claude Code](https://claude.ai/claude-code) 有效订阅
-- [ffmpeg](https://ffmpeg.org) + [whisper](https://github.com/openai/whisper)（可选，用于语音）
+- **[Claude Code CLI](https://claude.ai/claude-code)** —— 本地安装并登录，需要有效订阅（Max 或 Pro）
+- **[Bun](https://bun.sh)** >= 1.0 —— 运行时
+- **[ffmpeg](https://ffmpeg.org)** + **[whisper](https://github.com/openai/whisper)** —— 可选，用于语音转文字
+
+> 本项目通过 CLI 模式（`claude -p`）在本地运行 Claude Code，需要在同一台机器上运行。不支持 API key 模式。
 
 ## 安装指南
 
@@ -237,7 +242,7 @@ daemon.sh logs 200   # 最近 200 行
 
 ### bot-pool.json
 
-所有配置集中在一个文件中，无需 `.env`。
+所有配置集中在一个文件 — `~/.claude/channels/telegram/bot-pool.json`。
 
 **最小配置**（安装向导自动生成）：
 
@@ -313,8 +318,6 @@ daemon.sh logs 200   # 最近 200 行
 > 配置修改后无需重启 daemon — 每次调用时自动重新读取。
 >
 > 向后兼容：`ownerId`（单字符串）在未设置 `admins` 时仍作为兜底。
->
-> 唯一的环境变量是 `TELEGRAM_POOL_DIR`（默认 `~/.claude/channels/telegram`），大多数用户无需设置。
 
 ### manage-pool.sh 命令
 
@@ -331,24 +334,48 @@ manage-pool.sh init-group                   # 自动检测群组
 ## 架构
 
 ```
-daemon.ts（单进程，持续运行）
-├── grammY 长轮询所有机器人
-├── @提及 / 回复 → claude -p --continue --allowedTools --output-format stream-json
-│   ├── stream-json 事件 → 群里实时进度消息
-│   └── result 事件 → 发送最终结果，删除进度消息
-├── 看板：置顶消息，每 30 分钟刷新
-├── 定时任务：每分钟检查
-└── 语音：ffmpeg（ogg→wav）→ whisper → 文字 → claude
+watchdog.sh（进程守护）
+└── daemon.ts（单进程）
+    ├── grammY 长轮询所有机器人
+    ├── @提及 / 回复 → claude -p --continue --allowedTools --output-format stream-json
+    │   ├── stream-json 事件 → 群里实时进度消息
+    │   ├── result 事件 → context/费用/token 统计，发送结果，删除进度
+    │   └── rate_limit_event → 额度重置倒计时
+    ├── 看板：置顶消息，可配置刷新间隔
+    │   ├── 每个项目：git 状态、context 用量条、模型、费用
+    │   ├── 汇总：调用次数、耗时、费用、各模型 token
+    │   └── 额度重置倒计时
+    ├── 定时记忆：为活跃项目自动保存上下文（可配置间隔）
+    ├── 定时任务：每分钟检查
+    ├── 重启检测：daemon 被项目 bot 重启时通知群组
+    └── 语音：ffmpeg（ogg→wav）→ whisper → 文字 → claude
 
 ~/.claude/channels/telegram/（状态目录）
-├── bot-pool.json        # token、分配、权限模式
+├── bot-pool.json        # 唯一配置文件：token、权限、设置
 ├── cron.json            # 定时任务
 ├── dashboard-msg.json   # 置顶看板消息 ID
 ├── daemon.pid           # 运行中的进程 ID
+├── restart-note.json    # （临时）项目 bot 重启时的上下文
 ├── daemon.ts            → 符号链接到 repo/src/daemon.ts
 ├── daemon.sh            → 符号链接到 repo/scripts/daemon.sh
+├── watchdog.sh          → 符号链接到 repo/scripts/watchdog.sh
 └── manage-pool.sh       → 符号链接到 repo/scripts/manage-pool.sh
 ```
+
+### 进程守护
+
+daemon 在 **watchdog** 下运行，崩溃自动重启：
+- 崩溃后 3 秒重试
+- 5 分钟内连续崩溃 5 次则放弃
+- `daemon.sh stop` 先删除 PID 文件，watchdog 检测到后正常退出
+
+### 自修改安全
+
+当项目 bot 修改了 daemon 自身的代码（例如 telegram-pool 项目的 bot 编辑 `daemon.ts`）：
+1. Claude 先完成所有编辑并回复结果
+2. 可选写入 `restart-note.json` 记录修改摘要
+3. 最后执行 `daemon.sh restart`
+4. watchdog 重启 daemon，master bot 在群里通知摘要
 
 ## 常见问题
 
@@ -358,7 +385,9 @@ daemon.ts（单进程，持续运行）
 | 日志出现 `409 Conflict` | 有其他进程在轮询同一个机器人 | `pkill -f "claude.*channels"` 然后 `daemon.sh restart` |
 | 机器人回复 `(无输出)` | 消息内容为空或 stdin 超时 | 确保消息除了 @提及外还有实际内容 |
 | 进度卡住没反应 | Claude 会话超时或崩溃 | `daemon.sh logs` 查看日志，然后 `daemon.sh restart` |
-| 机器人自己重启了 | 项目机器人修改了 daemon 代码 | 正常现象 —— 群里会收到重启通知 |
+| Daemon 持续崩溃 | 快速崩溃循环 | watchdog 连续 5 次崩溃后放弃。检查日志，修复后重启 |
+| 机器人自己重启了 | 项目机器人修改了 daemon 代码 | 正常现象 —— watchdog 自动重启，群里会收到通知 |
+| 看板无数据 | daemon 启动后未调用 | 统计在内存中，重启后重置。先发一次任务 |
 
 ## 安全与隐私
 
@@ -391,6 +420,10 @@ daemon.ts（单进程，持续运行）
 - **超时保护**：可配置单次调用超时
 - **进程守护**：watchdog 崩溃自动重启，连续崩溃 5 次后放弃
 - **自重启安全**：项目 bot 修改 daemon 代码时，先完成并回复，最后才重启
+
+## 致谢
+
+看板设计参考了 [claude-hud](https://github.com/jarrodwatts/claude-hud) —— context window 追踪和会话指标的理念。
 
 ## 开源协议
 

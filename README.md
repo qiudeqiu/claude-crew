@@ -34,19 +34,18 @@ Telegram Group "My Projects"
 
 ## Features
 
-- **One bot per project** — dedicated Telegram bot for each codebase
-- **@mention = execute** — `@bot do something` runs Claude Code in that project directory
+- **One bot per project** — each codebase gets a dedicated Telegram bot
+- **@mention = execute** — `@bot fix the login bug` runs Claude Code in that project
 - **Reply to continue** — reply to a bot's message to keep the conversation going
-- **Quote any content** — reply to a message (text/photo/voice) while @mentioning a bot, quoted content is included
-- **Real-time progress** — see tools Claude is using as it works
-- **Master bot (required)** — dashboard, cross-project search, cron scheduler, restart/memory notifications
-- **Dashboard** — pinned message with git status, context window usage per project, cost, rate limit reset countdown
-- **Cron** — `cron add @bot 09:00 daily summary`
-- **Periodic memory** — auto-saves conversation memory for active projects (configurable interval, or disabled)
-- **Voice** — voice messages auto-transcribed via Whisper
-- **Photo** — screenshots analyzed with Claude's vision
-- **Permission modes** — auto-approve or button-confirm per tool
-- **Owner-only** — all operations gated by Telegram user ID
+- **Quote anything** — reply to text, photos, or voice while @mentioning a bot
+- **Real-time progress** — live tool usage updates as Claude works
+- **Master bot** — dashboard, search, cron, restart/memory notifications (required)
+- **Dashboard** — pinned message: git status, context usage, cost, rate limit countdown
+- **Cron** — schedule recurring tasks per bot
+- **Periodic memory** — auto-saves conversation context for active projects
+- **Voice & photo** — voice transcription via Whisper, image analysis via vision
+- **Two-layer permissions** — access level (read-write / read-only) + permission mode (auto / approve)
+- **Multi-user access** — admins + per-bot member control
 
 ## Requirements
 
@@ -245,7 +244,7 @@ Combined with access control:
 
 ### bot-pool.json
 
-All configuration lives in a **single file** — `~/.claude/channels/telegram/bot-pool.json`. No `.env` file needed.
+All configuration lives in a single file — `~/.claude/channels/telegram/bot-pool.json`.
 
 **Minimal config** (setup wizard generates this):
 
@@ -318,11 +317,9 @@ All configuration lives in a **single file** — `~/.claude/channels/telegram/bo
 | **Member** (per-bot `allowedUsers`) | Only bots that list them | No |
 | **Others** | None — silently ignored | No |
 
-> Configuration changes take effect immediately — no daemon restart needed (values are re-read on each invocation).
+> Configuration changes take effect immediately — no daemon restart needed.
 >
 > Backward compatibility: `ownerId` (single string) still works as a fallback if `admins` is not set.
-
-> The only environment variable is `TELEGRAM_POOL_DIR` (default: `~/.claude/channels/telegram`), used to override the state directory location. Most users don't need to set it.
 
 ### manage-pool.sh Commands
 
@@ -357,7 +354,7 @@ watchdog.sh (process supervisor)
     └── Voice: ffmpeg (ogg→wav) → whisper → text → claude
 
 ~/.claude/channels/telegram/ (state directory)
-├── bot-pool.json        # all config: tokens, assignments, ownerId, permissions, etc.
+├── bot-pool.json        # single config file: tokens, permissions, settings
 ├── cron.json            # scheduled tasks
 ├── dashboard-msg.json   # pinned dashboard message ID
 ├── daemon.pid           # running process ID
