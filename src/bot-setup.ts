@@ -200,7 +200,11 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (config.role === "master" && !loadPool().masterExecute) {
-      // masterExecute disabled — master only handles built-in commands
+      await ctx
+        .reply(
+          `I'm the master bot — I handle commands, not tasks.\nTry: help, status, search, cron, restart`,
+        )
+        .catch(() => {});
       return;
     }
 
