@@ -33,32 +33,6 @@ Pull all bots into one group. @mention to switch between projects — no context
 
 ![Team Mode](docs/scene-team.png)
 
-## 💡 How It Works
-
-```
-Telegram Group "My Projects"
-+-----------------------------------------+
-|  Master      Proj-A      Proj-B         |
-|                                         |
-|  You: @proj_a_bot fix the login bug     |
-|  Proj-A: 👀                             |
-|  Proj-A: working... (12s)               |
-|    -> Read: auth.ts                     |
-|    -> Edit: auth.ts                     |
-|  Proj-A: Fixed. Changed auth.ts ...    |
-|                                         |
-|  Project Dashboard (pinned)             |
-|  +-----------------------------------+ |
-|  | proj-a   main · 2m ago            | |
-|  |   [opus-4-6] ████░░░░ 38%        | |
-|  | proj-b   feat/x · 1h ago         | |
-|  |   [sonnet-4-6] ██░░░░ 15%        | |
-|  | 3 calls | 2m15s | $0.45          | |
-|  | Reset: 2h34m (five_hour)          | |
-|  +-----------------------------------+ |
-+-----------------------------------------+
-```
-
 ## ✨ Features
 
 ### Instant feedback
@@ -78,6 +52,12 @@ See exactly what Claude is doing as it works — file reads, edits, commands, al
 Switch between pre-authorized mode (fast, no prompts) and approval mode (button confirm before writes) — per bot or globally.
 
 ![Permission](docs/feat-permission.png)
+
+### Pinned dashboard
+
+Master bot posts a pinned dashboard showing all projects at a glance — git status, context window usage, cost, and rate limit countdown.
+
+![Dashboard](docs/feat-dashboard.png)
 
 ### And more
 
