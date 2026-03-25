@@ -6,7 +6,7 @@ Multi-project Claude Code orchestration via Telegram bot pool.
 
 Turn a Telegram group into a remote control center for all your Claude Code projects. Each project gets its own bot — @mention to execute, reply to continue, voice commands, auto-dashboard, cron jobs.
 
-## How It Works
+## 💡 How It Works
 
 ```
 Telegram Group "My Projects"
@@ -32,7 +32,7 @@ Telegram Group "My Projects"
 └──────────────────────────────────────┘
 ```
 
-## Features
+## ✨ Features
 
 - **One bot per project** — each codebase gets a dedicated Telegram bot
 - **@mention = execute** — `@bot fix the login bug` runs Claude Code in that project
@@ -47,7 +47,32 @@ Telegram Group "My Projects"
 - **Two-layer permissions** — access level (read-write / read-only) + permission mode (auto / approve)
 - **Multi-user access** — admins + per-bot member control
 
-## Requirements
+## 📋 Recommendations
+
+### Who is this for?
+
+| Scenario | Fit | Suggested config |
+|----------|-----|-----------------|
+| Solo developer, 2–5 projects | Best fit | `permissionMode: "allowAll"`, single admin |
+| Small team (2–3 people) | Good fit | `permissionMode: "approve"`, per-bot `allowedUsers` |
+| Shared machine, mixed trust | Use with caution | `accessLevel: "readOnly"` for untrusted users, `"approve"` for trusted |
+| Enterprise / multi-tenant | Not designed for this | Consider Docker-isolated solutions instead |
+
+### Configuration tips
+
+- **Start with `approve` mode** if you're unsure — you can always switch to `allowAll` later
+- **Set `readOnly` on sensitive projects** to let team members browse code without write risk
+- **Use `allowedUsers` per bot** rather than adding everyone to `admins` — admins can use all bots
+- **Lower `maxConcurrent`** if you're on a rate-limited Claude plan (default 3 may be too many)
+- **Set `whisperLanguage`** explicitly (e.g. `"zh"`, `"en"`) for better voice recognition accuracy
+
+### What this project does NOT do
+
+- **No Docker isolation** — all bots run in the same process with access to the local filesystem. The built-in permission system (accessLevel + permissionMode + allowedUsers) provides sufficient control for personal and small-team use, but is not a security boundary for untrusted users.
+- **No API key mode** — requires a local Claude Code CLI with an active subscription (Max or Pro). Does not support Anthropic API keys.
+- **No cloud deployment** — designed to run on a local machine or personal server where your code lives.
+
+## 📦 Requirements
 
 - **[Claude Code CLI](https://claude.ai/claude-code)** — installed and logged in locally, with an active subscription (Max or Pro)
 - **[Bun](https://bun.sh)** >= 1.0 — runtime
@@ -55,7 +80,7 @@ Telegram Group "My Projects"
 
 > This project runs Claude Code in CLI mode (`claude -p`) locally. It requires an active Claude Code process on the same machine. API key mode is not supported.
 
-## Setup Guide
+## 🚀 Setup Guide
 
 ### Step 1: Clone and Install
 
@@ -161,7 +186,7 @@ bash scripts/daemon.sh start
 bash scripts/daemon.sh status   # verify all bots online
 ```
 
-## Usage
+## 📱 Usage
 
 ### Interacting with Bots
 
@@ -206,7 +231,7 @@ daemon.sh logs       # Last 50 log lines
 daemon.sh logs 200   # Last 200 lines
 ```
 
-## Configuration
+## ⚙️ Configuration
 
 ### Access & Permission (Two-Layer Control)
 
@@ -329,7 +354,7 @@ manage-pool.sh init-group                    # Auto-detect group ID
 manage-pool.sh set-mode <allowAll|approve>   # Set permission mode
 ```
 
-## Architecture
+## 🏗 Architecture
 
 ![Architecture](docs/architecture.png)
 
@@ -348,7 +373,7 @@ When a project bot modifies the daemon's own code (e.g., the `telegram-pool` pro
 3. Runs `daemon.sh restart` as the very last command
 4. Watchdog restarts the daemon, master bot notifies the group with the summary
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
@@ -360,7 +385,7 @@ When a project bot modifies the daemon's own code (e.g., the `telegram-pool` pro
 | Bot restarted itself | Project bot edited daemon code | Expected — watchdog auto-restarts, master bot notifies group |
 | Dashboard shows no data | No invocations since daemon start | Stats are in-memory, reset on restart. Make a call first |
 
-## Security & Privacy
+## 🔒 Security & Privacy
 
 ### Data stays local
 
@@ -392,35 +417,10 @@ No analytics, no telemetry, no cloud sync, no remote database.
 - **Process supervision**: watchdog auto-restarts on crash, gives up after 5 rapid crashes
 - **Self-restart safety**: when a project bot modifies daemon code, it finishes work and replies before restarting
 
-## Recommendations
-
-### Who is this for?
-
-| Scenario | Fit | Suggested config |
-|----------|-----|-----------------|
-| Solo developer, 2–5 projects | Best fit | `permissionMode: "allowAll"`, single admin |
-| Small team (2–3 people) | Good fit | `permissionMode: "approve"`, per-bot `allowedUsers` |
-| Shared machine, mixed trust | Use with caution | `accessLevel: "readOnly"` for untrusted users, `"approve"` for trusted |
-| Enterprise / multi-tenant | Not designed for this | Consider Docker-isolated solutions instead |
-
-### Configuration tips
-
-- **Start with `approve` mode** if you're unsure — you can always switch to `allowAll` later
-- **Set `readOnly` on sensitive projects** to let team members browse code without write risk
-- **Use `allowedUsers` per bot** rather than adding everyone to `admins` — admins can use all bots
-- **Lower `maxConcurrent`** if you're on a rate-limited Claude plan (default 3 may be too many)
-- **Set `whisperLanguage`** explicitly (e.g. `"zh"`, `"en"`) for better voice recognition accuracy
-
-### What this project does NOT do
-
-- **No Docker isolation** — all bots run in the same process with access to the local filesystem. The built-in permission system (accessLevel + permissionMode + allowedUsers) provides sufficient control for personal and small-team use, but is not a security boundary for untrusted users.
-- **No API key mode** — requires a local Claude Code CLI with an active subscription (Max or Pro). Does not support Anthropic API keys.
-- **No cloud deployment** — designed to run on a local machine or personal server where your code lives.
-
-## Acknowledgements
+## 🙏 Acknowledgements
 
 Dashboard design inspired by [claude-hud](https://github.com/jarrodwatts/claude-hud) — context window tracking and session metrics concepts.
 
-## License
+## 📄 License
 
 MIT

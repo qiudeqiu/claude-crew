@@ -6,7 +6,7 @@
 
 把一个 Telegram 群组变成你所有 Claude Code 项目的远程控制中心。每个项目分配一个专属机器人 —— @提及执行任务、回复继续对话、语音指令、自动看板、定时任务。
 
-## 工作原理
+## 💡 工作原理
 
 ```
 Telegram 群组 "我的项目"
@@ -32,7 +32,7 @@ Telegram 群组 "我的项目"
 └──────────────────────────────────────┘
 ```
 
-## 功能特性
+## ✨ 功能特性
 
 - **一个项目一个机器人** —— 每个代码仓库对应一个专属 Telegram 机器人
 - **@提及 = 执行** —— `@bot 修复登录bug` 在该项目目录运行 Claude Code
@@ -47,7 +47,32 @@ Telegram 群组 "我的项目"
 - **两层权限** —— 访问级别（读写/只读）+ 权限模式（预授权/按钮确认）
 - **多用户访问** —— 管理员 + 按 bot 配置成员权限
 
-## 前置要求
+## 📋 使用建议
+
+### 适合谁？
+
+| 场景 | 适合度 | 建议配置 |
+|------|--------|---------|
+| 个人开发者，2–5 个项目 | 最佳 | `permissionMode: "allowAll"`，单管理员 |
+| 小团队（2–3 人） | 适合 | `permissionMode: "approve"`，per-bot `allowedUsers` |
+| 共享机器，信任度不一 | 谨慎使用 | 不信任的用户设 `accessLevel: "readOnly"`，信任的设 `"approve"` |
+| 企业 / 多租户 | 不适用 | 建议使用 Docker 隔离方案 |
+
+### 配置建议
+
+- **不确定时先用 `approve` 模式** —— 之后随时可以切换到 `allowAll`
+- **敏感项目设 `readOnly`** —— 团队成员可以查看代码但没有写入风险
+- **用 per-bot `allowedUsers`** 而不是把所有人加到 `admins` —— admin 可以操作所有 bot
+- **限流计划下调低 `maxConcurrent`** —— 默认 3 可能太多
+- **明确指定 `whisperLanguage`**（如 `"zh"`、`"en"`）—— 语音识别准确率更高
+
+### 本项目不做什么
+
+- **无 Docker 隔离** —— 所有 bot 运行在同一进程中，可访问本地文件系统。内置权限系统（accessLevel + permissionMode + allowedUsers）足以满足个人和小团队使用，但不构成对不信任用户的安全边界。
+- **无 API key 模式** —— 需要本地安装 Claude Code CLI 并拥有有效订阅（Max 或 Pro），不支持 Anthropic API key。
+- **无云部署** —— 设计为运行在代码所在的本地机器或个人服务器上。
+
+## 📦 前置要求
 
 - **[Claude Code CLI](https://claude.ai/claude-code)** —— 本地安装并登录，需要有效订阅（Max 或 Pro）
 - **[Bun](https://bun.sh)** >= 1.0 —— 运行时
@@ -55,7 +80,7 @@ Telegram 群组 "我的项目"
 
 > 本项目通过 CLI 模式（`claude -p`）在本地运行 Claude Code，需要在同一台机器上运行。不支持 API key 模式。
 
-## 安装指南
+## 🚀 安装指南
 
 ### 第一步：克隆和安装
 
@@ -159,7 +184,7 @@ bash scripts/daemon.sh start
 bash scripts/daemon.sh status   # 确认所有机器人在线
 ```
 
-## 使用方法
+## 📱 使用方法
 
 ### 与机器人交互
 
@@ -204,7 +229,7 @@ daemon.sh logs       # 最近 50 行日志
 daemon.sh logs 200   # 最近 200 行
 ```
 
-## 配置
+## ⚙️ 配置
 
 ### 访问与权限（两层控制）
 
@@ -326,7 +351,7 @@ manage-pool.sh set-group <ID>               # 设置群组 ID
 manage-pool.sh init-group                   # 自动检测群组
 ```
 
-## 架构
+## 🏗 架构
 
 ![Architecture](docs/architecture.png)
 
@@ -345,7 +370,7 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 3. 最后执行 `daemon.sh restart`
 4. watchdog 重启 daemon，master bot 在群里通知摘要
 
-## 常见问题
+## 🔧 常见问题
 
 | 问题 | 原因 | 解决 |
 |------|------|------|
@@ -357,7 +382,7 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 | 机器人自己重启了 | 项目机器人修改了 daemon 代码 | 正常现象 —— watchdog 自动重启，群里会收到通知 |
 | 看板无数据 | daemon 启动后未调用 | 统计在内存中，重启后重置。先发一次任务 |
 
-## 安全与隐私
+## 🔒 安全与隐私
 
 ### 数据完全本地化
 
@@ -389,35 +414,10 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 - **进程守护**：watchdog 崩溃自动重启，连续崩溃 5 次后放弃
 - **自重启安全**：项目 bot 修改 daemon 代码时，先完成并回复，最后才重启
 
-## 使用建议
-
-### 适合谁？
-
-| 场景 | 适合度 | 建议配置 |
-|------|--------|---------|
-| 个人开发者，2–5 个项目 | 最佳 | `permissionMode: "allowAll"`，单管理员 |
-| 小团队（2–3 人） | 适合 | `permissionMode: "approve"`，per-bot `allowedUsers` |
-| 共享机器，信任度不一 | 谨慎使用 | 不信任的用户设 `accessLevel: "readOnly"`，信任的设 `"approve"` |
-| 企业 / 多租户 | 不适用 | 建议使用 Docker 隔离方案 |
-
-### 配置建议
-
-- **不确定时先用 `approve` 模式** — 之后随时可以切换到 `allowAll`
-- **敏感项目设 `readOnly`** — 团队成员可以查看代码但没有写入风险
-- **用 per-bot `allowedUsers`** 而不是把所有人加到 `admins` — admin 可以操作所有 bot
-- **限流计划下调低 `maxConcurrent`** — 默认 3 可能太多
-- **明确指定 `whisperLanguage`**（如 `"zh"`、`"en"`）— 语音识别准确率更高
-
-### 本项目不做什么
-
-- **无 Docker 隔离** — 所有 bot 运行在同一进程中，可访问本地文件系统。内置权限系统（accessLevel + permissionMode + allowedUsers）足以满足个人和小团队使用，但不构成对不信任用户的安全边界。
-- **无 API key 模式** — 需要本地安装 Claude Code CLI 并拥有有效订阅（Max 或 Pro），不支持 Anthropic API key。
-- **无云部署** — 设计为运行在代码所在的本地机器或个人服务器上。
-
-## 致谢
+## 🙏 致谢
 
 看板设计参考了 [claude-hud](https://github.com/jarrodwatts/claude-hud) —— context window 追踪和会话指标的理念。
 
-## 开源协议
+## 📄 开源协议
 
 MIT
