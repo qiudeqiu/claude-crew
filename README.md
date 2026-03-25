@@ -392,6 +392,31 @@ No analytics, no telemetry, no cloud sync, no remote database.
 - **Process supervision**: watchdog auto-restarts on crash, gives up after 5 rapid crashes
 - **Self-restart safety**: when a project bot modifies daemon code, it finishes work and replies before restarting
 
+## Recommendations
+
+### Who is this for?
+
+| Scenario | Fit | Suggested config |
+|----------|-----|-----------------|
+| Solo developer, 2–5 projects | Best fit | `permissionMode: "allowAll"`, single admin |
+| Small team (2–3 people) | Good fit | `permissionMode: "approve"`, per-bot `allowedUsers` |
+| Shared machine, mixed trust | Use with caution | `accessLevel: "readOnly"` for untrusted users, `"approve"` for trusted |
+| Enterprise / multi-tenant | Not designed for this | Consider Docker-isolated solutions instead |
+
+### Configuration tips
+
+- **Start with `approve` mode** if you're unsure — you can always switch to `allowAll` later
+- **Set `readOnly` on sensitive projects** to let team members browse code without write risk
+- **Use `allowedUsers` per bot** rather than adding everyone to `admins` — admins can use all bots
+- **Lower `maxConcurrent`** if you're on a rate-limited Claude plan (default 3 may be too many)
+- **Set `whisperLanguage`** explicitly (e.g. `"zh"`, `"en"`) for better voice recognition accuracy
+
+### What this project does NOT do
+
+- **No Docker isolation** — all bots run in the same process with access to the local filesystem. The built-in permission system (accessLevel + permissionMode + allowedUsers) provides sufficient control for personal and small-team use, but is not a security boundary for untrusted users.
+- **No API key mode** — requires a local Claude Code CLI with an active subscription (Max or Pro). Does not support Anthropic API keys.
+- **No cloud deployment** — designed to run on a local machine or personal server where your code lives.
+
 ## Acknowledgements
 
 Dashboard design inspired by [claude-hud](https://github.com/jarrodwatts/claude-hud) — context window tracking and session metrics concepts.

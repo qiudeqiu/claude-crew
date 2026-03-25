@@ -389,6 +389,31 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 - **进程守护**：watchdog 崩溃自动重启，连续崩溃 5 次后放弃
 - **自重启安全**：项目 bot 修改 daemon 代码时，先完成并回复，最后才重启
 
+## 使用建议
+
+### 适合谁？
+
+| 场景 | 适合度 | 建议配置 |
+|------|--------|---------|
+| 个人开发者，2–5 个项目 | 最佳 | `permissionMode: "allowAll"`，单管理员 |
+| 小团队（2–3 人） | 适合 | `permissionMode: "approve"`，per-bot `allowedUsers` |
+| 共享机器，信任度不一 | 谨慎使用 | 不信任的用户设 `accessLevel: "readOnly"`，信任的设 `"approve"` |
+| 企业 / 多租户 | 不适用 | 建议使用 Docker 隔离方案 |
+
+### 配置建议
+
+- **不确定时先用 `approve` 模式** — 之后随时可以切换到 `allowAll`
+- **敏感项目设 `readOnly`** — 团队成员可以查看代码但没有写入风险
+- **用 per-bot `allowedUsers`** 而不是把所有人加到 `admins` — admin 可以操作所有 bot
+- **限流计划下调低 `maxConcurrent`** — 默认 3 可能太多
+- **明确指定 `whisperLanguage`**（如 `"zh"`、`"en"`）— 语音识别准确率更高
+
+### 本项目不做什么
+
+- **无 Docker 隔离** — 所有 bot 运行在同一进程中，可访问本地文件系统。内置权限系统（accessLevel + permissionMode + allowedUsers）足以满足个人和小团队使用，但不构成对不信任用户的安全边界。
+- **无 API key 模式** — 需要本地安装 Claude Code CLI 并拥有有效订阅（Max 或 Pro），不支持 Anthropic API key。
+- **无云部署** — 设计为运行在代码所在的本地机器或个人服务器上。
+
 ## 致谢
 
 看板设计参考了 [claude-hud](https://github.com/jarrodwatts/claude-hud) —— context window 追踪和会话指标的理念。
