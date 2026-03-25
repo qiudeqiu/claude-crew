@@ -1,7 +1,7 @@
 {
   "name": "claude-crew",
   "version": "0.2.0",
-  "description": "Remote supplement to Claude Code CLI — orchestrate multiple projects from Telegram",
+  "description": "Claude Code — Every Project, Anywhere. One bot per project, orchestrated from Telegram.",
   "type": "module",
   "scripts": {
     "daemon": "bun run src/daemon.ts",

@@ -11,7 +11,9 @@
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
 </p>
 
-Your remote Claude Code command center — one bot per project. Go solo and run everything from one chat, or bring your team into one group to divide and conquer. Any device, any time.
+**Claude Code — Every Project, Anywhere.**
+
+One bot per project. Go solo and run everything from one chat, or bring your team into one group to divide and conquer.
 
 ## 🎯 Three Ways to Use
 

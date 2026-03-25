@@ -11,7 +11,9 @@
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
 </p>
 
-你的 Claude Code 远程指挥部 —— 一个 bot 一个项目。一人群控所有项目，或将 AI 超能力共享给团队，同一个群里各司其职、互不干扰。任何设备、任何时间。
+**Claude Code — Every Project, Anywhere.**
+
+一个 bot 一个项目。一人群控所有项目，或将 AI 超能力共享给团队，同一个群里各司其职、互不干扰。
 
 ## 🎯 三种使用模式
 
