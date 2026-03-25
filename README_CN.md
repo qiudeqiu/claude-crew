@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
 </p>
 
-Claude Code CLI 的远程补充方案，为个人开发者和小团队设计 —— 不用坐在电脑前也能操控你的 Claude Code 会话。
+你的 Claude Code 远程指挥部 —— 一个 bot 一个项目。一人群控所有项目，或将 AI 超能力共享给团队，同一个群里各司其职、互不干扰。任何设备、任何时间。
 
 ## 🎯 三种使用模式
 
@@ -72,6 +72,23 @@ Master bot 发送置顶看板，一览所有项目状态 —— git 分支、con
 - **语音 & 图片** —— Whisper 语音转文字，视觉能力分析截图
 - **多用户访问** —— 管理员 + 按 bot 配置成员权限
 
+## 📊 方案对比
+
+| 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 | Happy Coder |
+|-----|:-:|:-:|:-:|:-:|
+| 多项目编排 | ✅ 一个 bot 一个项目 | ❌ 单会话 | ❌ 单 bot | ❌ 单会话 |
+| 团队协作 | ✅ 2-10 人，按 bot 配权限 | ❌ 仅单人 | ❌ 仅单人 | ❌ 仅单人 |
+| 群内 @mention 路由 | ✅ | ❌ | ❌ | ❌ |
+| 置顶看板 | ✅ Git、context、费用、额度 | ❌ | ❌ | ❌ |
+| 定时任务 | ✅ | ❌ | ❌ | ❌ |
+| 跨项目搜索 | ✅ | ❌ | ❌ | ❌ |
+| 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
+| 权限模式 | ✅ allowAll / approve / readOnly | ✅ | ✅ 配对 + 白名单 | ✅ |
+| 零安装客户端 | ✅ Telegram 已在手机上 | ❌ 仅终端 | ✅ Telegram | ❌ 需装原生 app |
+| 多 agent 支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini |
+| 端到端加密 | Telegram 传输加密 | 不适用 | Telegram 传输加密 | ✅ 零知识加密 |
+| 原生移动端体验 | Telegram（够用） | ❌ | Telegram | ✅ 精致原生 app |
+
 ## 📋 使用建议
 
 ### 适合谁？
@@ -99,7 +116,7 @@ Master bot 发送置顶看板，一览所有项目状态 —— git 分支、con
 
 ## 📦 前置条件
 
-> **本项目不是独立的 AI 机器人。** 它是 Claude Code CLI 之上的远程控制层。你必须先安装 Claude Code、登录并订阅，项目才能运行。安装脚本会自动检查这些条件。
+> **本项目不是独立的 AI 机器人。** 它是 Claude Code CLI 之上的远程控制层。你需要一台 24/7 运行的电脑（Mac/Linux/服务器），上面安装并登录了 Claude Code CLI 且有有效订阅。你的 Telegram 消息会路由到这台机器，在本地执行 `claude -p` 后将结果返回。安装脚本会自动检查依赖。
 
 ### 必需
 

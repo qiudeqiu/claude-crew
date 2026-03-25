@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
 </p>
 
-A remote supplement to Claude Code CLI, designed for solo developers and small teams who want to control their Claude Code sessions without sitting at the terminal.
+Your remote Claude Code command center — one bot per project. Go solo and run everything from one chat, or bring your team into one group to divide and conquer. Any device, any time.
 
 ## 🎯 Three Ways to Use
 
@@ -72,6 +72,23 @@ Master bot posts a pinned dashboard showing all projects at a glance — git sta
 - **Voice & photo** — voice transcription via Whisper, image analysis via vision
 - **Multi-user access** — admins + per-bot member control
 
+## 📊 Comparison
+
+| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
+|-----------|:-:|:-:|:-:|:-:|
+| Multi-project orchestration | ✅ One bot per project | ❌ Single session | ❌ Single bot | ❌ Single session |
+| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | ❌ Solo only |
+| @mention routing in group | ✅ | ❌ | ❌ | ❌ |
+| Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
+| Cron scheduler | ✅ | ❌ | ❌ | ❌ |
+| Cross-project search | ✅ | ❌ | ❌ | ❌ |
+| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
+| Permission modes | ✅ allowAll / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
+| Zero-install client | ✅ Telegram already on your phone | ❌ Terminal only | ✅ Telegram | ❌ Requires native app |
+| Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
+| E2E encryption | Telegram transport | N/A | Telegram transport | ✅ Zero-knowledge |
+| Native mobile UX | Telegram (good enough) | ❌ | Telegram | ✅ Polished native app |
+
 ## 📋 Recommendations
 
 ### Who is this for?
@@ -99,7 +116,7 @@ Master bot posts a pinned dashboard showing all projects at a glance — git sta
 
 ## 📦 Prerequisites
 
-> **This project is NOT a standalone AI bot.** It is a remote control layer on top of Claude Code CLI. You must have Claude Code installed, logged in, and subscribed before anything works. The setup script will verify this automatically.
+> **This project is NOT a standalone AI bot.** It is a remote control layer on top of Claude Code CLI. You need a computer (Mac/Linux/server) running 24/7 with Claude Code CLI installed, logged in, and subscribed. Your Telegram messages are routed to this machine, which runs `claude -p` locally and sends results back. The setup script will verify dependencies automatically.
 
 ### Required
 
