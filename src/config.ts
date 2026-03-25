@@ -113,3 +113,58 @@ export function validateConfig(): void {
     process.exit(1);
   }
 }
+
+// ── Auto-migration: fill missing fields with defaults on startup ──
+export function migrateConfig(): string[] {
+  const raw = readFileSync(POOL_FILE, "utf8");
+  const pool = JSON.parse(raw) as Record<string, unknown>;
+  const added: string[] = [];
+
+  // Global defaults
+  const globalDefaults: Record<string, unknown> = {
+    accessLevel: "readWrite",
+    permissionMode: "allowAll",
+    masterExecute: false,
+    maxConcurrent: DEFAULT_MAX_CONCURRENT,
+    rateLimitSeconds: DEFAULT_RATE_LIMIT_S,
+    sessionTimeoutMinutes: DEFAULT_SESSION_TIMEOUT_MIN,
+    dashboardIntervalMinutes: DEFAULT_DASHBOARD_INTERVAL_MIN,
+    memoryIntervalMinutes: 120,
+    whisperLanguage: "",
+  };
+
+  for (const [key, defaultVal] of Object.entries(globalDefaults)) {
+    if (!(key in pool)) {
+      pool[key] = defaultVal;
+      added.push(key);
+    }
+  }
+
+  // Per-bot defaults (project bots only)
+  const bots = pool.bots as Array<Record<string, unknown>>;
+  if (Array.isArray(bots)) {
+    for (const bot of bots) {
+      if (bot.role !== "project") continue;
+      if (!("accessLevel" in bot)) {
+        bot.accessLevel = "readWrite";
+        added.push(`${bot.username}.accessLevel`);
+      }
+      if (!("permissionMode" in bot)) {
+        bot.permissionMode = pool.permissionMode ?? "allowAll";
+        added.push(`${bot.username}.permissionMode`);
+      }
+      if (!("allowedUsers" in bot)) {
+        bot.allowedUsers = [];
+        added.push(`${bot.username}.allowedUsers`);
+      }
+    }
+  }
+
+  if (added.length > 0) {
+    writeFileSync(POOL_FILE, JSON.stringify(pool, null, 2) + "\n", {
+      mode: 0o600,
+    });
+  }
+
+  return added;
+}

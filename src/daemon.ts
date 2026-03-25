@@ -15,6 +15,7 @@ import {
   getAdmins,
   getConfig,
   validateConfig,
+  migrateConfig,
   INBOX_DIR,
   RESTART_NOTE_FILE,
   LOG_FILE,
@@ -32,8 +33,13 @@ import { updateDashboard } from "./dashboard.js";
 import { checkCron } from "./cron.js";
 import { checkMemory } from "./memory.js";
 
-// ── Startup validation ──
+// ── Startup validation & migration ──
 validateConfig();
+const migrated = migrateConfig();
+if (migrated.length > 0) {
+  // Can't use log() before main — use stderr (log file may not exist yet)
+  process.stderr.write(`[migrate] added defaults: ${migrated.join(", ")}\n`);
+}
 log(`Auth: ${getAdmins().length} admin(s): ${getAdmins().join(", ")}`);
 
 // ══════════════════════════════════════
