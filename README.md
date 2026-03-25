@@ -61,17 +61,35 @@ Telegram Group "My Projects"
 
 ## ✨ Features
 
+### Instant feedback
+
+Your message gets a 👀 reaction the moment a bot picks it up — you always know your command was received.
+
+![Acknowledged](docs/feat-ack.png)
+
+### Real-time progress
+
+See exactly what Claude is doing as it works — file reads, edits, commands, all streamed live to your chat.
+
+![Progress](docs/feat-progress.png)
+
+### Flexible permissions
+
+Switch between pre-authorized mode (fast, no prompts) and approval mode (button confirm before writes) — per bot or globally.
+
+![Permission](docs/feat-permission.png)
+
+### And more
+
 - **One bot per project** — each codebase gets a dedicated Telegram bot
 - **@mention = execute** — `@bot fix the login bug` runs Claude Code in that project
 - **Reply to continue** — reply to a bot's message to keep the conversation going
 - **Quote anything** — reply to text, photos, or voice while @mentioning a bot
-- **Real-time progress** — live tool usage updates as Claude works
 - **Master bot** — dashboard, search, cron, restart/memory notifications (required)
 - **Dashboard** — pinned message: git status, context usage, cost, rate limit countdown
 - **Cron** — schedule recurring tasks per bot
 - **Periodic memory** — auto-saves conversation context for active projects
 - **Voice & photo** — voice transcription via Whisper, image analysis via vision
-- **Two-layer permissions** — access level (read-write / read-only) + permission mode (auto / approve)
 - **Multi-user access** — admins + per-bot member control
 
 ## 📋 Recommendations
