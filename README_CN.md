@@ -81,7 +81,6 @@ Master bot 发送置顶看板，一览所有项目状态 —— git 分支、con
 | 群内 @mention 路由 | ✅ | ❌ | ❌ | ❌ |
 | 置顶看板 | ✅ Git、context、费用、额度 | ❌ | ❌ | ❌ |
 | 定时任务 | ✅ | ❌ | ❌ | ❌ |
-| 跨项目搜索 | ✅ | ❌ | ❌ | ❌ |
 | 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
 | 权限模式 | ✅ allowAll / approve / readOnly | ✅ | ✅ 配对 + 白名单 | ✅ |
 | 零安装客户端 | ✅ Telegram 已在手机上 | ❌ 仅终端 | ✅ Telegram | ❌ 需装原生 app |

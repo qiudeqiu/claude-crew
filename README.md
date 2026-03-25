@@ -81,7 +81,6 @@ Master bot posts a pinned dashboard showing all projects at a glance — git sta
 | @mention routing in group | ✅ | ❌ | ❌ | ❌ |
 | Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
 | Cron scheduler | ✅ | ❌ | ❌ | ❌ |
-| Cross-project search | ✅ | ❌ | ❌ | ❌ |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
 | Permission modes | ✅ allowAll / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
 | Zero-install client | ✅ Telegram already on your phone | ❌ Terminal only | ✅ Telegram | ❌ Requires native app |
