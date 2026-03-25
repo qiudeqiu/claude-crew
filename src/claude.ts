@@ -64,6 +64,7 @@ export async function runClaude(
   );
 
   let resultText = "";
+  let assistantText = ""; // fallback: accumulate text from assistant messages
   let permissionDenials: string[] = [];
   let costUSD = 0;
   let durationMs = 0;
@@ -73,8 +74,87 @@ export async function runClaude(
   let model = "";
   let tokensByModel: Record<string, number> = {};
   let buffer = "";
+  let gotResultEvent = false;
   const decoder = new TextDecoder();
   const reader = (proc.stdout as ReadableStream<Uint8Array>).getReader();
+
+  function processEvent(event: Record<string, unknown>): void {
+    // Result (includes permission_denials)
+    if (event.type === "result") {
+      gotResultEvent = true;
+      resultText =
+        typeof event.result === "string"
+          ? event.result
+          : JSON.stringify(event.result ?? "");
+      permissionDenials = (
+        (event.permission_denials as Array<unknown>) ?? []
+      ).map((d) =>
+        typeof d === "string"
+          ? d
+          : (((d as Record<string, unknown>).tool_name ??
+              (d as Record<string, unknown>).tool ??
+              (d as Record<string, unknown>).name ??
+              "?") as string),
+      );
+      costUSD = (event.total_cost_usd as number) ?? 0;
+      durationMs = (event.duration_ms as number) ?? 0;
+      numTurns = (event.num_turns as number) ?? 0;
+      // Extract per-model token counts + context info
+      const mu =
+        (event.modelUsage as Record<string, Record<string, number>>) ?? {};
+      for (const [m, info] of Object.entries(mu)) {
+        const total =
+          (info.inputTokens ?? 0) +
+          (info.outputTokens ?? 0) +
+          (info.cacheReadInputTokens ?? 0) +
+          (info.cacheCreationInputTokens ?? 0);
+        tokensByModel[m] = total;
+        if (!contextWindow && info.contextWindow) {
+          contextWindow = info.contextWindow;
+          model = m;
+        }
+      }
+      // Total context = all input + output tokens
+      const u = (event.usage as Record<string, number>) ?? {};
+      contextUsed =
+        (u.input_tokens ?? 0) +
+        (u.output_tokens ?? 0) +
+        (u.cache_read_input_tokens ?? 0) +
+        (u.cache_creation_input_tokens ?? 0);
+    }
+
+    // Rate limit event
+    if (event.type === "rate_limit_event" && event.rate_limit_info) {
+      const rli = event.rate_limit_info as Record<string, unknown>;
+      daemon.rateLimitInfo = {
+        resetsAt: (rli.resetsAt as number) ?? 0,
+        rateLimitType: (rli.rateLimitType as string) ?? "",
+        status: (rli.status as string) ?? "",
+      };
+    }
+
+    // Assistant message -> extract text blocks as fallback + progress callback
+    if (
+      event.type === "assistant" &&
+      (event.message as Record<string, unknown>)?.content
+    ) {
+      const content = (event.message as Record<string, unknown>)
+        .content as Array<Record<string, unknown>>;
+      for (const block of content) {
+        if (block.type === "text" && typeof block.text === "string") {
+          assistantText += (assistantText ? "\n" : "") + block.text;
+        }
+        if (opts.onProgress && block.type === "tool_use") {
+          opts.onProgress(
+            formatToolLabel(
+              (block.name as string) ?? "",
+              (block.input as Record<string, unknown>) ?? {},
+            ),
+          );
+        }
+      }
+    }
+  }
 
   try {
     while (true) {
@@ -95,78 +175,18 @@ export async function runClaude(
         } catch {
           continue;
         }
+        processEvent(event);
+      }
+    }
 
-        // Result (includes permission_denials)
-        if (event.type === "result") {
-          resultText =
-            typeof event.result === "string"
-              ? event.result
-              : JSON.stringify(event.result ?? "");
-          permissionDenials = (
-            (event.permission_denials as Array<unknown>) ?? []
-          ).map((d) =>
-            typeof d === "string"
-              ? d
-              : (((d as Record<string, unknown>).tool_name ??
-                  (d as Record<string, unknown>).tool ??
-                  (d as Record<string, unknown>).name ??
-                  "?") as string),
-          );
-          costUSD = (event.total_cost_usd as number) ?? 0;
-          durationMs = (event.duration_ms as number) ?? 0;
-          numTurns = (event.num_turns as number) ?? 0;
-          // Extract per-model token counts + context info
-          const mu =
-            (event.modelUsage as Record<string, Record<string, number>>) ?? {};
-          for (const [m, info] of Object.entries(mu)) {
-            const total =
-              (info.inputTokens ?? 0) +
-              (info.outputTokens ?? 0) +
-              (info.cacheReadInputTokens ?? 0) +
-              (info.cacheCreationInputTokens ?? 0);
-            tokensByModel[m] = total;
-            if (!contextWindow && info.contextWindow) {
-              contextWindow = info.contextWindow;
-              model = m;
-            }
-          }
-          // Total context = all input + output tokens
-          const u = (event.usage as Record<string, number>) ?? {};
-          contextUsed =
-            (u.input_tokens ?? 0) +
-            (u.output_tokens ?? 0) +
-            (u.cache_read_input_tokens ?? 0) +
-            (u.cache_creation_input_tokens ?? 0);
-        }
-
-        // Rate limit event
-        if (event.type === "rate_limit_event" && event.rate_limit_info) {
-          const rli = event.rate_limit_info as Record<string, unknown>;
-          daemon.rateLimitInfo = {
-            resetsAt: (rli.resetsAt as number) ?? 0,
-            rateLimitType: (rli.rateLimitType as string) ?? "",
-            status: (rli.status as string) ?? "",
-          };
-        }
-
-        // Tool use -> progress callback
-        if (
-          opts.onProgress &&
-          event.type === "assistant" &&
-          (event.message as Record<string, unknown>)?.content
-        ) {
-          const content = (event.message as Record<string, unknown>)
-            .content as Array<Record<string, unknown>>;
-          for (const block of content) {
-            if (block.type !== "tool_use") continue;
-            opts.onProgress(
-              formatToolLabel(
-                (block.name as string) ?? "",
-                (block.input as Record<string, unknown>) ?? {},
-              ),
-            );
-          }
-        }
+    // Process any remaining data in buffer (last line without trailing newline)
+    const remaining = buffer.trim();
+    if (remaining) {
+      try {
+        const event = JSON.parse(remaining) as Record<string, unknown>;
+        processEvent(event);
+      } catch {
+        // not valid JSON, ignore
       }
     }
   } finally {
@@ -174,13 +194,18 @@ export async function runClaude(
   }
 
   const stderr = await new Response(proc.stderr).text();
-  await proc.exited;
+  const exitCode = await proc.exited;
   clearTimeout(killTimeout);
 
   if (stderr) log(`STDERR: ${dir} — ${stderr.slice(0, 200)}`);
+  if (exitCode !== 0) log(`EXIT: ${dir} — code ${exitCode}`);
+  if (!gotResultEvent) log(`WARN: ${dir} — no result event in stream`);
+
+  // Fallback: if result event had empty text, use accumulated assistant text
+  const finalText = resultText.trim() || assistantText.trim();
 
   return {
-    text: resultText.trim(),
+    text: finalText,
     permissionDenials,
     costUSD,
     durationMs,
@@ -313,6 +338,7 @@ export async function invokeClaudeAndReply(
       if (result.permissionDenials.length > 0) {
         const denied = [...new Set(result.permissionDenials)];
         log(`APPROVE: denied tools: ${denied.join(", ")}`);
+        const firstResultText = result.text;
 
         const approvalId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const toolList = denied.map((t) => `  \u2022 ${t}`).join("\n");
@@ -344,12 +370,19 @@ export async function invokeClaudeAndReply(
         if (approved) {
           log(`APPROVE: retrying with tools: ${approved}`);
           steps.length = 0;
-          result = await runClaude(dir, prompt, {
-            allowedTools: approved,
-            appendSystemPrompt: systemPrompt,
-            onProgress,
-            resume: false,
-          });
+          result = await runClaude(
+            dir,
+            "\u5de5\u5177\u5df2\u6388\u6743\uff0c\u8bf7\u7ee7\u7eed\u5b8c\u6210\u4efb\u52a1\u5e76\u56de\u590d\u6267\u884c\u7ed3\u679c\u3002",
+            {
+              allowedTools: approved,
+              appendSystemPrompt: systemPrompt,
+              onProgress,
+            },
+          );
+          // Fall back to first run's text if retry produced nothing
+          if (!result.text && firstResultText) {
+            result = { ...result, text: firstResultText };
+          }
         }
       }
     } else {
