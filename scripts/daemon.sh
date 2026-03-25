@@ -14,6 +14,13 @@ DAEMON_SCRIPT="$DAEMON_DIR/daemon.ts"
 
 case "${1:-help}" in
   start)
+    # Pre-flight: ensure Claude Code CLI is available
+    if ! command -v claude >/dev/null 2>&1; then
+      echo "❌ Claude Code CLI 未安装 — 请先安装并登录"
+      echo "   https://claude.ai/claude-code"
+      exit 1
+    fi
+
     # Check if already running
     if [ -f "$PID_FILE" ]; then
       PID=$(cat "$PID_FILE")

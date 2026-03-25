@@ -13,11 +13,43 @@ echo ""
 
 # 1. Check dependencies
 echo "检查依赖..."
-command -v bun >/dev/null 2>&1 || { echo "❌ 需要 bun (https://bun.sh)"; exit 1; }
-command -v claude >/dev/null 2>&1 || { echo "❌ 需要 claude CLI (Claude Code)"; exit 1; }
+
+# Bun runtime
+command -v bun >/dev/null 2>&1 || {
+  echo "❌ 需要 Bun >= 1.0"
+  echo "   安装: curl -fsSL https://bun.sh/install | bash"
+  exit 1
+}
+
+# Claude Code CLI — CRITICAL
+if ! command -v claude >/dev/null 2>&1; then
+  echo "❌ 未检测到 Claude Code CLI"
+  echo ""
+  echo "   本项目需要 Claude Code CLI 作为核心运行时。"
+  echo "   它不是一个可选依赖 — 没有它项目无法运行。"
+  echo ""
+  echo "   安装步骤:"
+  echo "   1. 访问 https://claude.ai/claude-code 安装 Claude Code"
+  echo "   2. 运行 claude 完成登录和授权"
+  echo "   3. 确认你有有效的订阅 (Max 或 Pro)"
+  echo "   4. 重新运行本脚本"
+  exit 1
+fi
+
+# Check if Claude Code is logged in
+CLAUDE_AUTH=$(claude --version 2>&1 || true)
+if echo "$CLAUDE_AUTH" | grep -qi "not logged in\|unauthenticated\|login required"; then
+  echo "⚠️  Claude Code CLI 已安装但未登录"
+  echo "   请先运行: claude"
+  echo "   完成登录后重新运行本脚本"
+  exit 1
+fi
+echo "✅ Claude Code CLI 已就绪"
+
+# Optional: ffmpeg + whisper (voice features)
 command -v ffmpeg >/dev/null 2>&1 || echo "⚠️  未检测到 ffmpeg — 语音功能需要它 (brew install ffmpeg)"
 command -v whisper >/dev/null 2>&1 || echo "⚠️  未检测到 whisper — 语音功能需要它 (pipx install openai-whisper)"
-echo "✅ 基础依赖检查通过"
+echo "✅ 依赖检查通过"
 echo ""
 
 # 2. Create state directory

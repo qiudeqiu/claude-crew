@@ -99,13 +99,32 @@ Telegram Group "My Projects"
 - **No API key mode** — requires a local Claude Code CLI with an active subscription (Max or Pro). Does not support Anthropic API keys.
 - **No cloud deployment** — designed to run on a local machine or personal server where your code lives.
 
-## 📦 Requirements
+## 📦 Prerequisites
 
-- **[Claude Code CLI](https://claude.ai/claude-code)** — installed and logged in locally, with an active subscription (Max or Pro)
-- **[Bun](https://bun.sh)** >= 1.0 — runtime
-- **[ffmpeg](https://ffmpeg.org)** + **[whisper](https://github.com/openai/whisper)** — optional, for voice message transcription
+> **This project is NOT a standalone AI bot.** It is a remote control layer on top of Claude Code CLI. You must have Claude Code installed, logged in, and subscribed before anything works. The setup script will verify this automatically.
 
-> This project runs Claude Code in CLI mode (`claude -p`) locally. It requires an active Claude Code process on the same machine. API key mode is not supported.
+### Required
+
+| Dependency | Why | Install |
+|-----------|-----|---------|
+| **[Claude Code CLI](https://claude.ai/claude-code)** | Core runtime — all AI tasks run through `claude -p` | `npm install -g @anthropic-ai/claude-code` |
+| **Active subscription** | Claude Code requires Max or Pro plan | [claude.ai/pricing](https://claude.ai/pricing) |
+| **Logged-in session** | CLI must be authenticated | Run `claude` and complete login |
+| **[Bun](https://bun.sh)** >= 1.0 | Daemon runtime | `curl -fsSL https://bun.sh/install \| bash` |
+
+### Optional
+
+| Dependency | Why | Install |
+|-----------|-----|---------|
+| [ffmpeg](https://ffmpeg.org) | Voice message transcription | `brew install ffmpeg` |
+| [whisper](https://github.com/openai/whisper) | Speech-to-text engine | `pipx install openai-whisper` |
+
+### Verify before proceeding
+
+```bash
+claude --version    # should print version (not "command not found")
+bun --version       # should print >= 1.0
+```
 
 ## 🚀 Quick Start
 

@@ -99,13 +99,32 @@ Telegram 群组 "我的项目"
 - **无 API key 模式** —— 需要本地安装 Claude Code CLI 并拥有有效订阅（Max 或 Pro），不支持 Anthropic API key。
 - **无云部署** —— 设计为运行在代码所在的本地机器或个人服务器上。
 
-## 📦 前置要求
+## 📦 前置条件
 
-- **[Claude Code CLI](https://claude.ai/claude-code)** —— 本地安装并登录，需要有效订阅（Max 或 Pro）
-- **[Bun](https://bun.sh)** >= 1.0 —— 运行时
-- **[ffmpeg](https://ffmpeg.org)** + **[whisper](https://github.com/openai/whisper)** —— 可选，用于语音转文字
+> **本项目不是独立的 AI 机器人。** 它是 Claude Code CLI 之上的远程控制层。你必须先安装 Claude Code、登录并订阅，项目才能运行。安装脚本会自动检查这些条件。
 
-> 本项目通过 CLI 模式（`claude -p`）在本地运行 Claude Code，需要在同一台机器上运行。不支持 API key 模式。
+### 必需
+
+| 依赖 | 用途 | 安装方式 |
+|------|------|---------|
+| **[Claude Code CLI](https://claude.ai/claude-code)** | 核心运行时 —— 所有 AI 任务通过 `claude -p` 执行 | `npm install -g @anthropic-ai/claude-code` |
+| **有效订阅** | Claude Code 需要 Max 或 Pro 计划 | [claude.ai/pricing](https://claude.ai/pricing) |
+| **已登录会话** | CLI 必须已完成认证 | 运行 `claude` 并完成登录 |
+| **[Bun](https://bun.sh)** >= 1.0 | Daemon 运行时 | `curl -fsSL https://bun.sh/install \| bash` |
+
+### 可选
+
+| 依赖 | 用途 | 安装方式 |
+|------|------|---------|
+| [ffmpeg](https://ffmpeg.org) | 语音消息转码 | `brew install ffmpeg` |
+| [whisper](https://github.com/openai/whisper) | 语音转文字 | `pipx install openai-whisper` |
+
+### 安装前验证
+
+```bash
+claude --version    # 应输出版本号（不是 "command not found"）
+bun --version       # 应输出 >= 1.0
+```
 
 ## 🚀 快速开始
 
