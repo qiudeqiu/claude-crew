@@ -247,18 +247,27 @@ Combined with access control:
 
 All configuration lives in a single file — `~/.claude/channels/telegram/bot-pool.json`.
 
-The setup wizard generates a complete config with all defaults visible. Example:
+The setup wizard and `manage-pool.sh add` generate a complete config with all defaults visible — both global settings and per-bot fields. Example:
 
 ```json
 {
   "admins": ["123456789"],
   "bots": [
-    { "token": "123:AAH...", "username": "master_bot", "role": "master" },
-    { "token": "456:AAH...", "username": "proj_bot", "role": "project",
-      "assignedProject": "my-app", "assignedPath": "/home/user/my-app",
+    {
+      "token": "123:AAH...",
+      "username": "master_bot",
+      "role": "master"
+    },
+    {
+      "token": "456:AAH...",
+      "username": "proj_bot",
+      "role": "project",
+      "assignedProject": "my-app",
+      "assignedPath": "/home/user/my-app",
       "accessLevel": "readWrite",
       "permissionMode": "approve",
-      "allowedUsers": ["111111111", "222222222"] }
+      "allowedUsers": ["111111111", "222222222"]
+    }
   ],
   "sharedGroupId": "-100123456789",
   "accessLevel": "readWrite",

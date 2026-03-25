@@ -58,7 +58,14 @@ print(any(b['token'] == os.environ['TK'] for b in pool['bots']))
     POOL="$POOL_FILE" TK="$TOKEN" UN="$USERNAME" RL="$ROLE" python3 -c "
 import json, os
 pool = json.load(open(os.environ['POOL']))
-pool['bots'].append({'token': os.environ['TK'], 'username': os.environ['UN'], 'role': os.environ['RL']})
+bot = {'token': os.environ['TK'], 'username': os.environ['UN'], 'role': os.environ['RL']}
+if os.environ['RL'] == 'project':
+    bot['assignedProject'] = ''
+    bot['assignedPath'] = ''
+    bot['accessLevel'] = 'readWrite'
+    bot['permissionMode'] = pool.get('permissionMode', 'allowAll')
+    bot['allowedUsers'] = []
+pool['bots'].append(bot)
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 "
     ROLE_LABEL="项目 bot"

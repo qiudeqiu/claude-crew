@@ -245,18 +245,27 @@ daemon.sh logs 200   # 最近 200 行
 
 所有配置集中在一个文件 — `~/.claude/channels/telegram/bot-pool.json`。
 
-安装向导生成完整配置，所有默认值均可见。示例：
+安装向导和 `manage-pool.sh add` 生成完整配置，全局设置和单 bot 字段的默认值均可见。示例：
 
 ```json
 {
   "admins": ["123456789"],
   "bots": [
-    { "token": "123:AAH...", "username": "master_bot", "role": "master" },
-    { "token": "456:AAH...", "username": "proj_bot", "role": "project",
-      "assignedProject": "my-app", "assignedPath": "/home/user/my-app",
+    {
+      "token": "123:AAH...",
+      "username": "master_bot",
+      "role": "master"
+    },
+    {
+      "token": "456:AAH...",
+      "username": "proj_bot",
+      "role": "project",
+      "assignedProject": "my-app",
+      "assignedPath": "/home/user/my-app",
       "accessLevel": "readWrite",
       "permissionMode": "approve",
-      "allowedUsers": ["111111111", "222222222"] }
+      "allowedUsers": ["111111111", "222222222"]
+    }
   ],
   "sharedGroupId": "-100123456789",
   "accessLevel": "readWrite",
