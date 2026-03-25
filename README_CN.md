@@ -1,8 +1,15 @@
 [English](README.md) | [中文](README_CN.md)
 
-# claude-crew
+<p align="center">
+  <img src="docs/banner.png" alt="claude-crew" width="100%">
+</p>
 
-你的远程 Claude Code 小队 —— 一个项目一个 bot，通过 Telegram 统一调度。
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
+  <img src="https://img.shields.io/badge/runtime-Bun_%3E%3D1.0-f9f1e1" alt="Bun">
+  <img src="https://img.shields.io/badge/Claude_Code-CLI-blueviolet" alt="Claude Code">
+  <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
+</p>
 
 Claude Code CLI 的远程补充方案，为个人开发者和小团队设计 —— 不用坐在电脑前也能操控你的 Claude Code 会话。把一个 Telegram 群组变成所有项目的控制中心 —— @提及执行任务、回复继续对话、语音指令、自动看板、定时任务。
 
@@ -80,7 +87,23 @@ Telegram 群组 "我的项目"
 
 > 本项目通过 CLI 模式（`claude -p`）在本地运行 Claude Code，需要在同一台机器上运行。不支持 API key 模式。
 
-## 🚀 安装指南
+## 🚀 快速开始
+
+```bash
+git clone https://github.com/qiudeqiu/claude-crew.git && cd claude-crew && bun install
+bash scripts/setup.sh          # 交互式安装向导
+bash scripts/manage-pool.sh add <主控token> --master
+bash scripts/manage-pool.sh add <项目token>
+bash scripts/manage-pool.sh assign <bot用户名> <项目名> <路径>
+bash scripts/daemon.sh start
+```
+
+> 在 [@BotFather](https://t.me/BotFather) 创建 bot，拉入私密群组，每个 bot 关闭 Group Privacy。
+
+<details>
+<summary><b>详细安装步骤</b></summary>
+
+## 安装指南
 
 ### 第一步：克隆和安装
 
@@ -183,6 +206,8 @@ bash scripts/manage-pool.sh assign api_bot backend ~/backend
 bash scripts/daemon.sh start
 bash scripts/daemon.sh status   # 确认所有机器人在线
 ```
+
+</details>
 
 ## 📱 使用方法
 
@@ -413,6 +438,17 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 - **超时保护**：可配置单次调用超时
 - **进程守护**：watchdog 崩溃自动重启，连续崩溃 5 次后放弃
 - **自重启安全**：项目 bot 修改 daemon 代码时，先完成并回复，最后才重启
+
+## 🤝 参与贡献
+
+欢迎 PR！请先开 issue 讨论你想做的改动。
+
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feat/my-feature`)
+3. 提交修改
+4. Push 并发起 PR
+
+报告 bug 时请附上 daemon 日志 (`daemon.sh logs 100`) 和 `bot-pool.json`（隐去 token）。
 
 ## 🙏 致谢
 

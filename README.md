@@ -1,8 +1,15 @@
 [English](README.md) | [中文](README_CN.md)
 
-# claude-crew
+<p align="center">
+  <img src="docs/banner.png" alt="claude-crew" width="100%">
+</p>
 
-Your remote Claude Code crew — one bot per project, orchestrated from Telegram.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
+  <img src="https://img.shields.io/badge/runtime-Bun_%3E%3D1.0-f9f1e1" alt="Bun">
+  <img src="https://img.shields.io/badge/Claude_Code-CLI-blueviolet" alt="Claude Code">
+  <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
+</p>
 
 A remote supplement to Claude Code CLI, designed for solo developers and small teams who want to control their Claude Code sessions without sitting at the terminal. Turn a Telegram group into a control center for all your projects — @mention to execute, reply to continue, voice commands, auto-dashboard, cron jobs.
 
@@ -80,7 +87,23 @@ Telegram Group "My Projects"
 
 > This project runs Claude Code in CLI mode (`claude -p`) locally. It requires an active Claude Code process on the same machine. API key mode is not supported.
 
-## 🚀 Setup Guide
+## 🚀 Quick Start
+
+```bash
+git clone https://github.com/qiudeqiu/claude-crew.git && cd claude-crew && bun install
+bash scripts/setup.sh          # interactive setup wizard
+bash scripts/manage-pool.sh add <master_token> --master
+bash scripts/manage-pool.sh add <project_token>
+bash scripts/manage-pool.sh assign <bot_username> <project_name> <path>
+bash scripts/daemon.sh start
+```
+
+> Create bots via [@BotFather](https://t.me/BotFather), add them to a private group, and turn off Group Privacy for each bot.
+
+<details>
+<summary><b>Detailed Setup Guide (step by step)</b></summary>
+
+## Setup Guide
 
 ### Step 1: Clone and Install
 
@@ -185,6 +208,8 @@ bash scripts/manage-pool.sh assign api_bot backend ~/backend
 bash scripts/daemon.sh start
 bash scripts/daemon.sh status   # verify all bots online
 ```
+
+</details>
 
 ## 📱 Usage
 
@@ -416,6 +441,17 @@ No analytics, no telemetry, no cloud sync, no remote database.
 - **Timeout**: configurable session timeout per invocation
 - **Process supervision**: watchdog auto-restarts on crash, gives up after 5 rapid crashes
 - **Self-restart safety**: when a project bot modifies daemon code, it finishes work and replies before restarting
+
+## 🤝 Contributing
+
+PRs welcome! Please open an issue first to discuss what you'd like to change.
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Commit your changes
+4. Push and open a PR
+
+For bugs, please include daemon logs (`daemon.sh logs 100`) and your `bot-pool.json` (redact tokens).
 
 ## 🙏 Acknowledgements
 
