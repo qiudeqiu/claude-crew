@@ -69,6 +69,11 @@ case "${1:-help}" in
       pkill -9 -P "$WATCHDOG_PID" 2>/dev/null
       kill -9 "$WATCHDOG_PID" 2>/dev/null
     fi
+    # Kill any orphaned daemon processes (from previous bot-triggered restarts, etc.)
+    pkill -f "bun run.*daemon.ts" 2>/dev/null
+    sleep 1
+    # Force kill if any remain
+    pkill -9 -f "bun run.*daemon.ts" 2>/dev/null
     echo "✅ Daemon 已停止"
     ;;
 
