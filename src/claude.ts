@@ -29,12 +29,13 @@ export async function runClaude(
     disallowedTools?: string;
     appendSystemPrompt?: string;
     onProgress?: (label: string) => void;
+    resume?: boolean;
   } = {},
 ): Promise<ClaudeResult> {
   const cmd = [
     "claude",
     "-p",
-    "--continue",
+    ...(opts.resume !== false ? ["--continue"] : []),
     "--verbose",
     "--output-format",
     "stream-json",
@@ -115,7 +116,8 @@ export async function runClaude(
           durationMs = (event.duration_ms as number) ?? 0;
           numTurns = (event.num_turns as number) ?? 0;
           // Extract per-model token counts + context info
-          const mu = (event.modelUsage as Record<string, Record<string, number>>) ?? {};
+          const mu =
+            (event.modelUsage as Record<string, Record<string, number>>) ?? {};
           for (const [m, info] of Object.entries(mu)) {
             const total =
               (info.inputTokens ?? 0) +
@@ -206,7 +208,9 @@ export async function invokeClaudeAndReply(
   const cfg = getConfig();
 
   if (Date.now() - managed.lastInvoke < cfg.rateLimitMs) {
-    await tgBot.api.sendMessage(chatId, "\u23f3 \u8bf7\u7a0d\u7b49\u51e0\u79d2\u518d\u8bd5").catch(() => {});
+    await tgBot.api
+      .sendMessage(chatId, "\u23f3 \u8bf7\u7a0d\u7b49\u51e0\u79d2\u518d\u8bd5")
+      .catch(() => {});
     return;
   }
   if (daemon.activeInvocations >= cfg.maxConcurrent) {
@@ -313,7 +317,10 @@ export async function invokeClaudeAndReply(
         const approvalId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const toolList = denied.map((t) => `  \u2022 ${t}`).join("\n");
         const keyboard = new InlineKeyboard()
-          .text("\u2705 \u5141\u8bb8\u5e76\u91cd\u8bd5", `approve:yes:${approvalId}`)
+          .text(
+            "\u2705 \u5141\u8bb8\u5e76\u91cd\u8bd5",
+            `approve:yes:${approvalId}`,
+          )
           .text("\u274c \u4e0d\u9700\u8981", `approve:no:${approvalId}`);
 
         await tgBot.api
@@ -337,15 +344,12 @@ export async function invokeClaudeAndReply(
         if (approved) {
           log(`APPROVE: retrying with tools: ${approved}`);
           steps.length = 0;
-          result = await runClaude(
-            dir,
-            "\u8bf7\u7ee7\u7eed\u5b8c\u6210\u521a\u624d\u7684\u4efb\u52a1\uff0c\u9700\u8981\u7684\u5de5\u5177\u5df2\u7ecf\u88ab\u6388\u6743\u4e86\u3002",
-            {
-              allowedTools: approved,
-              appendSystemPrompt: systemPrompt,
-              onProgress,
-            },
-          );
+          result = await runClaude(dir, prompt, {
+            allowedTools: approved,
+            appendSystemPrompt: systemPrompt,
+            onProgress,
+            resume: false,
+          });
         }
       }
     } else {
@@ -363,7 +367,9 @@ export async function invokeClaudeAndReply(
     }
 
     if (!result.text) {
-      await tgBot.api.sendMessage(chatId, "(\u65e0\u8f93\u51fa)").catch(() => {});
+      await tgBot.api
+        .sendMessage(chatId, "(\u65e0\u8f93\u51fa)")
+        .catch(() => {});
       return;
     }
 
