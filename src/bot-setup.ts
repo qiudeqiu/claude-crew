@@ -208,7 +208,7 @@ export function setupBot(managed: ManagedBot): void {
       return;
     }
 
-    if (!config.assignedPath) {
+    if (!config.assignedPath && config.role !== "master") {
       await ctx
         .reply(`\u26a0\ufe0f @${botName} No project assigned`)
         .catch(() => {});
