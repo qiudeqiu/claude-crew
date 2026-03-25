@@ -77,7 +77,7 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 admins = pool.get('admins', [])
 oid = os.environ['OID']
-if not admins and not pool.get('ownerId'):
+if not admins:
     pool['admins'] = [oid]
     json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 " 2>/dev/null

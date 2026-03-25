@@ -286,7 +286,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `admins` | **(required)** | Admin user ID list. Admins can use **all** bots. Replaces legacy `ownerId`. |
+| `admins` | **(required)** | Admin user ID list. Admins can use **all** bots. |
 | `accessLevel` | `"readWrite"` | Global default. `"readWrite"` = full access. `"readOnly"` = read/search only, no writes. |
 | `permissionMode` | `"allowAll"` | Global default (only when readWrite). `"allowAll"` = pre-authorize. `"approve"` = button confirmation. |
 | `memoryIntervalMinutes` | `120` | Auto-save conversation memory for active projects (minutes). `0` = disabled. |
@@ -315,7 +315,6 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 
 > Configuration changes take effect immediately — no daemon restart needed.
 >
-> Backward compatibility: `ownerId` (single string) still works as a fallback if `admins` is not set.
 
 ### manage-pool.sh Commands
 

@@ -15,7 +15,6 @@ export type BotPool = {
   bots: PoolBot[];
   sharedGroupId?: string;
   admins?: string[];
-  ownerId?: string;
   accessLevel?: "readWrite" | "readOnly";
   permissionMode?: "allowAll" | "approve";
   memoryIntervalMinutes?: number;

@@ -77,9 +77,7 @@ export function getConfig() {
 // ── Auth ──
 export function getAdmins(): string[] {
   const pool = loadPool();
-  if (pool.admins && pool.admins.length > 0) return pool.admins;
-  const ownerId = pool.ownerId ?? "";
-  return ownerId ? [ownerId] : [];
+  return pool.admins ?? [];
 }
 
 export function isAdmin(userId: string): boolean {
@@ -108,7 +106,7 @@ export function validateConfig(): void {
   if (admins.length === 0) {
     // Can't use log() here (circular), use stderr
     process.stderr.write(
-      "FATAL: no admins configured — set admins or ownerId in bot-pool.json\n",
+      "FATAL: no admins configured — set admins in bot-pool.json\n",
     );
     process.exit(1);
   }

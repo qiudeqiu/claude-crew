@@ -284,7 +284,7 @@ daemon.sh logs 200   # 最近 200 行
 
 | 字段 | 默认值 | 说明 |
 |------|--------|------|
-| `admins` | **（必填）** | 管理员用户 ID 列表。管理员可用**所有** bot。兼容旧版 `ownerId` |
+| `admins` | **（必填）** | 管理员用户 ID 列表。管理员可用**所有** bot。 |
 | `accessLevel` | `"readWrite"` | 全局默认。`"readWrite"` = 读写。`"readOnly"` = 仅读取搜索，禁止写入 |
 | `permissionMode` | `"allowAll"` | 全局默认（仅 readWrite 时生效）。`"allowAll"` = 预授权。`"approve"` = 按钮确认 |
 | `memoryIntervalMinutes` | `120` | 定时记忆间隔（分钟）。`0` = 关闭 |
@@ -313,7 +313,6 @@ daemon.sh logs 200   # 最近 200 行
 
 > 配置修改后无需重启 daemon — 每次调用时自动重新读取。
 >
-> 向后兼容：`ownerId`（单字符串）在未设置 `admins` 时仍作为兜底。
 
 ### manage-pool.sh 命令
 
