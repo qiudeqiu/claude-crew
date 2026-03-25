@@ -33,11 +33,34 @@ import { updateDashboard } from "./dashboard.js";
 import { checkCron } from "./cron.js";
 import { checkMemory } from "./memory.js";
 
+// ── Singleton: kill any other daemon.ts processes ──
+{
+  const myPid = process.pid;
+  try {
+    const ps = require("child_process")
+      .execSync(`pgrep -f "bun run.*daemon.ts"`, { encoding: "utf8" })
+      .trim();
+    const pids = ps
+      .split("\n")
+      .map((p: string) => parseInt(p, 10))
+      .filter((p: number) => p !== myPid && !isNaN(p));
+    if (pids.length > 0) {
+      for (const pid of pids) {
+        try {
+          process.kill(pid, "SIGTERM");
+        } catch {}
+      }
+      process.stderr.write(
+        `[singleton] killed ${pids.length} stale daemon(s): ${pids.join(", ")}\n`,
+      );
+    }
+  } catch {}
+}
+
 // ── Startup validation & migration ──
 validateConfig();
 const migrated = migrateConfig();
 if (migrated.length > 0) {
-  // Can't use log() before main — use stderr (log file may not exist yet)
   process.stderr.write(`[migrate] added defaults: ${migrated.join(", ")}\n`);
 }
 log(`Auth: ${getAdmins().length} admin(s): ${getAdmins().join(", ")}`);
