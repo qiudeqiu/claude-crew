@@ -1,10 +1,10 @@
 [English](README.md) | [中文](README_CN.md)
 
-# claude-telegram-bots
+# claude-crew
 
-通过 Telegram 机器人池实现多项目 Claude Code 编排。
+你的远程 Claude Code 小队 —— 一个项目一个 bot，通过 Telegram 统一调度。
 
-把一个 Telegram 群组变成你所有 Claude Code 项目的远程控制中心。每个项目分配一个专属机器人 —— @提及执行任务、回复继续对话、语音指令、自动看板、定时任务。
+Claude Code CLI 的远程补充方案，为个人开发者和小团队设计 —— 不用坐在电脑前也能操控你的 Claude Code 会话。把一个 Telegram 群组变成所有项目的控制中心 —— @提及执行任务、回复继续对话、语音指令、自动看板、定时任务。
 
 ## 💡 工作原理
 
@@ -85,8 +85,8 @@ Telegram 群组 "我的项目"
 ### 第一步：克隆和安装
 
 ```bash
-git clone https://github.com/qiudeqiu/claude-telegram-bots.git
-cd claude-telegram-bots
+git clone https://github.com/qiudeqiu/claude-crew.git
+cd claude-crew
 bun install
 ```
 

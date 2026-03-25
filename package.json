@@ -1,7 +1,7 @@
 {
-  "name": "claude-telegram-bots",
-  "version": "0.1.0",
-  "description": "Multi-project Claude Code orchestration via Telegram bot pool",
+  "name": "claude-crew",
+  "version": "0.2.0",
+  "description": "Remote supplement to Claude Code CLI — orchestrate multiple projects from Telegram",
   "type": "module",
   "scripts": {
     "daemon": "bun run src/daemon.ts",
@@ -9,7 +9,7 @@
     "pool": "bash scripts/manage-pool.sh"
   },
   "bin": {
-    "claude-telegram-bots": "scripts/cli.sh"
+    "claude-crew": "scripts/cli.sh"
   },
   "dependencies": {
     "grammy": "^1.41.0"
@@ -20,13 +20,14 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/qiudeqiu/claude-telegram-bots"
+    "url": "https://github.com/qiudeqiu/claude-crew"
   },
   "keywords": [
     "claude-code",
+    "claude-crew",
     "telegram",
-    "multi-agent",
-    "bot-pool",
+    "remote-control",
+    "multi-project",
     "orchestration",
     "ai-agents"
   ]

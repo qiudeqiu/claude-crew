@@ -1,10 +1,10 @@
 [English](README.md) | [中文](README_CN.md)
 
-# claude-telegram-bots
+# claude-crew
 
-Multi-project Claude Code orchestration via Telegram bot pool.
+Your remote Claude Code crew — one bot per project, orchestrated from Telegram.
 
-Turn a Telegram group into a remote control center for all your Claude Code projects. Each project gets its own bot — @mention to execute, reply to continue, voice commands, auto-dashboard, cron jobs.
+A remote supplement to Claude Code CLI, designed for solo developers and small teams who want to control their Claude Code sessions without sitting at the terminal. Turn a Telegram group into a control center for all your projects — @mention to execute, reply to continue, voice commands, auto-dashboard, cron jobs.
 
 ## 💡 How It Works
 
@@ -85,8 +85,8 @@ Telegram Group "My Projects"
 ### Step 1: Clone and Install
 
 ```bash
-git clone https://github.com/qiudeqiu/claude-telegram-bots.git
-cd claude-telegram-bots
+git clone https://github.com/qiudeqiu/claude-crew.git
+cd claude-crew
 bun install
 ```
 
