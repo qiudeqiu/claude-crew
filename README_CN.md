@@ -84,7 +84,7 @@ Master bot 发送置顶看板，一览所有项目状态 —— git 分支、con
 | 置顶看板 | ✅ Git、context、费用、额度 | ❌ | ❌ | ❌ |
 | 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本实现 |
 | 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
-| 权限模式 | ✅ allowAll / approve / readOnly | ✅ | ✅ 配对 + 白名单 | ✅ |
+| 权限模式 | ✅ allowAll / auto / approve / readOnly | ✅ | ✅ 配对 + 白名单 | ✅ |
 | 零安装客户端 | ✅ Telegram 已在手机上 | ❌ 仅终端 | ✅ Telegram | Web app 或原生 app（需扫码配对） |
 | 多 agent 支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini |
 | 端到端加密 | Telegram 传输加密 | 不适用 | Telegram 传输加密 | ✅ 零知识加密 |
@@ -327,6 +327,7 @@ daemon.sh logs 200   # 最近 200 行
 | 模式 | 行为 | 适用场景 |
 |------|------|----------|
 | `allowAll`（默认） | Bash、Edit、Write、Agent、Skill 预授权，无确认提示 | 个人可信环境 |
+| `auto` | 所有操作自动批准，由 Claude Code 后台安全分类器把关。拦截危险操作（生产部署、force push、删除数据等）。需要 Team 计划 + Sonnet/Opus 4.6 | 速度与安全兼顾 |
 | `approve` | 先以只读运行。如需写操作，Telegram 弹出按钮确认后重试 | 多人团队、敏感项目 |
 
 **权限配置矩阵** — 各组合下的实际能力：
@@ -334,6 +335,7 @@ daemon.sh logs 200   # 最近 200 行
 | `accessLevel` | `permissionMode` | 读取/搜索 | Bash（只读） | 编辑/写入 | Bash（写入） | 授权方式 |
 |---------------|------------------|:---------:|:-----------:|:---------:|:----------:|:-------:|
 | `readWrite` | `allowAll` | ✅ | ✅ | ✅ | ✅ | 自动 |
+| `readWrite` | `auto` | ✅ | ✅ | ✅ | ✅ | 后台分类器 |
 | `readWrite` | `approve` | ✅ | ✅ | ✅ | ✅ | 按钮确认 |
 | `readOnly` | （忽略） | ✅ | ✅ | ❌ | ❌ | 不适用 |
 
@@ -391,7 +393,7 @@ daemon.sh logs 200   # 最近 200 行
 |------|--------|------|
 | `admins` | **（必填）** | 管理员用户 ID 列表。管理员可用**所有** bot。 |
 | `accessLevel` | `"readWrite"` | 全局默认。`"readWrite"` = 读写。`"readOnly"` = 仅读取搜索，禁止写入 |
-| `permissionMode` | `"allowAll"` | 全局默认（仅 readWrite 时生效）。`"allowAll"` = 预授权。`"approve"` = 按钮确认 |
+| `permissionMode` | `"allowAll"` | 全局默认（仅 readWrite 时生效）。`"allowAll"` = 预授权。`"auto"` = 后台安全分类器（需 Team 计划）。`"approve"` = 按钮确认 |
 | `memoryIntervalMinutes` | `120` | 定时记忆间隔（分钟）。`0` = 关闭 |
 | `masterExecute` | `false` | 允许 master bot 执行非命令任务 |
 | `maxConcurrent` | `3` | 最大并发 Claude 调用数 |

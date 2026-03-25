@@ -97,7 +97,7 @@ export function getBotAccessLevel(
 
 export function getBotPermissionMode(
   botConfig: PoolBot,
-): "allowAll" | "approve" {
+): "allowAll" | "approve" | "auto" {
   return botConfig.permissionMode ?? loadPool().permissionMode ?? "allowAll";
 }
 

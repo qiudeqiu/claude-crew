@@ -7,7 +7,7 @@ export type PoolBot = {
   assignedProject?: string;
   assignedPath?: string;
   accessLevel?: "readWrite" | "readOnly";
-  permissionMode?: "allowAll" | "approve";
+  permissionMode?: "allowAll" | "approve" | "auto";
   allowedUsers?: string[];
 };
 
@@ -16,7 +16,7 @@ export type BotPool = {
   sharedGroupId?: string;
   admins?: string[];
   accessLevel?: "readWrite" | "readOnly";
-  permissionMode?: "allowAll" | "approve";
+  permissionMode?: "allowAll" | "approve" | "auto";
   memoryIntervalMinutes?: number;
   masterExecute?: boolean;
   maxConcurrent?: number;

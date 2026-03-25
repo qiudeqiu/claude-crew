@@ -84,7 +84,7 @@ Master bot posts a pinned dashboard showing all projects at a glance — git sta
 | Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
-| Permission modes | ✅ allowAll / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
+| Permission modes | ✅ allowAll / auto / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
 | Zero-install client | ✅ Telegram already on your phone | ❌ Terminal only | ✅ Telegram | Web app or native app (QR pairing) |
 | Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
 | E2E encryption | Telegram transport | N/A | Telegram transport | ✅ Zero-knowledge |
@@ -329,6 +329,7 @@ Permissions are configured in two layers. Set globally or per-bot in `bot-pool.j
 | Mode | Behavior | Best for |
 |------|----------|----------|
 | `allowAll` (default) | Bash, Edit, Write, Agent, Skill pre-authorized. No prompts. | Trusted single-user setup |
+| `auto` | All actions auto-approved with Claude Code's background safety classifier. Blocks dangerous ops (production deploys, force push, data deletion). Requires Team plan + Sonnet/Opus 4.6. | Balance of speed and safety |
 | `approve` | First run read-only. If writes needed, Telegram button asks for approval. Retry with approved tools. | Multi-user teams, sensitive projects |
 
 **Permission Matrix** — what each combination allows:
@@ -336,6 +337,7 @@ Permissions are configured in two layers. Set globally or per-bot in `bot-pool.j
 | `accessLevel` | `permissionMode` | Read/Search | Bash (read) | Edit/Write | Bash (write) | Approval |
 |---------------|------------------|:-----------:|:-----------:|:----------:|:------------:|:--------:|
 | `readWrite` | `allowAll` | ✅ | ✅ | ✅ | ✅ | Auto |
+| `readWrite` | `auto` | ✅ | ✅ | ✅ | ✅ | Background classifier |
 | `readWrite` | `approve` | ✅ | ✅ | ✅ | ✅ | Button confirm |
 | `readOnly` | (ignored) | ✅ | ✅ | ❌ | ❌ | N/A |
 
@@ -393,7 +395,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 |-------|---------|-------------|
 | `admins` | **(required)** | Admin user ID list. Admins can use **all** bots. |
 | `accessLevel` | `"readWrite"` | Global default. `"readWrite"` = full access. `"readOnly"` = read/search only, no writes. |
-| `permissionMode` | `"allowAll"` | Global default (only when readWrite). `"allowAll"` = pre-authorize. `"approve"` = button confirmation. |
+| `permissionMode` | `"allowAll"` | Global default (only when readWrite). `"allowAll"` = pre-authorize. `"auto"` = background safety classifier (Team plan required). `"approve"` = button confirmation. |
 | `memoryIntervalMinutes` | `120` | Auto-save conversation memory for active projects (minutes). `0` = disabled. |
 | `masterExecute` | `false` | Allow master bot to run Claude tasks (not just admin commands). |
 | `maxConcurrent` | `3` | Maximum parallel Claude invocations across all bots. |

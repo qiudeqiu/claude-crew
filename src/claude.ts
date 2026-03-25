@@ -27,6 +27,7 @@ export async function runClaude(
   opts: {
     allowedTools?: string;
     disallowedTools?: string;
+    permissionMode?: string;
     appendSystemPrompt?: string;
     onProgress?: (label: string) => void;
     resume?: boolean;
@@ -39,6 +40,7 @@ export async function runClaude(
     "--verbose",
     "--output-format",
     "stream-json",
+    ...(opts.permissionMode ? ["--permission-mode", opts.permissionMode] : []),
     ...(opts.appendSystemPrompt
       ? ["--append-system-prompt", opts.appendSystemPrompt]
       : []),
@@ -390,6 +392,13 @@ export async function invokeClaudeAndReply(
           }
         }
       }
+    } else if (mode === "auto") {
+      // ReadWrite + Auto: use Claude Code's auto mode with background classifier
+      result = await runClaude(dir, prompt, {
+        permissionMode: "auto",
+        appendSystemPrompt: systemPrompt,
+        onProgress,
+      });
     } else {
       // ReadWrite + AllowAll: pre-authorize everything
       result = await runClaude(dir, prompt, {
