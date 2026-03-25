@@ -11,7 +11,27 @@
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
 </p>
 
-Claude Code CLI 的远程补充方案，为个人开发者和小团队设计 —— 不用坐在电脑前也能操控你的 Claude Code 会话。把一个 Telegram 群组变成所有项目的控制中心 —— @提及执行任务、回复继续对话、语音指令、自动看板、定时任务。
+Claude Code CLI 的远程补充方案，为个人开发者和小团队设计 —— 不用坐在电脑前也能操控你的 Claude Code 会话。
+
+## 🎯 三种使用模式
+
+### 1:1 专注模式
+
+私聊 bot，一对一操控项目 —— 一个 bot、一个项目、互不干扰。
+
+![Focus Mode](docs/scene-focus.png)
+
+### 1:N 集中模式
+
+把所有 bot 拉进一个群，@mention 切换项目 —— 不用来回跳转。
+
+![Hub Mode](docs/scene-hub.png)
+
+### 团队协作模式
+
+2–10 人共用一个群，per-bot 权限控制谁能操作什么项目 —— 协作不冲突。
+
+![Team Mode](docs/scene-team.png)
 
 ## 💡 工作原理
 

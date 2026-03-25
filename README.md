@@ -11,7 +11,27 @@
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
 </p>
 
-A remote supplement to Claude Code CLI, designed for solo developers and small teams who want to control their Claude Code sessions without sitting at the terminal. Turn a Telegram group into a control center for all your projects — @mention to execute, reply to continue, voice commands, auto-dashboard, cron jobs.
+A remote supplement to Claude Code CLI, designed for solo developers and small teams who want to control their Claude Code sessions without sitting at the terminal.
+
+## 🎯 Three Ways to Use
+
+### 1:1 Focus Mode
+
+DM a project bot for private, focused control — one bot, one project, no interference.
+
+![Focus Mode](docs/scene-focus.png)
+
+### 1:N Hub Mode
+
+Pull all bots into one group. @mention to switch between projects — no context switching.
+
+![Hub Mode](docs/scene-hub.png)
+
+### Team Mode
+
+2–10 people in a shared group. Per-bot permissions keep everyone in their lane.
+
+![Team Mode](docs/scene-team.png)
 
 ## 💡 How It Works
 
