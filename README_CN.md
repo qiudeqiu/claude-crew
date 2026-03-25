@@ -328,34 +328,7 @@ manage-pool.sh init-group                   # 自动检测群组
 
 ## 架构
 
-```
-watchdog.sh（进程守护）
-└── daemon.ts（单进程）
-    ├── grammY 长轮询所有机器人
-    ├── @提及 / 回复 → claude -p --continue --allowedTools --output-format stream-json
-    │   ├── stream-json 事件 → 群里实时进度消息
-    │   ├── result 事件 → context/费用/token 统计，发送结果，删除进度
-    │   └── rate_limit_event → 额度重置倒计时
-    ├── 看板：置顶消息，可配置刷新间隔
-    │   ├── 每个项目：git 状态、context 用量条、模型、费用
-    │   ├── 汇总：调用次数、耗时、费用、各模型 token
-    │   └── 额度重置倒计时
-    ├── 定时记忆：为活跃项目自动保存上下文（可配置间隔）
-    ├── 定时任务：每分钟检查
-    ├── 重启检测：daemon 被项目 bot 重启时通知群组
-    └── 语音：ffmpeg（ogg→wav）→ whisper → 文字 → claude
-
-~/.claude/channels/telegram/（状态目录）
-├── bot-pool.json        # 唯一配置文件：token、权限、设置
-├── cron.json            # 定时任务
-├── dashboard-msg.json   # 置顶看板消息 ID
-├── daemon.pid           # 运行中的进程 ID
-├── restart-note.json    # （临时）项目 bot 重启时的上下文
-├── daemon.ts            → 符号链接到 repo/src/daemon.ts
-├── daemon.sh            → 符号链接到 repo/scripts/daemon.sh
-├── watchdog.sh          → 符号链接到 repo/scripts/watchdog.sh
-└── manage-pool.sh       → 符号链接到 repo/scripts/manage-pool.sh
-```
+![Architecture](docs/architecture.png)
 
 ### 进程守护
 

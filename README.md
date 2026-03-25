@@ -331,34 +331,7 @@ manage-pool.sh set-mode <allowAll|approve>   # Set permission mode
 
 ## Architecture
 
-```
-watchdog.sh (process supervisor)
-└── daemon.ts (single process)
-    ├── grammY long-polling for all bots
-    ├── @mention / reply → claude -p --continue --allowedTools --output-format stream-json
-    │   ├── stream-json events → real-time progress message in group
-    │   ├── result event → context/cost/token stats, send response, delete progress
-    │   └── rate_limit_event → capture reset countdown
-    ├── Dashboard: pinned message, auto-refresh every 30 min
-    │   ├── Per-project: git status, context window usage bar, model, cost
-    │   ├── Aggregate: total invocations, duration, cost, tokens by model
-    │   └── Rate limit reset countdown
-    ├── Periodic memory: auto-save for active projects (configurable interval)
-    ├── Cron: checks scheduled tasks every minute
-    ├── Restart detection: notifies group when daemon was restarted by a project bot
-    └── Voice: ffmpeg (ogg→wav) → whisper → text → claude
-
-~/.claude/channels/telegram/ (state directory)
-├── bot-pool.json        # single config file: tokens, permissions, settings
-├── cron.json            # scheduled tasks
-├── dashboard-msg.json   # pinned dashboard message ID
-├── daemon.pid           # running process ID
-├── restart-note.json    # (transient) restart context from project bot
-├── daemon.ts            → symlink to repo/src/daemon.ts
-├── daemon.sh            → symlink to repo/scripts/daemon.sh
-├── watchdog.sh          → symlink to repo/scripts/watchdog.sh
-└── manage-pool.sh       → symlink to repo/scripts/manage-pool.sh
-```
+![Architecture](docs/architecture.png)
 
 ### Process Supervision
 
