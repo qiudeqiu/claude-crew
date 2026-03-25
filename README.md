@@ -80,10 +80,10 @@ Master bot posts a pinned dashboard showing all projects at a glance — git sta
 | Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | ❌ Solo only |
 | @mention routing in group | ✅ | ❌ | ❌ | ❌ |
 | Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
-| Cron scheduler | ✅ | ❌ | ❌ | ❌ |
+| Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
 | Permission modes | ✅ allowAll / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
-| Zero-install client | ✅ Telegram already on your phone | ❌ Terminal only | ✅ Telegram | ❌ Requires native app |
+| Zero-install client | ✅ Telegram already on your phone | ❌ Terminal only | ✅ Telegram | Web app or native app (QR pairing) |
 | Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
 | E2E encryption | Telegram transport | N/A | Telegram transport | ✅ Zero-knowledge |
 | Native mobile UX | Telegram (good enough) | ❌ | Telegram | ✅ Polished native app |

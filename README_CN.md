@@ -80,10 +80,10 @@ Master bot 发送置顶看板，一览所有项目状态 —— git 分支、con
 | 团队协作 | ✅ 2-10 人，按 bot 配权限 | ❌ 仅单人 | ❌ 仅单人 | ❌ 仅单人 |
 | 群内 @mention 路由 | ✅ | ❌ | ❌ | ❌ |
 | 置顶看板 | ✅ Git、context、费用、额度 | ❌ | ❌ | ❌ |
-| 定时任务 | ✅ | ❌ | ❌ | ❌ |
+| 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本实现 |
 | 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
 | 权限模式 | ✅ allowAll / approve / readOnly | ✅ | ✅ 配对 + 白名单 | ✅ |
-| 零安装客户端 | ✅ Telegram 已在手机上 | ❌ 仅终端 | ✅ Telegram | ❌ 需装原生 app |
+| 零安装客户端 | ✅ Telegram 已在手机上 | ❌ 仅终端 | ✅ Telegram | Web app 或原生 app（需扫码配对） |
 | 多 agent 支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini |
 | 端到端加密 | Telegram 传输加密 | 不适用 | Telegram 传输加密 | ✅ 零知识加密 |
 | 原生移动端体验 | Telegram（够用） | ❌ | Telegram | ✅ 精致原生 app |
