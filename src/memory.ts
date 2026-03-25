@@ -41,7 +41,7 @@ export async function checkMemory(): Promise<void> {
         "--continue",
         "--output-format",
         "text",
-        "\u8bf7\u56de\u987e\u672c\u6b21\u4f1a\u8bdd\u7684\u5173\u952e\u5185\u5bb9\uff0c\u5c06\u91cd\u8981\u7684\u51b3\u7b56\u3001\u53d8\u66f4\u548c\u5f85\u529e\u4e8b\u9879\u4fdd\u5b58\u5230\u9879\u76ee\u7684 memory \u4e2d\uff08\u4f7f\u7528 auto memory \u673a\u5236\uff09\u3002\u53ea\u4fdd\u5b58\u6709\u4ef7\u503c\u7684\u4fe1\u606f\uff0c\u4e0d\u8981\u4fdd\u5b58\u7410\u788e\u7684\u7ec6\u8282\u3002\u5b8c\u6210\u540e\u7b80\u77ed\u8bf4\u660e\u4fdd\u5b58\u4e86\u4ec0\u4e48\u3002",
+        "Review the key content of this session and save important decisions, changes, and pending items to the project's memory (using the auto memory mechanism). Only save valuable information, not trivial details. When done, briefly describe what was saved.",
         "--allowedTools",
         "Bash,Edit,Write,Read,Glob,Grep",
       ],
@@ -64,7 +64,7 @@ export async function checkMemory(): Promise<void> {
   // Notify via master bot
   if (saving.length > 0 && daemon.masterBot && chatId) {
     await daemon.masterBot.bot.api
-      .sendMessage(chatId, `\ud83e\udde0 \u5b9a\u65f6\u8bb0\u5fc6: ${saving.join(", ")}`)
+      .sendMessage(chatId, `\ud83e\udde0 Periodic memory: ${saving.join(", ")}`)
       .catch(() => {});
   }
 }

@@ -148,7 +148,7 @@ async function main(): Promise<void> {
         const note = JSON.parse(readFileSync(RESTART_NOTE_FILE, "utf8"));
         await daemon.masterBot.bot.api.sendMessage(
           pool.sharedGroupId,
-          `🔄 Daemon 已重启\n📂 ${note.project ?? "?"}\n📝 ${note.summary ?? ""}`,
+          `🔄 Daemon restarted\n📂 ${note.project ?? "?"}\n📝 ${note.summary ?? ""}`,
         );
         unlinkSync(RESTART_NOTE_FILE);
       } else {
@@ -158,7 +158,7 @@ async function main(): Promise<void> {
         if (tail.includes("Shutting down...") && tail.includes("INVOKE:")) {
           await daemon.masterBot.bot.api.sendMessage(
             pool.sharedGroupId,
-            `🔄 Daemon 已重启（由项目 bot 触发）`,
+            `🔄 Daemon restarted (triggered by project bot)`,
           );
         }
       }

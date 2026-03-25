@@ -1,12 +1,12 @@
 #!/bin/bash
 # Bot Pool Manager for Telegram multi-project setup
 # Usage:
-#   ./manage-pool.sh add <token> [--master]  — 添加 bot（--master 标记为主控）
-#   ./manage-pool.sh list                    — 查看所有 bot 及分配状态
-#   ./manage-pool.sh release [project]       — 释放指定项目的 bot（或全部）
-#   ./manage-pool.sh remove <username>       — 从池中移除 bot
-#   ./manage-pool.sh set-group <group_id>    — 设置共享群组 ID
-#   ./manage-pool.sh init-group              — 从已添加的 bot 自动检测群组
+#   ./manage-pool.sh add <token> [--master]  — Add bot (--master marks as master)
+#   ./manage-pool.sh list                    — View all bots and assignments
+#   ./manage-pool.sh release [project]       — Release bot from project (or all)
+#   ./manage-pool.sh remove <username>       — Remove bot from pool
+#   ./manage-pool.sh set-group <group_id>    — Set shared group ID
+#   ./manage-pool.sh init-group              — Auto-detect group from added bots
 
 POOL_FILE="$HOME/.claude/channels/telegram/bot-pool.json"
 
@@ -25,9 +25,9 @@ case "${1:-help}" in
       if [ "$2" = "--master" ]; then TOKEN="$3"; fi
     fi
     if [ -z "$TOKEN" ]; then
-      echo "用法: $0 add <bot_token> [--master]"
-      echo "从 @BotFather 获取 token，格式: 123456789:AAH..."
-      echo "  --master  标记为主控 bot（管理全局配置）"
+      echo "Usage: $0 add <bot_token> [--master]"
+      echo "Get token from @BotFather, format: 123456789:AAH..."
+      echo "  --master  Mark as master bot (global management)"
       exit 1
     fi
 
@@ -35,7 +35,7 @@ case "${1:-help}" in
     RESULT=$(curl -s "https://api.telegram.org/bot${TOKEN}/getMe")
     OK=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('ok',False))" 2>/dev/null)
     if [ "$OK" != "True" ]; then
-      echo "❌ Token 无效: $RESULT"
+      echo "❌ Invalid token: $RESULT"
       exit 1
     fi
 
@@ -48,7 +48,7 @@ pool = json.load(open(os.environ['POOL']))
 print(any(b['token'] == os.environ['TK'] for b in pool['bots']))
 " 2>/dev/null)
     if [ "$EXISTS" = "True" ]; then
-      echo "⚠️  @${USERNAME} 已在池中"
+      echo "⚠️  @${USERNAME} already in pool"
       exit 0
     fi
 
@@ -68,27 +68,27 @@ if os.environ['RL'] == 'project':
 pool['bots'].append(bot)
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 "
-    ROLE_LABEL="项目 bot"
-    if [ "$IS_MASTER" = "true" ]; then ROLE_LABEL="🏠 主控 bot"; fi
-    echo "✅ 已添加 @${USERNAME} 为 ${ROLE_LABEL}"
-    echo "   现在把 @${USERNAME} 拉入你的管理群组"
-    echo "   然后运行: $0 set-group <group_id>"
+    ROLE_LABEL="Project bot"
+    if [ "$IS_MASTER" = "true" ]; then ROLE_LABEL="🏠 Master bot"; fi
+    echo "✅ Added @${USERNAME} as ${ROLE_LABEL}"
+    echo "   Now add @${USERNAME} to your management group"
+    echo "   Then run: $0 set-group <group_id>"
     ;;
 
   list)
-    echo "📋 Bot 池状态:"
+    echo "📋 Bot Pool Status:"
     echo "────────────────────────────────────────"
     python3 -c "
 import json
 pool = json.load(open('$POOL_FILE'))
-gid = pool.get('sharedGroupId', '(未设置)')
-print(f'  共享群组: {gid}')
+gid = pool.get('sharedGroupId', '(not set)')
+print(f'  Shared group: {gid}')
 print()
 if not pool['bots']:
-    print('  (空) 使用 ./manage-pool.sh add <token> 添加 bot')
+    print('  (empty) Use ./manage-pool.sh add <token> to add a bot')
 for i, b in enumerate(pool['bots']):
-    role = '🏠 主控' if b.get('role') == 'master' else '📂 项目'
-    status = '🟢 ' + b.get('assignedProject', '') if b.get('assignedProject') else '⚪ 空闲'
+    role = '🏠 Master' if b.get('role') == 'master' else '📂 Project'
+    status = '🟢 ' + b.get('assignedProject', '') if b.get('assignedProject') else '⚪ Idle'
     username = '@' + b.get('username', '?')
     path = b.get('assignedPath', '')
     print(f'  {i+1}. [{role}] {username:20s} {status}')
@@ -96,7 +96,7 @@ for i, b in enumerate(pool['bots']):
         print(f'     📁 {path}')
 " 2>/dev/null
     echo "────────────────────────────────────────"
-    echo "共 $(python3 -c "import json; print(len(json.load(open('$POOL_FILE'))['bots']))" 2>/dev/null) 个 bot"
+    echo "Total: $(python3 -c "import json; print(len(json.load(open('$POOL_FILE'))['bots']))" 2>/dev/null) bots"
     ;;
 
   release)
@@ -108,19 +108,19 @@ prj = os.environ['PRJ']
 count = 0
 for b in pool['bots']:
     if b.get('assignedProject') and (prj == '' or b.get('assignedProject') == prj):
-        print(f\"  释放 @{b.get('username','?')} ← {b.get('assignedProject')}\")
+        print(f\"  Released @{b.get('username','?')} <- {b.get('assignedProject')}\")
         b.pop('assignedProject', None)
         b.pop('assignedPath', None)
         count += 1
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
-print(f'✅ 已释放 {count} 个 bot')
+print(f'✅ Released {count} bot(s)')
 " 2>/dev/null
     ;;
 
   remove)
     USERNAME="$2"
     if [ -z "$USERNAME" ]; then
-      echo "用法: $0 remove <username>"
+      echo "Usage: $0 remove <username>"
       exit 1
     fi
     USERNAME="${USERNAME#@}"
@@ -133,22 +133,22 @@ pool['bots'] = [b for b in pool['bots'] if b.get('username') != un]
 after = len(pool['bots'])
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 if before > after:
-    print(f'✅ 已移除 @{un}')
+    print(f'✅ Removed @{un}')
 else:
-    print(f'⚠️  未找到 @{un}')
+    print(f'⚠️  Not found: @{un}')
 " 2>/dev/null
     ;;
 
   set-group)
     GROUP_ID="$2"
     if [ -z "$GROUP_ID" ]; then
-      echo "用法: $0 set-group <group_id>"
+      echo "Usage: $0 set-group <group_id>"
       echo ""
-      echo "获取 group_id 的方法:"
-      echo "  1. 把一个 bot 拉入群组"
-      echo "  2. 在群里发一条消息"
-      echo "  3. 运行: curl -s https://api.telegram.org/bot<TOKEN>/getUpdates | python3 -m json.tool"
-      echo "  4. 找到 chat.id（负数，如 -1001234567890）"
+      echo "How to get group_id:"
+      echo "  1. Add a bot to the group"
+      echo "  2. Send a message in the group"
+      echo "  3. Run: curl -s https://api.telegram.org/bot<TOKEN>/getUpdates | python3 -m json.tool"
+      echo "  4. Find chat.id (negative number, e.g. -1001234567890)"
       exit 1
     fi
     POOL="$POOL_FILE" GID="$GROUP_ID" python3 -c "
@@ -156,7 +156,7 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 pool['sharedGroupId'] = os.environ['GID']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
-print(f'✅ 共享群组已设置为: ' + os.environ['GID'])
+print(f'✅ Shared group set to: ' + os.environ['GID'])
 " 2>/dev/null
     ;;
 
@@ -165,16 +165,16 @@ print(f'✅ 共享群组已设置为: ' + os.environ['GID'])
     PROJECT="$3"
     PROJPATH="$4"
     if [ -z "$USERNAME" ] || [ -z "$PROJECT" ] || [ -z "$PROJPATH" ]; then
-      echo "用法: $0 assign <bot_username> <project_name> <path>"
+      echo "Usage: $0 assign <bot_username> <project_name> <path>"
       echo ""
-      echo "示例: $0 assign frontend_bot my-app ~/my-app"
+      echo "Example: $0 assign frontend_bot my-app ~/my-app"
       exit 1
     fi
     USERNAME="${USERNAME#@}"
     # Resolve path
     PROJPATH=$(cd "$PROJPATH" 2>/dev/null && pwd || echo "$PROJPATH")
     if [ ! -d "$PROJPATH" ]; then
-      echo "⚠️  路径不存在: $PROJPATH"
+      echo "⚠️  Path does not exist: $PROJPATH"
       exit 1
     fi
     POOL="$POOL_FILE" UN="$USERNAME" PRJ="$PROJECT" PP="$PROJPATH" python3 -c "
@@ -189,7 +189,7 @@ for b in pool['bots']:
         found = True
         break
 if not found:
-    print(f'⚠️  未找到 @{un}，请先 add')
+    print(f'⚠️  Not found: @{un}, run add first')
 else:
     json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
     print(f'✅ @{un} → {os.environ[\"PRJ\"]} ({os.environ[\"PP\"]})')
@@ -197,7 +197,7 @@ else:
     ;;
 
   init-group)
-    echo "🔍 自动检测群组..."
+    echo "🔍 Auto-detecting group..."
     # Try each bot's getUpdates to find a group chat
     FOUND=""
     python3 -c "
@@ -230,21 +230,21 @@ pool = json.load(open(os.environ['POOL']))
 pool['sharedGroupId'] = os.environ['GID']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 " 2>/dev/null
-      echo "✅ 检测到群组: $TITLE ($GID)"
+      echo "✅ Group detected: $TITLE ($GID)"
     else
-      echo "⚠️  未检测到群组"
-      echo "   确保至少一个 bot 已加入群组且有人发过消息"
-      echo "   或手动设置: $0 set-group <group_id>"
+      echo "⚠️  No group detected"
+      echo "   Make sure at least one bot has joined a group and someone sent a message"
+      echo "   Or set manually: $0 set-group <group_id>"
     fi
     ;;
 
   set-mode)
     MODE="$2"
     if [ "$MODE" != "allowAll" ] && [ "$MODE" != "approve" ]; then
-      echo "用法: $0 set-mode <allowAll|approve>"
+      echo "Usage: $0 set-mode <allowAll|approve>"
       echo ""
-      echo "  allowAll — 预授权所有工具（默认，响应快）"
-      echo "  approve  — 写操作需要审批后执行（更安全）"
+      echo "  allowAll — Pre-authorize all tools (default, faster)"
+      echo "  approve  — Write ops require approval (safer)"
       exit 1
     fi
     POOL="$POOL_FILE" MD="$MODE" python3 -c "
@@ -252,39 +252,39 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 pool['permissionMode'] = os.environ['MD']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
-print(f'✅ 权限模式已设置为: ' + os.environ['MD'])
+print(f'✅ Permission mode set to: ' + os.environ['MD'])
 " 2>/dev/null
-    echo "   重启 daemon 生效: daemon.sh restart"
+    echo "   Restart daemon to apply: daemon.sh restart"
     ;;
 
   help|*)
-    echo "🤖 Telegram Bot 池管理 (多项目架构)"
+    echo "🤖 Telegram Bot Pool Manager (multi-project architecture)"
     echo ""
-    echo "用法:"
-    echo "  $0 add <token>            添加项目 bot"
-    echo "  $0 add <token> --master   添加主控 bot（全局管理）"
-    echo "  $0 list                   查看所有 bot 及分配状态"
-    echo "  $0 assign <user> <name> <path>  分配项目到 bot"
-    echo "  $0 release [project]      释放 bot（不指定则释放全部）"
-    echo "  $0 remove <username>      从池中移除 bot"
-    echo "  $0 set-group <group_id>   设置共享群组 ID"
-    echo "  $0 init-group             自动检测群组 ID"
-    echo "  $0 set-mode <mode>        设置权限模式 (allowAll/approve)"
+    echo "Usage:"
+    echo "  $0 add <token>            Add project bot"
+    echo "  $0 add <token> --master   Add master bot (global management)"
+    echo "  $0 list                   View all bots and assignments"
+    echo "  $0 assign <user> <name> <path>  Assign project to bot"
+    echo "  $0 release [project]      Release bot (all if unspecified)"
+    echo "  $0 remove <username>      Remove bot from pool"
+    echo "  $0 set-group <group_id>   Set shared group ID"
+    echo "  $0 init-group             Auto-detect group ID"
+    echo "  $0 set-mode <mode>        Set permission mode (allowAll/approve)"
     echo ""
-    echo "快速开始:"
-    echo "  1. 在 Telegram @BotFather 创建 bot（建议 3-5 个项目 bot + 1 个主控 bot）"
+    echo "Quick start:"
+    echo "  1. Create bots in Telegram via @BotFather (recommended: 3-5 project bots + 1 master bot)"
     echo "  2. $0 add <master_token> --master"
     echo "  3. $0 add <project_token1>"
     echo "  4. $0 add <project_token2>"
-    echo "  5. 把所有 bot 拉入同一个 Telegram 群组"
-    echo "  6. $0 set-group <group_id> 或 $0 init-group"
+    echo "  5. Add all bots to the same Telegram group"
+    echo "  6. $0 set-group <group_id> or $0 init-group"
     echo "  7. $0 assign <bot_user> <project> <path>"
     echo "  8. daemon.sh start"
     echo ""
-    echo "架构:"
-    echo "  🏠 主控 bot — 全局管理，查看所有项目，管理 agents/skills"
-    echo "  📂 项目 bot — 每个项目一个，只能写自己的项目，可读其他项目"
-    echo "  📋 委托机制 — 需要改别的项目时，通过群组 @目标bot 委托执行"
-    echo "  🧠 定时记忆 — 每 2 小时自动提醒保存会话记忆"
+    echo "Architecture:"
+    echo "  🏠 Master bot — Global management, view all projects, manage agents/skills"
+    echo "  📂 Project bot — One per project, can only write to its own project, can read others"
+    echo "  📋 Delegation — Need to modify another project? @mention the target bot in the group"
+    echo "  🧠 Periodic memory — Auto-saves session memory every 2 hours"
     ;;
 esac

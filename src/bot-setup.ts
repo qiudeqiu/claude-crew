@@ -2,11 +2,7 @@ import type { ReactionTypeEmoji } from "grammy/types";
 import type { ManagedBot } from "./types.js";
 import { canUseBot, isAdmin, loadPool, WRITE_TOOLS } from "./config.js";
 import { log } from "./logger.js";
-import {
-  splitMessage,
-  downloadPhoto,
-  transcribeVoice,
-} from "./helpers.js";
+import { splitMessage, downloadPhoto, transcribeVoice } from "./helpers.js";
 import { pendingApprovals } from "./state.js";
 import { invokeClaudeAndReply } from "./claude.js";
 import { handleMasterCommand } from "./commands.js";
@@ -31,7 +27,7 @@ export function setupBot(managed: ManagedBot): void {
   // Approval callback handler (approve mode)
   tgBot.on("callback_query:data", async (ctx) => {
     if (!ctx.from || !isAdmin(String(ctx.from.id))) {
-      await ctx.answerCallbackQuery({ text: "\u26d4 \u4ec5\u7ba1\u7406\u5458\u53ef\u64cd\u4f5c" });
+      await ctx.answerCallbackQuery({ text: "\u26d4 Admin only" });
       return;
     }
     const data = ctx.callbackQuery.data;
@@ -40,7 +36,7 @@ export function setupBot(managed: ManagedBot): void {
     const [, action, approvalId] = data.split(":");
     const pending = pendingApprovals.get(approvalId!);
     if (!pending) {
-      await ctx.answerCallbackQuery({ text: "\u23f0 \u5df2\u8fc7\u671f" });
+      await ctx.answerCallbackQuery({ text: "\u23f0 Expired" });
       return;
     }
 
@@ -49,8 +45,8 @@ export function setupBot(managed: ManagedBot): void {
     pending.resolve(approved ? WRITE_TOOLS : null);
 
     const label = approved
-      ? "\u2705 \u5df2\u6388\u6743\uff0c\u91cd\u65b0\u6267\u884c\u4e2d..."
-      : "\u274c \u5df2\u8df3\u8fc7";
+      ? "\u2705 Authorized, retrying..."
+      : "\u274c Skipped";
     await ctx.answerCallbackQuery({ text: label });
     const msg = ctx.callbackQuery.message;
     if (msg && "text" in msg && msg.text) {
@@ -83,7 +79,7 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (managed.busy) {
-      await ctx.reply("\u23f3 \u6b63\u5728\u5904\u7406\u4e0a\u4e00\u6761\u6d88\u606f...").catch(() => {});
+      await ctx.reply("\u23f3 Processing previous message...").catch(() => {});
       return;
     }
 
@@ -120,7 +116,7 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (managed.busy) {
-      await ctx.reply("\u23f3 \u6b63\u5728\u5904\u7406\u4e0a\u4e00\u6761\u6d88\u606f...").catch(() => {});
+      await ctx.reply("\u23f3 Processing previous message...").catch(() => {});
       return;
     }
 
@@ -131,7 +127,7 @@ export function setupBot(managed: ManagedBot): void {
       .catch(() => {});
 
     const statusMsg = await tgBot.api
-      .sendMessage(chatId, "\ud83c\udfa4 \u6b63\u5728\u8bc6\u522b\u8bed\u97f3...")
+      .sendMessage(chatId, "\ud83c\udfa4 Transcribing voice...")
       .catch(() => null);
 
     const result = await transcribeVoice(
@@ -145,7 +141,7 @@ export function setupBot(managed: ManagedBot): void {
           .editMessageText(
             chatId,
             statusMsg.message_id,
-            "\u26a0\ufe0f \u8bed\u97f3\u8bc6\u522b\u5931\u8d25",
+            "\u26a0\ufe0f Voice transcription failed",
           )
           .catch(() => {});
       }
@@ -157,7 +153,7 @@ export function setupBot(managed: ManagedBot): void {
         .editMessageText(
           chatId,
           statusMsg.message_id,
-          `\ud83c\udfa4 \u8bc6\u522b\u7ed3\u679c: ${result.text}`,
+          `\ud83c\udfa4 Transcription: ${result.text}`,
         )
         .catch(() => {});
     }
@@ -210,13 +206,13 @@ export function setupBot(managed: ManagedBot): void {
 
     if (!config.assignedPath) {
       await ctx
-        .reply(`\u26a0\ufe0f @${botName} \u5c1a\u672a\u7ed1\u5b9a\u9879\u76ee`)
+        .reply(`\u26a0\ufe0f @${botName} No project assigned`)
         .catch(() => {});
       return;
     }
 
     if (managed.busy) {
-      await ctx.reply("\u23f3 \u6b63\u5728\u5904\u7406\u4e0a\u4e00\u6761\u6d88\u606f...").catch(() => {});
+      await ctx.reply("\u23f3 Processing previous message...").catch(() => {});
       return;
     }
 
@@ -230,16 +226,20 @@ export function setupBot(managed: ManagedBot): void {
     // Include quoted message content if replying to a message
     let fullText = text;
     let quotedImagePath: string | undefined;
-    const replyMsg = ctx.message.reply_to_message as Record<string, unknown> | undefined;
+    const replyMsg = ctx.message.reply_to_message as
+      | Record<string, unknown>
+      | undefined;
     if (replyMsg) {
       const quotedText =
         (replyMsg.text as string) ?? (replyMsg.caption as string) ?? "";
       const parts: string[] = [];
 
-      if (quotedText) parts.push(`\u6587\u5b57: ${quotedText}`);
+      if (quotedText) parts.push(`Text: ${quotedText}`);
 
       // Quoted photo
-      const replyPhotos = replyMsg.photo as Array<{ file_id: string }> | undefined;
+      const replyPhotos = replyMsg.photo as
+        | Array<{ file_id: string }>
+        | undefined;
       if (replyPhotos?.length) {
         const best = replyPhotos[replyPhotos.length - 1];
         quotedImagePath = await downloadPhoto(
@@ -247,17 +247,19 @@ export function setupBot(managed: ManagedBot): void {
           config.token,
           best.file_id,
         );
-        if (quotedImagePath) parts.push(`\u56fe\u7247: ${quotedImagePath}`);
+        if (quotedImagePath) parts.push(`Image: ${quotedImagePath}`);
       }
 
       // Quoted document/file
-      const replyDoc = replyMsg.document as {
-        file_name?: string;
-        mime_type?: string;
-      } | undefined;
+      const replyDoc = replyMsg.document as
+        | {
+            file_name?: string;
+            mime_type?: string;
+          }
+        | undefined;
       if (replyDoc) {
         parts.push(
-          `\u6587\u4ef6: ${replyDoc.file_name ?? "\u672a\u77e5"} (${replyDoc.mime_type ?? ""})`,
+          `File: ${replyDoc.file_name ?? "unknown"} (${replyDoc.mime_type ?? ""})`,
         );
       }
 
@@ -269,17 +271,16 @@ export function setupBot(managed: ManagedBot): void {
           config.token,
           replyVoice.file_id,
         );
-        if (voiceResult?.text) parts.push(`\u8bed\u97f3\u5185\u5bb9: ${voiceResult.text}`);
+        if (voiceResult?.text) parts.push(`Voice: ${voiceResult.text}`);
       }
 
       // Quoted video note / sticker
-      if (replyMsg.video_note) parts.push(`[\u89c6\u9891\u6d88\u606f]`);
+      if (replyMsg.video_note) parts.push(`[Video message]`);
       const replySticker = replyMsg.sticker as { emoji?: string } | undefined;
-      if (replySticker)
-        parts.push(`[\u8d34\u7eb8: ${replySticker.emoji ?? ""}]`);
+      if (replySticker) parts.push(`[Sticker: ${replySticker.emoji ?? ""}]`);
 
       if (parts.length > 0) {
-        fullText = `[\u5f15\u7528\u6d88\u606f]\n${parts.join("\n")}\n\n${text}`;
+        fullText = `[Quoted message]\n${parts.join("\n")}\n\n${text}`;
       }
     }
 

@@ -234,7 +234,7 @@ export async function invokeClaudeAndReply(
 
   if (Date.now() - managed.lastInvoke < cfg.rateLimitMs) {
     await tgBot.api
-      .sendMessage(chatId, "\u23f3 \u8bf7\u7a0d\u7b49\u51e0\u79d2\u518d\u8bd5")
+      .sendMessage(chatId, "\u23f3 Please wait a few seconds")
       .catch(() => {});
     return;
   }
@@ -242,7 +242,7 @@ export async function invokeClaudeAndReply(
     await tgBot.api
       .sendMessage(
         chatId,
-        `\u23f3 ${daemon.activeInvocations}/${cfg.maxConcurrent} \u4efb\u52a1\u6267\u884c\u4e2d\uff0c\u8bf7\u7a0d\u540e`,
+        `\u23f3 ${daemon.activeInvocations}/${cfg.maxConcurrent} tasks running, please wait`,
       )
       .catch(() => {});
     return;
@@ -305,7 +305,7 @@ export async function invokeClaudeAndReply(
   try {
     const cleanMsg = userMessage.replace(/@\w+/g, "").trim();
     const prompt = imagePath
-      ? `\u7528\u6237\u53d1\u9001\u4e86\u4e00\u5f20\u56fe\u7247\uff0c\u8def\u5f84: ${imagePath}\u3002\u8bf7\u5148\u7528 Read \u5de5\u5177\u67e5\u770b\u8fd9\u5f20\u56fe\u7247\uff0c\u7136\u540e\u56de\u7b54: ${cleanMsg || "\u5206\u6790\u8fd9\u5f20\u56fe\u7247"}`
+      ? `The user sent an image at path: ${imagePath}. Please use the Read tool to view the image first, then respond: ${cleanMsg || "Analyze this image"}`
       : cleanMsg;
 
     const isDaemonProject = existsSync(join(dir, "src", "daemon.ts"));
@@ -343,16 +343,13 @@ export async function invokeClaudeAndReply(
         const approvalId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const toolList = denied.map((t) => `  \u2022 ${t}`).join("\n");
         const keyboard = new InlineKeyboard()
-          .text(
-            "\u2705 \u5141\u8bb8\u5e76\u91cd\u8bd5",
-            `approve:yes:${approvalId}`,
-          )
-          .text("\u274c \u4e0d\u9700\u8981", `approve:no:${approvalId}`);
+          .text("\u2705 Allow & retry", `approve:yes:${approvalId}`)
+          .text("\u274c Skip", `approve:no:${approvalId}`);
 
         await tgBot.api
           .sendMessage(
             chatId,
-            `\ud83d\udd12 Claude \u9700\u8981\u4ee5\u4e0b\u5de5\u5177\u6743\u9650:\n${toolList}\n\n\u5141\u8bb8\u540e\u5c06\u91cd\u65b0\u6267\u884c`,
+            `\ud83d\udd12 Requires tool permissions:\n${toolList}\n\nWill retry after approval`,
             { reply_markup: keyboard },
           )
           .catch(() => {});
@@ -373,7 +370,7 @@ export async function invokeClaudeAndReply(
           result = await runClaude(
             dir,
             prompt +
-              "\n\n\u5de5\u5177\u5df2\u6388\u6743\u3002\u8bf7\u6267\u884c\u5b8c\u6bd5\u540e\u7528\u6587\u5b57\u56de\u590d\u6267\u884c\u7ed3\u679c\uff0c\u4e0d\u8981\u53ea\u8fd4\u56de\u5de5\u5177\u8c03\u7528\u3002",
+              "\n\nTools authorized. After execution, reply with a text summary of the results instead of only returning tool calls.",
             {
               allowedTools: approved,
               appendSystemPrompt: systemPrompt,
@@ -388,7 +385,7 @@ export async function invokeClaudeAndReply(
           if (!result.text && result.numTurns > 0) {
             result = {
               ...result,
-              text: "\u2705 \u4efb\u52a1\u5df2\u6267\u884c\uff08Claude \u8c03\u7528\u4e86\u5de5\u5177\u4f46\u672a\u751f\u6210\u6587\u5b57\u56de\u590d\uff09",
+              text: "\u2705 Task executed (Claude used tools but produced no text response)",
             };
           }
         }
@@ -408,9 +405,7 @@ export async function invokeClaudeAndReply(
     }
 
     if (!result.text) {
-      await tgBot.api
-        .sendMessage(chatId, "(\u65e0\u8f93\u51fa)")
-        .catch(() => {});
+      await tgBot.api.sendMessage(chatId, "(no output)").catch(() => {});
       return;
     }
 
@@ -439,7 +434,7 @@ export async function invokeClaudeAndReply(
     const msg = err instanceof Error ? err.message : String(err);
     log(`FAIL: ${project} — ${msg}`);
     await tgBot.api
-      .sendMessage(chatId, `\u26a0\ufe0f \u5931\u8d25: ${msg.slice(0, 200)}`)
+      .sendMessage(chatId, `\u26a0\ufe0f Failed: ${msg.slice(0, 200)}`)
       .catch(() => {});
   } finally {
     if (pendingProgressFlush) clearTimeout(pendingProgressFlush);

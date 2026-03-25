@@ -1,11 +1,11 @@
 #!/bin/bash
 # Telegram Bot Pool Daemon manager
 # Usage:
-#   ./daemon.sh start   — 启动 daemon（后台运行）
-#   ./daemon.sh stop    — 停止 daemon
-#   ./daemon.sh status  — 查看状态
-#   ./daemon.sh logs    — 查看日志
-#   ./daemon.sh restart — 重启
+#   ./daemon.sh start   — Start daemon (background)
+#   ./daemon.sh stop    — Stop daemon
+#   ./daemon.sh status  — View status
+#   ./daemon.sh logs    — View logs
+#   ./daemon.sh restart — Restart
 
 DAEMON_DIR="$HOME/.claude/channels/telegram"
 PID_FILE="$DAEMON_DIR/daemon.pid"
@@ -16,7 +16,7 @@ case "${1:-help}" in
   start)
     # Pre-flight: ensure Claude Code CLI is available
     if ! command -v claude >/dev/null 2>&1; then
-      echo "❌ Claude Code CLI 未安装 — 请先安装并登录"
+      echo "❌ Claude Code CLI not installed — please install and log in first"
       echo "   https://claude.ai/claude-code"
       exit 1
     fi
@@ -25,13 +25,13 @@ case "${1:-help}" in
     if [ -f "$PID_FILE" ]; then
       PID=$(cat "$PID_FILE")
       if kill -0 "$PID" 2>/dev/null; then
-        echo "⚠️  Daemon 已在运行 (PID: $PID)"
+        echo "⚠️  Daemon already running (PID: $PID)"
         exit 0
       fi
       rm -f "$PID_FILE"
     fi
 
-    echo "🚀 启动 daemon..."
+    echo "🚀 Starting daemon..."
     # Watchdog: auto-restart on crash, give up after 5 rapid crashes
     WATCHDOG_SCRIPT="$(cd "$(dirname "$0")" && pwd)/watchdog.sh"
     nohup "$WATCHDOG_SCRIPT" "$DAEMON_DIR" "$DAEMON_SCRIPT" "$PID_FILE" "$LOG_FILE" >> "$LOG_FILE" 2>&1 &
@@ -40,11 +40,11 @@ case "${1:-help}" in
     sleep 1
 
     if kill -0 "$DAEMON_PID" 2>/dev/null; then
-      echo "✅ Daemon 已启动 (PID: $DAEMON_PID)"
-      echo "   日志: $LOG_FILE"
-      echo "   停止: $0 stop"
+      echo "✅ Daemon started (PID: $DAEMON_PID)"
+      echo "   Logs: $LOG_FILE"
+      echo "   Stop: $0 stop"
     else
-      echo "❌ Daemon 启动失败，查看日志:"
+      echo "❌ Daemon failed to start, check logs:"
       tail -5 "$LOG_FILE"
       exit 1
     fi
@@ -52,20 +52,20 @@ case "${1:-help}" in
 
   stop)
     if [ ! -f "$PID_FILE" ]; then
-      echo "⚠️  Daemon 未运行"
+      echo "⚠️  Daemon not running"
       exit 0
     fi
     WATCHDOG_PID=$(cat "$PID_FILE")
     # Remove PID file FIRST so watchdog knows this is intentional stop
     rm -f "$PID_FILE"
-    echo "🛑 停止 daemon..."
+    echo "🛑 Stopping daemon..."
     # Kill watchdog and all its descendants (bun, claude, etc.)
     pkill -P "$WATCHDOG_PID" 2>/dev/null  # kill children first
     kill "$WATCHDOG_PID" 2>/dev/null       # then watchdog
     sleep 2
     # Force kill if still alive
     if kill -0 "$WATCHDOG_PID" 2>/dev/null; then
-      echo "   强制终止..."
+      echo "   Force killing..."
       pkill -9 -P "$WATCHDOG_PID" 2>/dev/null
       kill -9 "$WATCHDOG_PID" 2>/dev/null
     fi
@@ -74,7 +74,7 @@ case "${1:-help}" in
     sleep 1
     # Force kill if any remain
     pkill -9 -f "bun run.*daemon.ts" 2>/dev/null
-    echo "✅ Daemon 已停止"
+    echo "✅ Daemon stopped"
     ;;
 
   restart)
@@ -88,19 +88,19 @@ case "${1:-help}" in
       PID=$(cat "$PID_FILE")
       if kill -0 "$PID" 2>/dev/null; then
         UPTIME=$(ps -o etime= -p "$PID" 2>/dev/null | xargs)
-        echo "🟢 Daemon 运行中"
+        echo "🟢 Daemon running"
         echo "   PID: $PID"
-        echo "   运行时间: $UPTIME"
+        echo "   Uptime: $UPTIME"
         echo ""
         # Show bot pool status
         "$DAEMON_DIR/manage-pool.sh" list
       else
-        echo "🔴 Daemon 已退出 (stale PID: $PID)"
+        echo "🔴 Daemon exited (stale PID: $PID)"
         rm -f "$PID_FILE"
       fi
     else
-      echo "🔴 Daemon 未运行"
-      echo "   启动: $0 start"
+      echo "🔴 Daemon not running"
+      echo "   Start: $0 start"
     fi
     ;;
 
@@ -108,45 +108,45 @@ case "${1:-help}" in
     if [ -f "$LOG_FILE" ]; then
       tail -${2:-50} "$LOG_FILE"
     else
-      echo "暂无日志"
+      echo "No logs yet"
     fi
     ;;
 
   help|*)
     echo "🤖 Telegram Bot Pool Daemon v3"
     echo ""
-    echo "终端管理:"
-    echo "  $0 start     启动 daemon"
-    echo "  $0 stop      停止 daemon"
-    echo "  $0 restart   重启 daemon"
-    echo "  $0 status    查看运行状态"
-    echo "  $0 logs [N]  查看日志（默认 50 行）"
+    echo "Terminal management:"
+    echo "  $0 start     Start daemon"
+    echo "  $0 stop      Stop daemon"
+    echo "  $0 restart   Restart daemon"
+    echo "  $0 status    View running status"
+    echo "  $0 logs [N]  View logs (default 50 lines)"
     echo ""
-    echo "Telegram 群组命令（@主控bot）:"
-    echo "  help                          帮助信息"
-    echo "  status                        刷新项目看板"
-    echo "  search <关键词>               搜索所有项目代码"
-    echo "  restart                       重启 daemon"
-    echo "  cron list                     查看定时任务"
-    echo "  cron add @bot HH:MM 任务      每天定时执行"
-    echo "  cron add @bot */N 任务        每 N 分钟执行"
-    echo "  cron del <id>                 删除定时任务"
+    echo "Telegram group commands (@master bot):"
+    echo "  help                          Help info"
+    echo "  status                        Refresh dashboard"
+    echo "  search <keyword>              Search all project code"
+    echo "  restart                       Restart daemon"
+    echo "  cron list                     View scheduled tasks"
+    echo "  cron add @bot HH:MM task      Daily scheduled task"
+    echo "  cron add @bot */N task        Every N minutes"
+    echo "  cron del <id>                 Delete scheduled task"
     echo ""
-    echo "工作原理:"
-    echo "  Daemon 持有所有 bot token，保持 long-polling。"
-    echo "  当你在 Telegram @某个 bot 发消息时："
-    echo "    1. Daemon 检测到消息"
-    echo "    2. 生成 claude -p 调用（预授权工具）"
-    echo "    3. 实时解析 stream-json 事件流"
-    echo "    4. 群里显示工具调用进度"
-    echo "    5. 完成后发送结果到群里"
+    echo "How it works:"
+    echo "  Daemon holds all bot tokens and maintains long-polling."
+    echo "  When you @mention a bot in Telegram:"
+    echo "    1. Daemon detects the message"
+    echo "    2. Spawns claude -p call (pre-authorized tools)"
+    echo "    3. Parses stream-json events in real time"
+    echo "    4. Shows tool call progress in the group"
+    echo "    5. Sends result to the group when done"
     echo ""
-    echo "  不 @ 时发消息 → 被忽略（需要 @ 指定 bot）"
+    echo "  Messages without @ → ignored (must @mention a bot)"
     echo ""
-    echo "安全措施:"
-    echo "  - 仅 OWNER_ID 的消息触发会话"
-    echo "  - 最多 3 个并发任务"
-    echo "  - 工具预授权（Bash/Edit/Write/Agent/Skill）"
-    echo "  - 每任务 10 分钟超时"
+    echo "Security:"
+    echo "  - Only OWNER_ID messages trigger sessions"
+    echo "  - Max 3 concurrent tasks"
+    echo "  - Pre-authorized tools (Bash/Edit/Write/Agent/Skill)"
+    echo "  - 10 minute timeout per task"
     ;;
 esac
