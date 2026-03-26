@@ -25,17 +25,17 @@
 
 | 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 | Happy Coder |
 |-----|:-:|:-:|:-:|:-:|
-| 多项目编排 | ✅ 一个 bot 一个项目 | ❌ 单会话 | ❌ 单 bot | ❌ 单会话 |
-| 团队协作 | ✅ 2-10 人，按 bot 配权限 | ❌ 仅单人 | ❌ 仅单人 | ❌ 仅单人 |
+| 多项目编排 | ✅ 一个 bot 一个项目 | ❌ 单会话 | ❌ 单 bot | ✅ 多会话 |
+| 团队协作 | ✅ 2-10 人，按 bot 配权限 | ❌ 仅单人 | ❌ 仅单人 | 部分（配对编程） |
 | 手机端设置 | ✅ 引导式向导 | ❌ 仅终端 | ❌ 终端配置 | ✅ 扫码配对 |
-| 手机端管理 | ✅ 按钮菜单管 bot/配置/用户 | ❌ | ❌ | 部分 |
-| 安装后免终端 | ✅ 只需一次 setup.sh | ❌ 一直要终端 | ❌ | ✅ |
+| 手机端管理 | ✅ 按钮菜单管 bot/配置/用户 | ✅ claude.ai / 移动端 | ✅ Telegram | 部分 |
+| 安装后免终端 | ✅ 只需一次 setup.sh | ❌ 需终端启动 | ❌ | ✅ |
 | 群内 @mention 路由 | ✅ | ❌ | ❌ | ❌ |
 | 置顶看板 | ✅ Git、context、费用、命令参考 | ❌ | ❌ | ❌ |
 | 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本实现 |
 | 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
 | 权限模式 | ✅ allowAll / auto / approve / readOnly | ✅ | ✅ 配对 + 白名单 | ✅ |
-| 客户端要求 | Telegram（任意设备） | 仅终端 | Telegram | 原生 app / Web app |
+| 客户端要求 | Telegram（任意设备） | Web / 移动端 app | Telegram | 原生 app / Web app |
 | 多 agent 支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini |
 
 ## 目录

@@ -25,17 +25,17 @@ A remote Claude Code solution for cross-device, multi-project parallel developme
 
 | Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
 |-----------|:-:|:-:|:-:|:-:|
-| Multi-project orchestration | ✅ One bot per project | ❌ Single session | ❌ Single bot | ❌ Single session |
-| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | ❌ Solo only |
+| Multi-project orchestration | ✅ One bot per project | ❌ Single session | ❌ Single bot | ✅ Multi-session |
+| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial (pair programming) |
 | Setup from phone | ✅ Guided wizard in Telegram | ❌ Terminal only | ❌ Terminal config | ✅ QR pairing |
-| Manage from phone | ✅ Button menus for bots, config, users | ❌ | ❌ | Partial |
-| Zero terminal after setup | ✅ One-time `setup.sh`, then all in Telegram | ❌ Always terminal | ❌ | ✅ |
+| Manage from phone | ✅ Button menus for bots, config, users | ✅ claude.ai / mobile app | ✅ Telegram | Partial |
+| Zero terminal after setup | ✅ One-time `setup.sh`, then all in Telegram | ❌ Terminal to start | ❌ | ✅ |
 | @mention routing in group | ✅ | ❌ | ❌ | ❌ |
 | Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
 | Permission modes | ✅ allowAll / auto / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
-| Client requirement | Telegram (any device) | Terminal only | Telegram | Native app / Web app |
+| Client requirement | Telegram (any device) | Web / Mobile app | Telegram | Native app / Web app |
 | Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
 
 ## Table of Contents
