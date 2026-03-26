@@ -344,8 +344,7 @@ export function optDesc(lang: Lang) {
         pm_allowAll: "预授权所有工具 — 无提示，最快执行",
         pm_approve:
           "首次只读运行；需要写入时，发送 Telegram 按钮请求管理员批准",
-        pm_auto:
-          "Claude Code 后台安全分类器自动批准安全操作，阻止危险操作（需 Team 计划）",
+        pm_auto: "Claude Code 后台安全分类器自动批准安全操作，阻止危险操作",
         pm_inherit: "使用全局 permissionMode 设置",
         al_readWrite: "完全访问 — 读文件、写文件、运行命令",
         al_readOnly: "仅读取/搜索 — 不可编辑文件，不可执行写命令",
@@ -359,7 +358,7 @@ export function optDesc(lang: Lang) {
         pm_approve:
           "First run read-only; if writes needed, sends a Telegram button for admin approval",
         pm_auto:
-          "Claude Code\u2019s background safety classifier auto-approves safe ops, blocks dangerous ones (requires Team plan)",
+          "Claude Code\u2019s background safety classifier auto-approves safe ops, blocks dangerous ones",
         pm_inherit: "Use the global permissionMode setting",
         al_readWrite:
           "Full access \u2014 read files, write files, run commands",
@@ -375,7 +374,7 @@ export function optDesc(lang: Lang) {
 export function fieldHint(lang: Lang) {
   return lang === "zh"
     ? {
-        mc: "推荐: Pro 计划 2-3, Team 计划 3-5",
+        mc: "推荐: Pro 计划 2-3, Max 计划 3-5",
         rl: "0 = 无冷却, 5 = 推荐默认值",
         st: "10 = 默认值, 长任务可调高",
         di: "30 = 默认值。值越小 API 调用越频繁",
@@ -385,7 +384,7 @@ export function fieldHint(lang: Lang) {
         ph: "如 /home/user/projects/my-api",
       }
     : {
-        mc: "Recommended: 2-3 for Pro plan, 3-5 for Team plan",
+        mc: "Recommended: 2-3 for Pro plan, 3-5 for Max plan",
         rl: "0 = no cooldown, 5 = recommended default",
         st: "10 = default, increase for long-running tasks",
         di: "30 = default. Lower values increase API calls",

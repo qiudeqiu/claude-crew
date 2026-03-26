@@ -345,7 +345,7 @@ daemon.sh logs 200   # 最近 200 行
 | 模式 | 行为 | 适用场景 |
 |------|------|----------|
 | `allowAll`（默认） | Bash、Edit、Write、Agent、Skill 预授权，无确认提示 | 个人可信环境 |
-| `auto` | 所有操作自动批准，由 Claude Code 后台安全分类器把关。拦截危险操作（生产部署、force push、删除数据等）。需要 Team 计划 + Sonnet/Opus 4.6 | 速度与安全兼顾 |
+| `auto` | 所有操作自动批准，由 Claude Code 后台安全分类器把关。拦截危险操作（生产部署、force push、删除数据等）。需要 Pro 或 Max 计划 | 速度与安全兼顾 |
 | `approve` | 先以只读运行。如需写操作，Telegram 弹出按钮确认后重试 | 多人团队、敏感项目 |
 
 **权限配置矩阵** — 各组合下的实际能力：
@@ -412,7 +412,7 @@ daemon.sh logs 200   # 最近 200 行
 |------|--------|------|
 | `admins` | **（必填）** | 管理员用户 ID 列表。管理员可用**所有** bot。 |
 | `accessLevel` | `"readWrite"` | 全局默认。`"readWrite"` = 读写。`"readOnly"` = 仅读取搜索，禁止写入 |
-| `permissionMode` | `"allowAll"` | 全局默认（仅 readWrite 时生效）。`"allowAll"` = 预授权。`"auto"` = 后台安全分类器（需 Team 计划）。`"approve"` = 按钮确认 |
+| `permissionMode` | `"allowAll"` | 全局默认（仅 readWrite 时生效）。`"allowAll"` = 预授权。`"auto"` = 后台安全分类器（需 Pro 或 Max 计划）。`"approve"` = 按钮确认 |
 | `language` | `"en"` | 菜单语言。`"en"` 或 `"zh"`。可通过菜单按钮切换。 |
 | `memoryIntervalMinutes` | `120` | 定时记忆间隔（分钟）。`0` = 关闭 |
 | `masterExecute` | `false` | 允许 master bot 执行非命令任务 |
