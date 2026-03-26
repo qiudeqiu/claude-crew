@@ -15,7 +15,11 @@
 
 一个 bot，组建你的 Claude Code 项目管理团队。
 
-claude-crew 让一个 Telegram 机器人变成完整的项目管理团队。
+claude-crew 让一个 Telegram 机器人变成完整的项目管理团队。**主控机器人**是你的控制中心 —— 添加项目机器人、修改配置、管理团队权限、监控所有项目状态，全部通过手机上的按钮菜单完成。每个**项目机器人**对接一个代码仓库，@提及即可执行 Claude Code 任务。一人群控，或邀请团队 —— 同一个群，所有项目，各司其职。
+
+<p align="center">
+  <img src="docs/concept.png" alt="claude-crew concept" width="100%">
+</p>
 
 ## 目录
 
@@ -32,12 +36,6 @@ claude-crew 让一个 Telegram 机器人变成完整的项目管理团队。
 - [常见问题](#-常见问题)
 - [安全与隐私](#-安全与隐私)
 - [参与贡献](#-参与贡献)
-
-**主控机器人**是你的控制中心 —— 添加项目机器人、修改配置、管理团队权限、监控所有项目状态，全部通过手机上的按钮菜单完成。每个**项目机器人**对接一个代码仓库，@提及即可执行 Claude Code 任务。一人群控，或邀请团队 —— 同一个群，所有项目，各司其职。
-
-<p align="center">
-  <img src="docs/concept.png" alt="claude-crew concept" width="100%">
-</p>
 
 ## 🎯 三种使用模式
 
