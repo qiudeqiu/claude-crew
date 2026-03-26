@@ -160,7 +160,16 @@ echo ""
 echo "  The bot auto-detects the group and starts the setup wizard."
 echo ""
 echo "Terminal commands:"
-echo "  daemon.sh status    View status"
-echo "  daemon.sh logs      View logs"
-echo "  daemon.sh restart   Restart"
-echo "  daemon.sh stop      Stop"
+echo "  daemon.sh status         View status"
+echo "  daemon.sh logs           View logs"
+echo "  daemon.sh restart        Restart"
+echo "  daemon.sh stop           Stop"
+echo "  daemon.sh autostart      Enable auto-start on login"
+echo "  daemon.sh no-autostart   Disable auto-start"
+echo ""
+
+# 10. Optional: auto-start on boot
+read -p "🔄 Enable auto-start on login? (y/N): " AUTOSTART
+if [ "$AUTOSTART" = "y" ] || [ "$AUTOSTART" = "Y" ]; then
+  "$INSTALL_DIR/daemon.sh" autostart
+fi

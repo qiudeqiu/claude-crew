@@ -112,15 +112,105 @@ case "${1:-help}" in
     fi
     ;;
 
+  autostart)
+    DAEMON_SH="$(cd "$(dirname "$0")" && pwd)/daemon.sh"
+    OS="$(uname)"
+    if [ "$OS" = "Darwin" ]; then
+      PLIST="$HOME/Library/LaunchAgents/com.claude-crew.daemon.plist"
+      mkdir -p "$HOME/Library/LaunchAgents"
+      cat > "$PLIST" << PLISTEOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.claude-crew.daemon</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$DAEMON_SH</string>
+    <string>start</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <false/>
+  <key>StandardOutPath</key>
+  <string>$LOG_FILE</string>
+  <key>StandardErrorPath</key>
+  <string>$LOG_FILE</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>$PATH</string>
+    <key>HOME</key>
+    <string>$HOME</string>
+  </dict>
+</dict>
+</plist>
+PLISTEOF
+      launchctl load "$PLIST" 2>/dev/null
+      echo "✅ Auto-start enabled (macOS launchd)"
+      echo "   Daemon will start automatically on login"
+      echo "   Disable: $0 no-autostart"
+    elif command -v systemctl >/dev/null 2>&1; then
+      UNIT_DIR="$HOME/.config/systemd/user"
+      mkdir -p "$UNIT_DIR"
+      cat > "$UNIT_DIR/claude-crew.service" << SVCEOF
+[Unit]
+Description=claude-crew Telegram Bot Pool Daemon
+After=network-online.target
+
+[Service]
+Type=forking
+ExecStart=$DAEMON_SH start
+ExecStop=$DAEMON_SH stop
+Restart=on-failure
+RestartSec=10
+Environment=PATH=$PATH
+Environment=HOME=$HOME
+
+[Install]
+WantedBy=default.target
+SVCEOF
+      systemctl --user daemon-reload
+      systemctl --user enable claude-crew.service
+      echo "✅ Auto-start enabled (systemd user service)"
+      echo "   Daemon will start automatically on login"
+      echo "   Disable: $0 no-autostart"
+    else
+      echo "❌ Unsupported platform — only macOS (launchd) and Linux (systemd) are supported"
+      exit 1
+    fi
+    ;;
+
+  no-autostart)
+    OS="$(uname)"
+    if [ "$OS" = "Darwin" ]; then
+      PLIST="$HOME/Library/LaunchAgents/com.claude-crew.daemon.plist"
+      launchctl unload "$PLIST" 2>/dev/null
+      rm -f "$PLIST"
+      echo "✅ Auto-start disabled (macOS)"
+    elif command -v systemctl >/dev/null 2>&1; then
+      systemctl --user disable claude-crew.service 2>/dev/null
+      rm -f "$HOME/.config/systemd/user/claude-crew.service"
+      systemctl --user daemon-reload
+      echo "✅ Auto-start disabled (Linux)"
+    else
+      echo "⚠️  No auto-start config found"
+    fi
+    ;;
+
   help|*)
     echo "🤖 Telegram Bot Pool Daemon v3"
     echo ""
     echo "Terminal management:"
-    echo "  $0 start     Start daemon"
-    echo "  $0 stop      Stop daemon"
-    echo "  $0 restart   Restart daemon"
-    echo "  $0 status    View running status"
-    echo "  $0 logs [N]  View logs (default 50 lines)"
+    echo "  $0 start          Start daemon"
+    echo "  $0 stop           Stop daemon"
+    echo "  $0 restart        Restart daemon"
+    echo "  $0 status         View running status"
+    echo "  $0 logs [N]       View logs (default 50 lines)"
+    echo "  $0 autostart      Enable auto-start on login"
+    echo "  $0 no-autostart   Disable auto-start"
     echo ""
     echo "Telegram group commands (@master bot):"
     echo "  help                          Help info"

@@ -342,13 +342,17 @@ bash scripts/daemon.sh restart
 ### Daemon 管理
 
 ```bash
-daemon.sh start      # 启动（后台运行）
-daemon.sh stop       # 停止
-daemon.sh restart    # 重启
-daemon.sh status     # 状态 + 机器人池概览
-daemon.sh logs       # 最近 50 行日志
-daemon.sh logs 200   # 最近 200 行
+daemon.sh start          # 启动（后台运行）
+daemon.sh stop           # 停止
+daemon.sh restart        # 重启
+daemon.sh status         # 状态 + 机器人池概览
+daemon.sh logs           # 最近 50 行日志
+daemon.sh logs 200       # 最近 200 行
+daemon.sh autostart      # 启用开机自启
+daemon.sh no-autostart   # 禁用开机自启
 ```
+
+> **开机自启：** daemon 默认不会在系统重启后自动恢复。运行 `daemon.sh autostart` 将其注册为系统登录启动项（macOS launchd / Linux systemd 用户服务）。无需 sudo — 以你的用户账户运行。安装脚本会在安装末尾询问是否启用。
 
 ## ⚙️ 配置
 

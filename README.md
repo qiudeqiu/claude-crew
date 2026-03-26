@@ -333,13 +333,17 @@ All master commands are accessible via **button menu** or text. Send `menu` to t
 ### Daemon Management
 
 ```bash
-daemon.sh start      # Start daemon (background)
-daemon.sh stop       # Stop daemon
-daemon.sh restart    # Restart
-daemon.sh status     # Status + bot pool overview
-daemon.sh logs       # Last 50 log lines
-daemon.sh logs 200   # Last 200 lines
+daemon.sh start          # Start daemon (background)
+daemon.sh stop           # Stop daemon
+daemon.sh restart        # Restart
+daemon.sh status         # Status + bot pool overview
+daemon.sh logs           # Last 50 log lines
+daemon.sh logs 200       # Last 200 lines
+daemon.sh autostart      # Enable auto-start on login
+daemon.sh no-autostart   # Disable auto-start
 ```
+
+> **Auto-start:** The daemon does not survive system restarts by default. Run `daemon.sh autostart` to register it with your OS login (macOS launchd / Linux systemd user service). No sudo required — it runs under your user account. The setup script will ask you about this during installation.
 
 ## ⚙️ Configuration
 
