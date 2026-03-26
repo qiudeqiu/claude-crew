@@ -29,7 +29,7 @@ A remote Claude Code solution for cross-device, multi-project parallel developme
 | Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial (pair programming) |
 | Setup from phone | ✅ Guided wizard in Telegram | ❌ Terminal only | ❌ Terminal config | ✅ QR pairing |
 | Manage from phone | ✅ Button menus for bots, config, users | ✅ claude.ai / mobile app | ✅ Telegram | Partial |
-| Zero terminal after setup | ✅ One-time `setup.sh`, then all in Telegram | ❌ Terminal to start | ❌ | ✅ |
+| Background daemon | ✅ Runs in background with watchdog + auto-start | ❌ Terminal must stay open | ❌ Terminal must stay open | ❌ Terminal must stay open |
 | @mention routing in group | ✅ | ❌ | ❌ | ❌ |
 | Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
