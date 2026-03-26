@@ -31,7 +31,9 @@ claude-crew turns a single Telegram bot into a complete project management team.
 - [Architecture](#-architecture)
 - [Troubleshooting](#-troubleshooting)
 - [Security & Privacy](#-security--privacy)
-- [Contributing](#-contributing) Your **master bot** is the control center — add project bots, configure settings, manage team access, and monitor all projects from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code tasks on @mention. Go solo or invite your team — one group, all projects, everyone in their lane.
+- [Contributing](#-contributing)
+
+Your **master bot** is the control center — add project bots, configure settings, manage team access, and monitor all projects from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code tasks on @mention. Go solo or invite your team — one group, all projects, everyone in their lane.
 
 ## 🎯 Three Ways to Use
 
