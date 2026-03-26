@@ -113,7 +113,11 @@ See exactly what Claude is doing as it works — file reads, edits, commands, al
 
 ### Flexible permissions
 
-Switch between pre-authorized mode (fast, no prompts) and approval mode (button confirm before writes) — per bot or globally.
+Three permission modes, configurable per bot or globally:
+
+- **allowAll** — all tools pre-authorized, no prompts, fastest execution
+- **auto** — Claude Code's background safety classifier auto-approves safe ops, blocks dangerous ones
+- **approve** — first run read-only; if writes needed, sends a Telegram button for admin approval
 
 ![Permission](docs/feat-permission.png)
 
