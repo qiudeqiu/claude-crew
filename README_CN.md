@@ -245,59 +245,46 @@ bash scripts/setup.sh
 
 > `setup.sh` 只设置主控机器人。项目机器人之后通过 `@master bots` 在 Telegram 中添加，或用 `manage-pool.sh add` 在终端添加。
 
-### 第四步：创建 Telegram 群组
+### 第四步：Telegram 设置
 
 1. 在 Telegram 创建一个**私密群组**
-2. 把**所有机器人**（主控 + 项目）拉进群
-3. **关键步骤** —— 对每个机器人在 @BotFather 中：
+2. 把主控机器人拉进群
+3. **关键步骤** —— 在 @BotFather 中关闭 Group Privacy：
 
    `/mybots` → 选择机器人 → **Bot Settings** → **Group Privacy** → **Turn off**
 
    > 不关闭 Group Privacy，机器人无法看到群消息！
 
-### 第五步：设置群组 ID
+4. 在群里发 `@master setup` —— 向导引导你完成：
+   - 设置此群组为共享控制群组
+   - 通过 @BotFather 创建项目机器人
+   - 分配到项目目录
+   - 一键重启上线
 
-在群里发一条消息，然后：
+5. 用 `@master menu` 进行后续管理
+
+搞定。后续一切在 Telegram 中操作。
+
+<details>
+<summary><b>终端替代方案（可选）</b></summary>
+
+如果你更习惯终端操作：
 
 ```bash
-# 自动检测
+# 设置群组 ID
 bash scripts/manage-pool.sh init-group
 
-# 或手动设置
-bash scripts/manage-pool.sh set-group <群组ID>
-```
+# 添加项目机器人
+bash scripts/manage-pool.sh add <项目token>
 
-> **替代方案：** 在群里发 `@master setup` 即可交互式设置群组 ID。
-
-手动获取群组 ID：
-```bash
-curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" \
-  | python3 -c "
-import sys, json
-for r in json.load(sys.stdin).get('result', []):
-    c = r.get('message', {}).get('chat', {})
-    if c.get('type') in ('group', 'supergroup'):
-        print(f'{c[\"id\"]}  {c.get(\"title\", \"\")}')"
-```
-
-### 第六步：分配项目
-
-```bash
+# 分配项目
 bash scripts/manage-pool.sh assign <机器人用户名> <项目名> <项目路径>
 
-# 示例：
-bash scripts/manage-pool.sh assign frontend_bot my-app ~/my-app
-bash scripts/manage-pool.sh assign api_bot backend ~/backend
+# 重启生效
+bash scripts/daemon.sh restart
 ```
 
-> **替代方案：** 项目分配是 `@master bots` → 添加机器人 流程的一部分。
-
-### 第七步：启动
-
-```bash
-bash scripts/daemon.sh start
-bash scripts/daemon.sh status   # 确认所有机器人在线
-```
+</details>
 
 </details>
 

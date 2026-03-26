@@ -245,59 +245,46 @@ This will:
 
 > `setup.sh` only sets up the master bot. Project bots are added afterwards via `@master bots` in Telegram or `manage-pool.sh add` in the terminal.
 
-### Step 4: Create Telegram Group
+### Step 4: Telegram Setup
 
 1. Create a **private group** in Telegram
-2. Add **all bots** (master + project bots) to the group
-3. **Critical** — for each bot in @BotFather:
+2. Add your master bot to the group
+3. **Critical** — disable Group Privacy in @BotFather:
 
    `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**
 
    > Bots cannot see group messages with Group Privacy enabled!
 
-### Step 5: Set Group ID
+4. Send `@master setup` in the group — the wizard walks you through:
+   - Setting the group as your shared control group
+   - Creating a project bot via @BotFather
+   - Assigning it to a project directory
+   - One-click restart to bring it online
 
-Send any message in the group, then:
+5. Use `@master menu` for all ongoing management
+
+That's it. Everything else is managed from Telegram.
+
+<details>
+<summary><b>Terminal alternatives (optional)</b></summary>
+
+If you prefer terminal over the interactive wizard:
 
 ```bash
-# Auto-detect
+# Set group ID
 bash scripts/manage-pool.sh init-group
 
-# Or manually
-bash scripts/manage-pool.sh set-group <group_id>
-```
+# Add project bots
+bash scripts/manage-pool.sh add <project_token>
 
-> **Alternative:** Use `@master setup` in the group to set the group ID interactively.
-
-To find the group ID manually:
-```bash
-curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" \
-  | python3 -c "
-import sys, json
-for r in json.load(sys.stdin).get('result', []):
-    c = r.get('message', {}).get('chat', {})
-    if c.get('type') in ('group', 'supergroup'):
-        print(f'{c[\"id\"]}  {c.get(\"title\", \"\")}')"
-```
-
-### Step 6: Assign Projects
-
-```bash
+# Assign projects
 bash scripts/manage-pool.sh assign <bot_username> <project_name> <path>
 
-# Examples:
-bash scripts/manage-pool.sh assign frontend_bot my-app ~/my-app
-bash scripts/manage-pool.sh assign api_bot backend ~/backend
+# Restart to apply
+bash scripts/daemon.sh restart
 ```
 
-> **Alternative:** Project assignment is part of the `@master bots` → Add Bot flow in Telegram.
-
-### Step 7: Start
-
-```bash
-bash scripts/daemon.sh start
-bash scripts/daemon.sh status   # verify all bots online
-```
+</details>
 
 </details>
 
