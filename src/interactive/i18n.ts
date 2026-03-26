@@ -469,8 +469,10 @@ export function onboardMsg(lang: Lang) {
           "3\ufe0f\u20e3 在 @BotFather 中关闭我的 Group Privacy：\n" +
           "   /mybots \u2192 选择我 \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
           "拉进群后我会自动发起设置向导 \ud83d\ude80",
+        needAdmin:
+          "\ud83d\udc4b 我已加入群组！\n\n\u26a0\ufe0f 请先将我设为群组管理员，这样我才能置顶看板和管理消息。\n\n操作：群组设置 \u2192 管理员 \u2192 添加我 \u2192 保存",
         groupDetected:
-          "\ud83d\udc4b 检测到新群组！\n\n是否将此群组设为共享控制群组？\n\n设置后，所有项目机器人和管理操作都将在此群组中进行。",
+          "\u2705 管理员权限已就绪！\n\n是否将此群组设为共享控制群组？\n\n设置后，所有项目机器人和管理操作都将在此群组中进行。",
         alreadySet: "\u2705 此群组已配置为共享群组。\n\n使用 config 管理设置。",
         otherGroup:
           "\u26a0\ufe0f 共享群组已在其他聊天中配置。\n\n请在该群组中使用 config 修改。",
@@ -521,8 +523,10 @@ export function onboardMsg(lang: Lang) {
           "3\ufe0f\u20e3 Disable my Group Privacy in @BotFather:\n" +
           "   /mybots \u2192 select me \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
           "I'll auto-start the setup wizard once I'm in the group \ud83d\ude80",
+        needAdmin:
+          "\ud83d\udc4b I've joined the group!\n\n\u26a0\ufe0f Please make me a group admin so I can pin the dashboard and manage messages.\n\nHow: Group settings \u2192 Administrators \u2192 Add me \u2192 Save",
         groupDetected:
-          "\ud83d\udc4b New group detected!\n\nSet this group as your shared control group?\n\nOnce set, all project bots and management will happen here.",
+          "\u2705 Admin access granted!\n\nSet this group as your shared control group?\n\nOnce set, all project bots and management will happen here.",
         alreadySet:
           "\u2705 This group is already configured as the shared group.\n\nUse config to manage settings.",
         otherGroup:

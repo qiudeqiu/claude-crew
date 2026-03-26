@@ -40,35 +40,39 @@ export function setupBot(managed: ManagedBot): void {
     tgBot.on("my_chat_member", async (ctx) => {
       const chat = ctx.myChatMember.chat;
       if (chat.type !== "group" && chat.type !== "supergroup") return;
+
       const newStatus = ctx.myChatMember.new_chat_member.status;
       if (newStatus !== "member" && newStatus !== "administrator") return;
 
       const pool = loadPool();
       if (pool.sharedGroupId) return; // already bound
 
-      const from = ctx.myChatMember.from;
-      if (!isAdmin(String(from.id))) return;
-
       const lang = getLang();
       const m = (await import("./interactive/i18n.js")).onboardMsg(lang);
       const c = (await import("./interactive/i18n.js")).common(lang);
       const chatId = String(chat.id);
 
-      await tgBot.api
-        .sendMessage(chatId, m.groupDetected, {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: `\u2705 ${m.yesUseGroup}`,
-                  callback_data: "o:setgroup",
-                },
-                { text: `\u274c ${c.cancel}`, callback_data: "o:cancel" },
+      if (newStatus === "member") {
+        // Added as regular member → ask for admin rights
+        await tgBot.api.sendMessage(chatId, m.needAdmin).catch(() => {});
+      } else if (newStatus === "administrator") {
+        // Promoted to admin → offer to bind group
+        await tgBot.api
+          .sendMessage(chatId, m.groupDetected, {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: `\u2705 ${m.yesUseGroup}`,
+                    callback_data: "o:setgroup",
+                  },
+                  { text: `\u274c ${c.cancel}`, callback_data: "o:cancel" },
+                ],
               ],
-            ],
-          },
-        })
-        .catch(() => {});
+            },
+          })
+          .catch(() => {});
+      }
     });
   }
 
