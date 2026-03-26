@@ -59,6 +59,7 @@ export function menuMsg(lang: Lang) {
         btnLang: "\ud83c\udf10 语言",
         refreshing: "\ud83d\udcca 正在刷新看板...",
         restarting: "\ud83d\udd04 正在重启...",
+        started: "\u2705 主控机器人已上线",
         noTasks: (master: string) =>
           "\ud83d\udccb 没有定时任务\n\n" +
           "\u2139\ufe0f 所有 cron 命令需 @主控 发送\n\n" +
@@ -96,6 +97,7 @@ export function menuMsg(lang: Lang) {
         btnLang: "\ud83c\udf10 Lang",
         refreshing: "\ud83d\udcca Refreshing dashboard...",
         restarting: "\ud83d\udd04 Restarting daemon...",
+        started: "\u2705 Master bot is online",
         noTasks: (master: string) =>
           "\ud83d\udccb No scheduled tasks\n\n" +
           "\u2139\ufe0f All cron commands must be @sent to master\n\n" +

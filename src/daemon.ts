@@ -168,9 +168,16 @@ async function main(): Promise<void> {
       } catch {}
     }
 
-    // Send menu
+    // Send startup message + menu
     try {
+      const { getLang, menuMsg } = await import("./interactive/i18n.js");
       const { showMainMenu } = await import("./interactive/index.js");
+      const lang = getLang();
+      const m = menuMsg(lang);
+      await daemon.masterBot!.bot.api.sendMessage(
+        pool.sharedGroupId,
+        m.started,
+      );
       await showMainMenu(daemon.masterBot!, pool.sharedGroupId);
     } catch {}
   }, RESTART_NOTIFY_DELAY_MS);
