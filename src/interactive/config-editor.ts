@@ -52,11 +52,47 @@ const GLOBAL_FIELDS: Record<string, FieldDef> = {
     options: ["true", "false"],
     optionDescKeys: ["me_true", "me_false"],
   },
-  mc: { key: "maxConcurrent", descKey: "mc", type: "number", min: 1, max: 10, hintKey: "mc" },
-  rl: { key: "rateLimitSeconds", descKey: "rl", type: "number", min: 0, max: 60, hintKey: "rl" },
-  st: { key: "sessionTimeoutMinutes", descKey: "st", type: "number", min: 1, max: 120, hintKey: "st" },
-  di: { key: "dashboardIntervalMinutes", descKey: "di", type: "number", min: 5, max: 1440, restart: true, hintKey: "di" },
-  mi: { key: "memoryIntervalMinutes", descKey: "mi", type: "number", min: 0, max: 1440, hintKey: "mi" },
+  mc: {
+    key: "maxConcurrent",
+    descKey: "mc",
+    type: "number",
+    min: 1,
+    max: 10,
+    hintKey: "mc",
+  },
+  rl: {
+    key: "rateLimitSeconds",
+    descKey: "rl",
+    type: "number",
+    min: 0,
+    max: 60,
+    hintKey: "rl",
+  },
+  st: {
+    key: "sessionTimeoutMinutes",
+    descKey: "st",
+    type: "number",
+    min: 1,
+    max: 120,
+    hintKey: "st",
+  },
+  di: {
+    key: "dashboardIntervalMinutes",
+    descKey: "di",
+    type: "number",
+    min: 5,
+    max: 1440,
+    restart: true,
+    hintKey: "di",
+  },
+  mi: {
+    key: "memoryIntervalMinutes",
+    descKey: "mi",
+    type: "number",
+    min: 0,
+    max: 1440,
+    hintKey: "mi",
+  },
   wl: { key: "whisperLanguage", descKey: "wl", type: "string", hintKey: "wl" },
 };
 
@@ -235,7 +271,15 @@ export async function handleConfigCallback(
     const fieldKey = data.slice(5);
     const field = GLOBAL_FIELDS[fieldKey];
     if (!field) return false;
-    return await showFieldEditor(api, chatId, userId, field, fieldKey, "global", messageId);
+    return await showFieldEditor(
+      api,
+      chatId,
+      userId,
+      field,
+      fieldKey,
+      "global",
+      messageId,
+    );
   }
 
   if (data.startsWith("c:gv:")) {
@@ -254,7 +298,15 @@ export async function handleConfigCallback(
     const fieldKey = rest.slice(lastColon + 1);
     const field = BOT_FIELDS[fieldKey];
     if (!field) return false;
-    return await showFieldEditor(api, chatId, userId, field, fieldKey, username, messageId);
+    return await showFieldEditor(
+      api,
+      chatId,
+      userId,
+      field,
+      fieldKey,
+      username,
+      messageId,
+    );
   }
 
   if (data.startsWith("c:bv:")) {
@@ -266,7 +318,15 @@ export async function handleConfigCallback(
     const username = parts.slice(0, -2).join(":");
     const field = BOT_FIELDS[fieldKey];
     if (!field) return false;
-    return await setBotValue(api, chatId, userId, username, field, value, messageId);
+    return await setBotValue(
+      api,
+      chatId,
+      userId,
+      username,
+      field,
+      value,
+      messageId,
+    );
   }
 
   return false;
@@ -294,10 +354,14 @@ async function showFieldEditor(
 
   let currentValue: string;
   if (isGlobal) {
-    currentValue = String((pool as Record<string, unknown>)[field.key] ?? "(not set)");
+    currentValue = String(
+      (pool as Record<string, unknown>)[field.key] ?? "(not set)",
+    );
   } else {
     const bot = pool.bots.find((b) => b.username === scope);
-    currentValue = String((bot as unknown as Record<string, unknown>)?.[field.key] ?? "(not set)");
+    currentValue = String(
+      (bot as unknown as Record<string, unknown>)?.[field.key] ?? "(not set)",
+    );
   }
 
   const desc = (fd as Record<string, string>)[field.descKey] ?? "";
@@ -309,7 +373,9 @@ async function showFieldEditor(
       .map((opt, i) => {
         const marker = opt === currentValue ? "\u2705 " : "\u25cb ";
         const descKey = field.optionDescKeys?.[i];
-        const optDescText = descKey ? (od as Record<string, string>)[descKey] ?? "" : "";
+        const optDescText = descKey
+          ? ((od as Record<string, string>)[descKey] ?? "")
+          : "";
         return `${marker}${opt}\n   ${optDescText}`;
       })
       .join("\n");
@@ -330,7 +396,9 @@ async function showFieldEditor(
     if (row.length > 0) buttons.push([...row]);
 
     const backData = isGlobal ? "c:g" : `c:b:${scope}`;
-    buttons.push([{ text: `\u25c0\ufe0f ${common(lang).back}`, callback_data: backData }]);
+    buttons.push([
+      { text: `\u25c0\ufe0f ${common(lang).back}`, callback_data: backData },
+    ]);
 
     await api
       .editMessageText(
@@ -344,8 +412,13 @@ async function showFieldEditor(
   }
 
   // Number/string: text input
-  const rangeHint = field.type === "number" ? `\n${cm.range(field.min!, field.max!)}` : `\n${cm.clearHint}`;
-  const tipHint = field.hintKey ? `\n${cm.tip}: ${(fh as Record<string, string>)[field.hintKey]}` : "";
+  const rangeHint =
+    field.type === "number"
+      ? `\n${cm.range(field.min!, field.max!)}`
+      : `\n${cm.clearHint}`;
+  const tipHint = field.hintKey
+    ? `\n${cm.tip}: ${(fh as Record<string, string>)[field.hintKey]}`
+    : "";
   const restartNote = field.restart ? `\n${cm.requiresRestart}` : "";
   const backData = isGlobal ? "c:g" : `c:b:${scope}`;
 
@@ -411,7 +484,9 @@ async function setGlobalValue(
       `${cm.saved(label, value)}${impact}${restartNote}`,
       {
         reply_markup: {
-          inline_keyboard: [[{ text: `\u25c0\ufe0f ${cm.backConfig}`, callback_data: "c:g" }]],
+          inline_keyboard: [
+            [{ text: `\u25c0\ufe0f ${cm.backConfig}`, callback_data: "c:g" }],
+          ],
         },
       },
     )
@@ -454,7 +529,14 @@ async function setBotValue(
       `${cm.saved(`@${username} ${label}`, value)}`,
       {
         reply_markup: {
-          inline_keyboard: [[{ text: `\u25c0\ufe0f ${cm.backBotConfig}`, callback_data: `c:b:${username}` }]],
+          inline_keyboard: [
+            [
+              {
+                text: `\u25c0\ufe0f ${cm.backBotConfig}`,
+                callback_data: `c:b:${username}`,
+              },
+            ],
+          ],
         },
       },
     )
@@ -486,7 +568,9 @@ export async function handleConfigText(
   const label = getFieldLabel(field.key);
   const input = text.trim();
   const backData = isGlobal ? "c:g" : `c:b:${editScope}`;
-  const cancelKb = { reply_markup: { inline_keyboard: cancelButton(backData, lang) } };
+  const cancelKb = {
+    reply_markup: { inline_keyboard: cancelButton(backData, lang) },
+  };
 
   if (field.type === "number") {
     const num = parseInt(input, 10);
@@ -495,7 +579,9 @@ export async function handleConfigText(
       (field.min !== undefined && num < field.min) ||
       (field.max !== undefined && num > field.max)
     ) {
-      await api.sendMessage(chatId, cm.invalidNumber(field.min!, field.max!), cancelKb).catch(() => {});
+      await api
+        .sendMessage(chatId, cm.invalidNumber(field.min!, field.max!), cancelKb)
+        .catch(() => {});
       return true;
     }
 
@@ -507,14 +593,23 @@ export async function handleConfigText(
       if (bot) (bot as unknown as Record<string, unknown>)[field.key] = num;
     }
     savePool(pool);
-    log(`CONFIG: ${isGlobal ? "global" : `@${editScope}`}.${field.key} = ${num} by ${userId}`);
+    log(
+      `CONFIG: ${isGlobal ? "global" : `@${editScope}`}.${field.key} = ${num} by ${userId}`,
+    );
     clearConversation(userId, chatId);
 
     const restartNote = field.restart ? `\n${cm.restartNeeded}` : "";
     await api
       .sendMessage(chatId, `${cm.saved(label, String(num))}${restartNote}`, {
         reply_markup: {
-          inline_keyboard: [[{ text: `\u25c0\ufe0f ${common(lang).back}`, callback_data: backData }]],
+          inline_keyboard: [
+            [
+              {
+                text: `\u25c0\ufe0f ${common(lang).back}`,
+                callback_data: backData,
+              },
+            ],
+          ],
         },
       })
       .catch(() => {});
@@ -525,7 +620,21 @@ export async function handleConfigText(
   const value = input === "none" || input === "" ? "" : input;
 
   if (field.key === "assignedPath" && value && !validatePath(value)) {
-    await api.sendMessage(chatId, cm.invalidPath(value), cancelKb).catch(() => {});
+    await api
+      .sendMessage(chatId, cm.invalidPath(value), cancelKb)
+      .catch(() => {});
+    return true;
+  }
+
+  // Validate whisperLanguage — only allow short alpha codes
+  if (
+    field.key === "whisperLanguage" &&
+    value &&
+    !/^[a-z]{2,10}$/i.test(value)
+  ) {
+    await api
+      .sendMessage(chatId, cm.invalidNumber(2, 10), cancelKb)
+      .catch(() => {});
     return true;
   }
 
@@ -537,14 +646,23 @@ export async function handleConfigText(
     if (bot) (bot as unknown as Record<string, unknown>)[field.key] = value;
   }
   savePool(pool);
-  log(`CONFIG: ${isGlobal ? "global" : `@${editScope}`}.${field.key} = "${value}" by ${userId}`);
+  log(
+    `CONFIG: ${isGlobal ? "global" : `@${editScope}`}.${field.key} = "${value}" by ${userId}`,
+  );
   clearConversation(userId, chatId);
 
   const display = value || `(${lang === "zh" ? "已清除" : "cleared"})`;
   await api
     .sendMessage(chatId, cm.saved(label, display), {
       reply_markup: {
-        inline_keyboard: [[{ text: `\u25c0\ufe0f ${common(lang).back}`, callback_data: backData }]],
+        inline_keyboard: [
+          [
+            {
+              text: `\u25c0\ufe0f ${common(lang).back}`,
+              callback_data: backData,
+            },
+          ],
+        ],
       },
     })
     .catch(() => {});

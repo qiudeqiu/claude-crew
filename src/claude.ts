@@ -60,10 +60,11 @@ export async function runClaude(
     stderr: "pipe",
   });
 
-  const killTimeout = setTimeout(
-    () => proc.kill("SIGTERM"),
-    getConfig().sessionTimeoutMs,
-  );
+  const killTimeout = setTimeout(() => {
+    proc.kill("SIGTERM");
+    // Force SIGKILL if SIGTERM doesn't work after 5s
+    setTimeout(() => proc.kill("SIGKILL"), 5000);
+  }, getConfig().sessionTimeoutMs);
 
   let resultText = "";
   let assistantText = ""; // fallback: accumulate text from assistant messages

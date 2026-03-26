@@ -26,9 +26,8 @@ export async function updateDashboard(): Promise<void> {
   const d = dashMsg(lang);
 
   const now = new Date();
-  const timeStr = now.toLocaleString("en-US", {
-    hour12: false,
-  });
+  const locale = lang === "zh" ? "zh-CN" : "en-US";
+  const timeStr = now.toLocaleString(locale, { hour12: false });
 
   const masterName =
     pool.bots.find((b) => b.role === "master")?.username ?? "master";

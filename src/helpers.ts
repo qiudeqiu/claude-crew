@@ -112,6 +112,7 @@ export async function downloadPhoto(
     if (!file.file_path) return undefined;
     const url = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
     const res = await fetch(url);
+    if (!res.ok) return undefined;
     const buf = Buffer.from(await res.arrayBuffer());
     const ext = file.file_path.split(".").pop() ?? "jpg";
     const path = join(INBOX_DIR, `${Date.now()}.${ext}`);
@@ -134,6 +135,7 @@ export async function transcribeVoice(
     if (!file.file_path) return undefined;
     const url = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
     const res = await fetch(url);
+    if (!res.ok) return undefined;
     const buf = Buffer.from(await res.arrayBuffer());
     const oggPath = join(INBOX_DIR, `${Date.now()}.ogg`);
     writeFileSync(oggPath, buf);
@@ -150,13 +152,22 @@ export async function transcribeVoice(
 
     try {
       const pool = loadPool();
-      const langFlag = pool.whisperLanguage
-        ? `--language ${pool.whisperLanguage}`
-        : "";
-      execSync(
-        `whisper "${wavPath}" --model turbo ${langFlag} --output_format txt --output_dir "${INBOX_DIR}" 2>/dev/null`,
-        { timeout: 60000 },
-      );
+      const whisperArgs = [
+        wavPath,
+        "--model",
+        "turbo",
+        "--output_format",
+        "txt",
+        "--output_dir",
+        INBOX_DIR,
+      ];
+      if (pool.whisperLanguage && /^[a-z]{2,10}$/i.test(pool.whisperLanguage)) {
+        whisperArgs.push("--language", pool.whisperLanguage);
+      }
+      require("child_process").execFileSync("whisper", whisperArgs, {
+        timeout: 60000,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
       const txtPath = wavPath.replace(".wav", ".txt");
       const text = existsSync(txtPath)
         ? readFileSync(txtPath, "utf8").trim()
