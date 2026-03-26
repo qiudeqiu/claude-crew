@@ -144,16 +144,21 @@ bun --version       # should print >= 1.0
 
 ## 🚀 Quick Start
 
+**Terminal (one-time setup):**
+
 ```bash
-git clone https://github.com/qiudeqiu/claude-crew.git && cd claude-crew && bun install
-bash scripts/setup.sh          # interactive setup wizard
-bash scripts/manage-pool.sh add <master_token> --master
-bash scripts/manage-pool.sh add <project_token>
-bash scripts/manage-pool.sh assign <bot_username> <project_name> <path>
-bash scripts/daemon.sh start
+git clone https://github.com/qiudeqiu/claude-crew.git && cd claude-crew
+bash scripts/setup.sh    # asks for your Telegram User ID + master bot token, then starts daemon
 ```
 
-> Create bots via [@BotFather](https://t.me/BotFather), add them to a private group, and turn off Group Privacy for each bot.
+> Create a master bot via [@BotFather](https://t.me/BotFather) first (`/newbot`). You only need one token to get started.
+
+**Telegram (everything else):**
+
+1. Create a private group, add your master bot, disable Group Privacy in @BotFather
+2. Send a message in the group, then tell your master bot: `run manage-pool.sh init-group`
+3. Add project bots: `add bot <token> and assign to <project> at <path>`
+4. Master bot guides you through the rest — invite bots to group, disable Group Privacy, restart
 
 <details>
 <summary><b>Detailed Setup Guide (step by step)</b></summary>

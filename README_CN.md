@@ -144,16 +144,21 @@ bun --version       # 应输出 >= 1.0
 
 ## 🚀 快速开始
 
+**终端（一次性安装）：**
+
 ```bash
-git clone https://github.com/qiudeqiu/claude-crew.git && cd claude-crew && bun install
-bash scripts/setup.sh          # 交互式安装向导
-bash scripts/manage-pool.sh add <主控token> --master
-bash scripts/manage-pool.sh add <项目token>
-bash scripts/manage-pool.sh assign <bot用户名> <项目名> <路径>
-bash scripts/daemon.sh start
+git clone https://github.com/qiudeqiu/claude-crew.git && cd claude-crew
+bash scripts/setup.sh    # 输入 Telegram User ID + master bot token，自动启动
 ```
 
-> 在 [@BotFather](https://t.me/BotFather) 创建 bot，拉入私密群组，每个 bot 关闭 Group Privacy。
+> 先在 [@BotFather](https://t.me/BotFather) 创建一个 master bot（`/newbot`）。只需要一个 token 就能开始。
+
+**Telegram（后续全部操作）：**
+
+1. 创建私密群组，拉入 master bot，在 @BotFather 关闭 Group Privacy
+2. 在群里发一条消息，然后告诉 master bot：`run manage-pool.sh init-group`
+3. 添加项目 bot：`add bot <token> and assign to <project> at <path>`
+4. Master bot 引导你完成剩余步骤 — 拉 bot 进群、关闭 Group Privacy、restart
 
 <details>
 <summary><b>详细安装步骤</b></summary>
