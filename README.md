@@ -189,12 +189,13 @@ bash scripts/setup.sh    # asks for your Telegram User ID + master bot token, th
 
 **Telegram (everything else):**
 
-1. Create a private group, add your master bot, disable Group Privacy in @BotFather
-2. Send `@master setup` in the group — the interactive wizard guides you through:
+1. Create a private group, add your master bot
+2. Disable Group Privacy: @BotFather → `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**
+3. Send `@master setup` in the group — the interactive wizard guides you through:
    - Setting the group as your shared control group
    - Adding your first project bot (token → project name → path)
    - One-click restart to bring the bot online
-3. Use `@master bots` to add more bots, `@master config` to edit settings, `@master users` to manage access
+4. Use `@master menu` for all ongoing management — bots, config, users
 
 <details>
 <summary><b>Detailed Setup Guide (step by step)</b></summary>
@@ -215,7 +216,8 @@ Open [@BotFather](https://t.me/BotFather):
 
 1. Send `/newbot`, choose a name and username
 2. **Save the token** (format: `123456789:AAH...`)
-3. Repeat for each bot
+
+You only need the **master bot** now. Project bots can be created later via `@master bots` in Telegram.
 
 **How many bots?**
 
@@ -237,27 +239,13 @@ bash scripts/setup.sh
 This will:
 - Check dependencies (bun, claude, ffmpeg, whisper)
 - Ask for your Telegram User ID (get from [@userinfobot](https://t.me/userinfobot))
-- Choose permission mode (allowAll or approve)
+- Ask for your master bot token (validates via Telegram API)
 - Create `bot-pool.json` config file at `~/.claude/channels/telegram/`
-- Create symlinks
+- Link scripts and start the daemon
 
-### Step 4: Add Bots to the Pool
+> `setup.sh` only sets up the master bot. Project bots are added afterwards via `@master bots` in Telegram or `manage-pool.sh add` in the terminal.
 
-```bash
-# Master bot (only one)
-bash scripts/manage-pool.sh add <master_token> --master
-
-# Project bots
-bash scripts/manage-pool.sh add <project_token_1>
-bash scripts/manage-pool.sh add <project_token_2>
-
-# Verify
-bash scripts/manage-pool.sh list
-```
-
-> **Alternative:** Skip this step. After starting the daemon, use `@master bots` → Add Bot in Telegram to add project bots interactively.
-
-### Step 5: Create Telegram Group
+### Step 4: Create Telegram Group
 
 1. Create a **private group** in Telegram
 2. Add **all bots** (master + project bots) to the group
@@ -267,7 +255,7 @@ bash scripts/manage-pool.sh list
 
    > Bots cannot see group messages with Group Privacy enabled!
 
-### Step 6: Set Group ID
+### Step 5: Set Group ID
 
 Send any message in the group, then:
 
@@ -292,7 +280,7 @@ for r in json.load(sys.stdin).get('result', []):
         print(f'{c[\"id\"]}  {c.get(\"title\", \"\")}')"
 ```
 
-### Step 7: Assign Projects
+### Step 6: Assign Projects
 
 ```bash
 bash scripts/manage-pool.sh assign <bot_username> <project_name> <path>
@@ -304,7 +292,7 @@ bash scripts/manage-pool.sh assign api_bot backend ~/backend
 
 > **Alternative:** Project assignment is part of the `@master bots` → Add Bot flow in Telegram.
 
-### Step 8: Start
+### Step 7: Start
 
 ```bash
 bash scripts/daemon.sh start

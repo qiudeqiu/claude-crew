@@ -67,7 +67,7 @@ echo ""
 
 # 5. Get master bot token
 echo "Create a master bot via @BotFather in Telegram (/newbot)"
-echo "This bot will be your command center — dashboard, search, cron, restart."
+echo "This bot will be your control center — menu, dashboard, bot/config/user management."
 echo ""
 read -p "🤖 Master bot token: " MASTER_TOKEN
 if [ -z "$MASTER_TOKEN" ]; then
@@ -107,7 +107,8 @@ if [ ! -f "$INSTALL_DIR/bot-pool.json" ]; then
   "sessionTimeoutMinutes": 10,
   "dashboardIntervalMinutes": 30,
   "memoryIntervalMinutes": 120,
-  "whisperLanguage": ""
+  "whisperLanguage": "",
+  "language": "en"
 }
 POOLJSON
   chmod 600 "$INSTALL_DIR/bot-pool.json"
@@ -148,17 +149,18 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ claude-crew is running!"
 echo ""
-echo "Now open Telegram and message @${MASTER_USERNAME}:"
+echo "Now open Telegram:"
 echo ""
 echo "  1. Create a private group and add @${MASTER_USERNAME} to it"
-echo "  2. Disable Group Privacy: @BotFather → /mybots → @${MASTER_USERNAME} → Bot Settings → Group Privacy → Turn off"
-echo "  3. Send a message in the group, then tell @${MASTER_USERNAME}:"
-echo "     \"run manage-pool.sh init-group\""
+echo "  2. Disable Group Privacy:"
+echo "     @BotFather → /mybots → @${MASTER_USERNAME} → Bot Settings → Group Privacy → Turn off"
+echo "  3. Send \"@${MASTER_USERNAME} setup\" in the group"
+echo "     The interactive wizard will guide you through:"
+echo "     → Setting the group as your control center"
+echo "     → Adding your first project bot"
+echo "     → One-click restart to bring it online"
 echo ""
-echo "  Then add project bots via Telegram:"
-echo "     \"add bot <token> and assign to <project> at <path>\""
-echo ""
-echo "  @${MASTER_USERNAME} will guide you through the rest."
+echo "  After setup, use \"@${MASTER_USERNAME} menu\" for all management."
 echo ""
 echo "Terminal commands:"
 echo "  daemon.sh status    View status"
