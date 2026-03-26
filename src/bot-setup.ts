@@ -6,6 +6,17 @@ import { splitMessage, downloadPhoto, transcribeVoice } from "./helpers.js";
 import { pendingApprovals } from "./state.js";
 import { invokeClaudeAndReply } from "./claude.js";
 import { handleMasterCommand } from "./commands.js";
+import {
+  routeCallback,
+  routeText,
+  showMainMenu,
+  getLang,
+} from "./interactive/index.js";
+import { startOnboarding } from "./interactive/onboarding.js";
+import { showBotList } from "./interactive/bot-management.js";
+import { showGlobalConfig } from "./interactive/config-editor.js";
+import { showUserManagement } from "./interactive/user-management.js";
+import { setupMsg } from "./interactive/i18n.js";
 
 export function setupBot(managed: ManagedBot): void {
   const { bot: tgBot, config } = managed;
@@ -24,13 +35,34 @@ export function setupBot(managed: ManagedBot): void {
     return next();
   });
 
-  // Approval callback handler (approve mode)
+  // Callback handler: interactive setup + approval
   tgBot.on("callback_query:data", async (ctx) => {
-    if (!ctx.from || !isAdmin(String(ctx.from.id))) {
+    if (!ctx.from) return;
+    const data = ctx.callbackQuery.data;
+    const userId = String(ctx.from.id);
+    const chatId = String(ctx.chat?.id ?? ctx.from.id);
+    const messageId = ctx.callbackQuery.message?.message_id ?? 0;
+
+    // Interactive setup callbacks (o:, b:, c:, u:)
+    if (config.role === "master") {
+      const handled = await routeCallback(
+        managed,
+        chatId,
+        userId,
+        data,
+        messageId,
+      );
+      if (handled) {
+        await ctx.answerCallbackQuery().catch(() => {});
+        return;
+      }
+    }
+
+    // Approval callbacks
+    if (!isAdmin(userId)) {
       await ctx.answerCallbackQuery({ text: "\u26d4 Admin only" });
       return;
     }
-    const data = ctx.callbackQuery.data;
     if (!data.startsWith("approve:")) return;
 
     const [, action, approvalId] = data.split(":");
@@ -79,7 +111,7 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (managed.busy) {
-      await ctx.reply("\u23f3 Processing previous message...").catch(() => {});
+      await ctx.reply(setupMsg(getLang()).busy).catch(() => {});
       return;
     }
 
@@ -116,7 +148,7 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (managed.busy) {
-      await ctx.reply("\u23f3 Processing previous message...").catch(() => {});
+      await ctx.reply(setupMsg(getLang()).busy).catch(() => {});
       return;
     }
 
@@ -185,9 +217,44 @@ export function setupBot(managed: ManagedBot): void {
       if (!isMentioned && !isReplyToMe) return;
     }
 
-    // Master bot: direct commands
+    // Master bot: interactive conversations + commands
     if (config.role === "master") {
-      const stripped = text.replace(/@\w+/g, "").trim();
+      const userId = String(ctx.from.id);
+
+      // Check active interactive conversation first (text input)
+      const interactiveHandled = await routeText(
+        managed,
+        chatId,
+        userId,
+        text.replace(/@\w+/g, "").trim(),
+      );
+      if (interactiveHandled) return;
+
+      // Interactive commands (button-driven)
+      // Strip @mentions and /command prefix
+      const stripped = text.replace(/@\w+/g, "").trim().replace(/^\//, "");
+      if (/^(help|menu|start)$/i.test(stripped)) {
+        await showMainMenu(managed, chatId);
+        return;
+      }
+      if (/^setup$/i.test(stripped)) {
+        await startOnboarding(managed, chatId, userId);
+        return;
+      }
+      if (/^(bots|addbot)$/i.test(stripped)) {
+        await showBotList(managed, chatId);
+        return;
+      }
+      if (/^config$/i.test(stripped)) {
+        await showGlobalConfig(managed, chatId);
+        return;
+      }
+      if (/^users$/i.test(stripped)) {
+        await showUserManagement(managed, chatId);
+        return;
+      }
+
+      // Text-only master commands (search, cron, restart, status)
       const directReply = handleMasterCommand(stripped);
       if (directReply !== undefined) {
         if (directReply !== null) {
@@ -200,23 +267,37 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (config.role === "master" && !loadPool().masterExecute) {
-      await ctx
-        .reply(
-          `I'm the master bot — I handle commands, not tasks.\nTry: help, status, search, cron, restart`,
-        )
-        .catch(() => {});
+      // Unrecognized input → show menu with buttons
+      await showMainMenu(managed, chatId);
       return;
     }
 
+    // Project bot: intercept master-only commands
+    if (config.role !== "master") {
+      const stripped = text.replace(/@\w+/g, "").trim();
+      if (
+        /^cron\s/i.test(stripped) ||
+        /^(help|status|setup|bots|config|users|restart|search\s)$/i.test(
+          stripped,
+        )
+      ) {
+        const pool = loadPool();
+        const masterName =
+          pool.bots.find((b) => b.role === "master")?.username ?? "master";
+        await ctx
+          .reply(setupMsg(getLang()).masterOnly(masterName))
+          .catch(() => {});
+        return;
+      }
+    }
+
     if (!config.assignedPath && config.role !== "master") {
-      await ctx
-        .reply(`\u26a0\ufe0f @${botName} No project assigned`)
-        .catch(() => {});
+      await ctx.reply(setupMsg(getLang()).noProject(botName)).catch(() => {});
       return;
     }
 
     if (managed.busy) {
-      await ctx.reply("\u23f3 Processing previous message...").catch(() => {});
+      await ctx.reply(setupMsg(getLang()).busy).catch(() => {});
       return;
     }
 

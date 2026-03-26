@@ -25,6 +25,7 @@ import {
   RESTART_NOTIFY_DELAY_MS,
   CRON_CHECK_INTERVAL_MS,
   MEMORY_CHECK_MS,
+  CONVERSATION_CLEANUP_MS,
 } from "./config.js";
 import { log } from "./logger.js";
 import { managedBots, botByUsername, daemon } from "./state.js";
@@ -32,6 +33,7 @@ import { setupBot } from "./bot-setup.js";
 import { updateDashboard } from "./dashboard.js";
 import { checkCron } from "./cron.js";
 import { checkMemory } from "./memory.js";
+import { cleanupExpired } from "./interactive/index.js";
 
 // ── Singleton: kill any other daemon.ts processes ──
 {
@@ -112,6 +114,21 @@ async function main(): Promise<void> {
 
     setTimeout(async () => {
       try {
+        // Register command menu for master bot
+        if (config.role === "master") {
+          await tgBot.api
+            .setMyCommands([
+              { command: "menu", description: "Main menu" },
+              { command: "bots", description: "Manage project bots" },
+              { command: "config", description: "Edit global settings" },
+              { command: "users", description: "Manage admins & users" },
+              { command: "setup", description: "First-time setup wizard" },
+              { command: "status", description: "Refresh dashboard" },
+              { command: "restart", description: "Restart daemon" },
+            ])
+            .catch(() => {});
+        }
+
         await tgBot.start({
           drop_pending_updates: true,
           onStart: (info) => {
@@ -170,6 +187,7 @@ async function main(): Promise<void> {
   setInterval(() => updateDashboard(), getConfig().dashboardIntervalMs);
   setInterval(() => checkCron(), CRON_CHECK_INTERVAL_MS);
   setInterval(() => checkMemory(), MEMORY_CHECK_MS);
+  setInterval(() => cleanupExpired(), CONVERSATION_CLEANUP_MS);
 
   log("Daemon v3 running.");
 }

@@ -8,6 +8,7 @@ import {
   formatDuration,
 } from "./helpers.js";
 import { daemon, botByUsername, sessionStats } from "./state.js";
+import { getLang, dashMsg } from "./interactive/i18n.js";
 
 export async function updateDashboard(): Promise<void> {
   if (!daemon.masterBot) {
@@ -21,12 +22,18 @@ export async function updateDashboard(): Promise<void> {
   }
   log("DASHBOARD: updating...");
 
+  const lang = getLang();
+  const d = dashMsg(lang);
+
   const now = new Date();
   const timeStr = now.toLocaleString("en-US", {
     hour12: false,
   });
 
-  let text = `\ud83d\udcca Project Dashboard \u00b7 ${timeStr}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n`;
+  const masterName =
+    pool.bots.find((b) => b.role === "master")?.username ?? "master";
+
+  let text = `${d.title(timeStr)}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n`;
 
   for (const b of pool.bots) {
     if (b.role === "master") continue;
@@ -61,7 +68,7 @@ export async function updateDashboard(): Promise<void> {
     text += `   \ud83e\udd16 ${botLabel}\n\n`;
   }
 
-  // Session stats (since daemon started)
+  // Session stats
   if (sessionStats.totalInvocations > 0) {
     const tokenLines = Object.entries(sessionStats.tokensByModel)
       .map(([model, count]) => {
@@ -70,11 +77,11 @@ export async function updateDashboard(): Promise<void> {
       })
       .join(" | ");
 
-    text += `\ud83d\udcc8 Session Stats\n`;
-    text += `   Invocations: ${sessionStats.totalInvocations} | Duration: ${formatDuration(sessionStats.totalDurationMs)} | Cost: ${formatCost(sessionStats.totalCostUSD)}\n`;
+    text += `${d.sessionStats}\n`;
+    text += `   ${d.invocations}: ${sessionStats.totalInvocations} | ${d.duration}: ${formatDuration(sessionStats.totalDurationMs)} | ${d.cost}: ${formatCost(sessionStats.totalCostUSD)}\n`;
     if (tokenLines) text += `   ${tokenLines}\n`;
   } else {
-    text += `\ud83d\udcc8 Session Stats: No invocations yet\n`;
+    text += `${d.noInvocations}\n`;
   }
 
   // Rate limit info
@@ -85,23 +92,24 @@ export async function updateDashboard(): Promise<void> {
     const h = Math.floor(diffMin / 60);
     const m = diffMin % 60;
     const resetStr = h > 0 ? `${h}h${m}m` : `${m}m`;
-    text += `\n\u23f1 Rate limit reset: ${resetStr} (${daemon.rateLimitInfo.rateLimitType})`;
+    text += `\n${d.rateReset(resetStr, daemon.rateLimitInfo.rateLimitType)}`;
   }
 
+  // Master bot info + commands
+  text += `\n\n${d.master(masterName)}\n${d.cmds}`;
+
   try {
-    // Delete old dashboard message
-    let dashMsg: { messageId: number; chatId: string } | null = null;
+    let dashMsgData: { messageId: number; chatId: string } | null = null;
     try {
-      dashMsg = JSON.parse(readFileSync(DASHBOARD_FILE, "utf8"));
+      dashMsgData = JSON.parse(readFileSync(DASHBOARD_FILE, "utf8"));
     } catch {}
 
-    if (dashMsg && dashMsg.chatId === pool.sharedGroupId) {
+    if (dashMsgData && dashMsgData.chatId === pool.sharedGroupId) {
       await daemon.masterBot.bot.api
-        .deleteMessage(pool.sharedGroupId, dashMsg.messageId)
+        .deleteMessage(pool.sharedGroupId, dashMsgData.messageId)
         .catch(() => {});
     }
 
-    // Send new and pin
     const sent = await daemon.masterBot.bot.api.sendMessage(
       pool.sharedGroupId,
       text,

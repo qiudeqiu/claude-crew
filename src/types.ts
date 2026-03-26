@@ -24,6 +24,7 @@ export type BotPool = {
   sessionTimeoutMinutes?: number;
   dashboardIntervalMinutes?: number;
   whisperLanguage?: string;
+  language?: string;
 };
 
 export type ManagedBot = {
@@ -58,6 +59,32 @@ export type ClaudeResult = {
   contextUsed: number;
   contextWindow: number;
   model: string;
+};
+
+// ── Interactive setup ──
+export type ConversationStep =
+  | "idle"
+  // Onboarding
+  | "onboard:awaitToken"
+  | "onboard:awaitProject"
+  | "onboard:awaitPath"
+  | "onboard:confirm"
+  // Bot management
+  | "bot:awaitToken"
+  | "bot:awaitProject"
+  | "bot:awaitPath"
+  // Config editing
+  | "config:awaitValue"
+  // User management
+  | "user:awaitAdmin"
+  | "user:awaitUser";
+
+export type ConversationState = {
+  step: ConversationStep;
+  chatId: string;
+  userId: string;
+  data: Record<string, string>;
+  expiresAt: number;
 };
 
 export type SessionStats = {

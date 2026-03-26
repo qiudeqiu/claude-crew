@@ -26,6 +26,8 @@ export const TYPING_INTERVAL_MS = 4_000;
 export const PROGRESS_THROTTLE_MS = 2_000;
 export const APPROVAL_TIMEOUT_MS = 120_000;
 export const BOT_START_STAGGER_MS = 2_000;
+export const CONVERSATION_TTL_MS = 300_000;
+export const CONVERSATION_CLEANUP_MS = 60_000;
 export const POLL_RETRY_DELAY_MS = 15_000;
 export const DASHBOARD_INITIAL_DELAY_MS = 15_000;
 export const RESTART_NOTIFY_DELAY_MS = 16_000;
@@ -43,6 +45,12 @@ export function loadPool(): BotPool {
   } catch {
     return { bots: [] };
   }
+}
+
+export function savePool(pool: BotPool): void {
+  writeFileSync(POOL_FILE, JSON.stringify(pool, null, 2) + "\n", {
+    mode: 0o600,
+  });
 }
 
 export function loadCron(): CronJob[] {
@@ -129,6 +137,7 @@ export function migrateConfig(): string[] {
     dashboardIntervalMinutes: DEFAULT_DASHBOARD_INTERVAL_MIN,
     memoryIntervalMinutes: 120,
     whisperLanguage: "",
+    language: "en",
   };
 
   for (const [key, defaultVal] of Object.entries(globalDefaults)) {

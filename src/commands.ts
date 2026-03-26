@@ -3,34 +3,11 @@ import { join } from "path";
 import { loadPool, loadCron, saveCron, STATE_DIR } from "./config.js";
 import { log } from "./logger.js";
 import { updateDashboard } from "./dashboard.js";
+import { getLang, menuMsg } from "./interactive/i18n.js";
 
 export function handleMasterCommand(
   stripped: string,
 ): string | null | undefined {
-  if (/^help$/i.test(stripped)) {
-    const pool = loadPool();
-    const projectBots = pool.bots.filter((b) => b.role !== "master");
-    return (
-      `\ud83e\udd16 Bot Pool Manager v3\n` +
-      `\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
-      `\ud83d\udcca ${projectBots.filter((b) => b.assignedProject).length} projects online\n\n` +
-      `\ud83c\udfe0 Master Bot\n` +
-      `  \u2022 help \u2014 this help\n` +
-      `  \u2022 status \u2014 refresh dashboard\n` +
-      `  \u2022 cron list / add / del\n` +
-      `  \u2022 search <keyword> \u2014 search all projects\n` +
-      `  \u2022 restart \u2014 restart daemon\n\n` +
-      `\ud83d\udcc2 Project Bot\n` +
-      `  \u2022 @bot your request\n` +
-      `  \u2022 Reply to bot to continue\n\n` +
-      `\ud83d\udfe2 Projects:\n` +
-      projectBots
-        .filter((b) => b.assignedProject)
-        .map((b) => `  \u2022 ${b.assignedProject} (@${b.username ?? "?"})`)
-        .join("\n")
-    );
-  }
-
   if (/^status$/i.test(stripped)) {
     void updateDashboard();
     return null;
@@ -49,26 +26,43 @@ export function handleMasterCommand(
   }
 
   if (/^cron\s+list$/i.test(stripped)) {
+    const lang = getLang();
+    const m = menuMsg(lang);
+    const pool = loadPool();
+    const masterName =
+      pool.bots.find((b) => b.role === "master")?.username ?? "master";
     const jobs = loadCron();
-    if (jobs.length === 0)
-      return "\ud83d\udccb No scheduled tasks\n\nUsage: cron add @bot HH:MM task description";
+    if (jobs.length === 0) return m.noTasks(masterName);
     return (
-      "\ud83d\udccb Scheduled Tasks\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+      `${m.tasksTitle}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
       jobs
         .map((j) => {
           const status = j.enabled ? "\ud83d\udfe2" : "\u23f8";
           const last = j.lastRun ? j.lastRun.split("T")[0] : "never";
-          return `${status} [${j.id}] @${j.botUsername} ${j.schedule}\n   ${j.prompt.slice(0, 60)}\n   Last: ${last}`;
+          return `${status} [${j.id}] @${j.botUsername} ${j.schedule}\n   ${j.prompt.slice(0, 60)}\n   ${m.last}: ${last}`;
         })
         .join("\n\n")
     );
   }
 
-  const cronAddMatch = stripped.match(
+  // Support both: cron add HH:MM task @bot  AND  cron add @bot HH:MM task
+  const cronAddOld = stripped.match(
     /^cron\s+add\s+@(\w+)\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)$/i,
   );
+  const cronAddNew = stripped.match(
+    /^cron\s+add\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)\s+@(\w+)$/i,
+  );
+  const cronAddMatch = cronAddOld
+    ? { botUser: cronAddOld[1], schedule: cronAddOld[2], prompt: cronAddOld[3] }
+    : cronAddNew
+      ? {
+          botUser: cronAddNew[3],
+          schedule: cronAddNew[1],
+          prompt: cronAddNew[2],
+        }
+      : null;
   if (cronAddMatch) {
-    const [, botUser, schedule, prompt] = cronAddMatch;
+    const { botUser, schedule, prompt } = cronAddMatch;
     const jobs = loadCron();
     const id = `job-${Date.now().toString(36)}`;
     jobs.push({

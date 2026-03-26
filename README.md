@@ -13,7 +13,7 @@
 
 **Claude Code — Every Project, Anywhere.**
 
-One bot per project. Go solo and run everything from one chat, or bring your team into one group to divide and conquer.
+One bot to build your Claude Code project management crew. Go solo and run everything from one chat, or bring your team into one group to divide and conquer.
 
 ## 🎯 Three Ways to Use
 
@@ -156,9 +156,11 @@ bash scripts/setup.sh    # asks for your Telegram User ID + master bot token, th
 **Telegram (everything else):**
 
 1. Create a private group, add your master bot, disable Group Privacy in @BotFather
-2. Send a message in the group, then tell your master bot: `run manage-pool.sh init-group`
-3. Add project bots: `add bot <token> and assign to <project> at <path>`
-4. Master bot guides you through the rest — invite bots to group, disable Group Privacy, restart
+2. Send `@master setup` in the group — the interactive wizard guides you through:
+   - Setting the group as your shared control group
+   - Adding your first project bot (token → project name → path)
+   - One-click restart to bring the bot online
+3. Use `@master bots` to add more bots, `@master config` to edit settings, `@master users` to manage access
 
 <details>
 <summary><b>Detailed Setup Guide (step by step)</b></summary>
@@ -294,9 +296,15 @@ When you reply to a message while @mentioning a bot, the quoted content is autom
 
 ### Master Bot Commands
 
+All master commands are accessible via **button menu** or text. Send `menu` to the master bot to open.
+
 | Command | Description |
 |---------|-------------|
-| `@master help` | Show all commands and project list |
+| `@master menu` | Open interactive button menu |
+| `@master setup` | First-time setup wizard |
+| `@master bots` | Manage project bots (add/remove/configure) |
+| `@master config` | Edit global settings via buttons |
+| `@master users` | Manage admins & per-bot users |
 | `@master status` | Force-refresh project dashboard |
 | `@master search <keyword>` | Grep across all projects |
 | `@master restart` | Restart daemon (reloads config) |
@@ -304,6 +312,8 @@ When you reply to a message while @mentioning a bot, the quoted content is autom
 | `@master cron add @bot HH:MM task` | Daily task at HH:MM |
 | `@master cron add @bot */N task` | Every N minutes |
 | `@master cron del <id>` | Delete task |
+
+> The menu supports English and Chinese. Switch language via the `Lang` button in the menu.
 
 ### Daemon Management
 
@@ -425,8 +435,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | **Member** (per-bot `allowedUsers`) | Only bots that list them | No |
 | **Others** | None — silently ignored | No |
 
-> Most configuration changes take effect immediately (permissions, rate limits, timeouts, etc.). **Exceptions that require `daemon.sh restart`:** `dashboardIntervalMinutes` and adding/removing bots in the `bots` array.
->
+> Most configuration changes take effect immediately (permissions, rate limits, timeouts, etc.). **Exceptions that require restart:** `dashboardIntervalMinutes` and adding/removing bots. The interactive setup (`@master bots`, `@master config`) offers a one-click restart button when needed.
 
 ### manage-pool.sh Commands
 
