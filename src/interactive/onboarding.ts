@@ -1,6 +1,6 @@
 import type { Api } from "grammy";
 import type { ManagedBot } from "../types.js";
-import { loadPool, savePool } from "../config.js";
+import { loadPool, savePool, createProjectBot } from "../config.js";
 import { log } from "../logger.js";
 import {
   getConversation,
@@ -8,7 +8,12 @@ import {
   clearConversation,
 } from "./state.js";
 import { validateBotToken, validatePath } from "./validate.js";
-import { confirmRow, restartRow, cancelButton } from "./keyboards.js";
+import {
+  confirmRow,
+  restartRow,
+  cancelButton,
+  SEPARATOR,
+} from "./keyboards.js";
 import { getLang, onboardMsg, common } from "./i18n.js";
 
 // ── Entry point ──
@@ -43,7 +48,13 @@ export async function startOnboarding(
   await api
     .sendMessage(chatId, m.welcome, {
       reply_markup: {
-        inline_keyboard: confirmRow("o:setgroup", "o:cancel", m.yesUseGroup, c.cancel, lang),
+        inline_keyboard: confirmRow(
+          "o:setgroup",
+          "o:cancel",
+          m.yesUseGroup,
+          c.cancel,
+          lang,
+        ),
       },
     })
     .catch(() => {});
@@ -156,7 +167,9 @@ async function handleTokenInput(
 ): Promise<boolean> {
   const lang = getLang();
   const m = onboardMsg(lang);
-  const cancelKb = { reply_markup: { inline_keyboard: cancelButton("m:menu", lang) } };
+  const cancelKb = {
+    reply_markup: { inline_keyboard: cancelButton("m:menu", lang) },
+  };
   const token = text.trim();
 
   if (!/^\d+:[A-Za-z0-9_-]+$/.test(token)) {
@@ -170,13 +183,20 @@ async function handleTokenInput(
     return true;
   }
 
-  const statusMsg = await api.sendMessage(chatId, m.validating).catch(() => null);
+  const statusMsg = await api
+    .sendMessage(chatId, m.validating)
+    .catch(() => null);
   const result = await validateBotToken(token);
 
   if (!result.ok) {
     if (statusMsg) {
       await api
-        .editMessageText(chatId, statusMsg.message_id, m.invalidTokenApi, cancelKb)
+        .editMessageText(
+          chatId,
+          statusMsg.message_id,
+          m.invalidTokenApi,
+          cancelKb,
+        )
         .catch(() => {});
     }
     return true;
@@ -184,7 +204,12 @@ async function handleTokenInput(
 
   if (statusMsg) {
     await api
-      .editMessageText(chatId, statusMsg.message_id, m.foundBot(result.username!), cancelKb)
+      .editMessageText(
+        chatId,
+        statusMsg.message_id,
+        m.foundBot(result.username!),
+        cancelKb,
+      )
       .catch(() => {});
   }
 
@@ -203,7 +228,9 @@ async function handleProjectInput(
 ): Promise<boolean> {
   const lang = getLang();
   const m = onboardMsg(lang);
-  const cancelKb = { reply_markup: { inline_keyboard: cancelButton("m:menu", lang) } };
+  const cancelKb = {
+    reply_markup: { inline_keyboard: cancelButton("m:menu", lang) },
+  };
   const project = text.trim();
 
   if (!project || project.length > 50) {
@@ -225,11 +252,15 @@ async function handlePathInput(
   const lang = getLang();
   const m = onboardMsg(lang);
   const c = common(lang);
-  const cancelKb = { reply_markup: { inline_keyboard: cancelButton("m:menu", lang) } };
+  const cancelKb = {
+    reply_markup: { inline_keyboard: cancelButton("m:menu", lang) },
+  };
   const path = text.trim();
 
   if (!validatePath(path)) {
-    await api.sendMessage(chatId, m.invalidPath(path), cancelKb).catch(() => {});
+    await api
+      .sendMessage(chatId, m.invalidPath(path), cancelKb)
+      .catch(() => {});
     return true;
   }
 
@@ -240,12 +271,18 @@ async function handlePathInput(
   await api
     .sendMessage(
       chatId,
-      `${m.summary}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
+      `${m.summary}\n${SEPARATOR}\n\n` +
         `Bot: @${username}\nProject: ${project}\nPath: ${path}\n` +
         `Access: readWrite\nPermission: allowAll\n\n${m.saveConfig}`,
       {
         reply_markup: {
-          inline_keyboard: confirmRow("o:confirm", "o:cancel", undefined, undefined, lang),
+          inline_keyboard: confirmRow(
+            "o:confirm",
+            "o:cancel",
+            undefined,
+            undefined,
+            lang,
+          ),
         },
       },
     )
@@ -271,16 +308,7 @@ async function finalizeOnboarding(
   if (!token || !username || !project || !path) return false;
 
   const pool = loadPool();
-  const newBot = {
-    token,
-    username,
-    role: "project" as const,
-    assignedProject: project,
-    assignedPath: path,
-    accessLevel: "readWrite" as const,
-    permissionMode: pool.permissionMode ?? "allowAll",
-    allowedUsers: [] as string[],
-  };
+  const newBot = createProjectBot(token, username, project, path, pool);
 
   savePool({ ...pool, bots: [...pool.bots, newBot] });
   log(`ONBOARD: added @${username} → ${project} (${path}) by ${userId}`);

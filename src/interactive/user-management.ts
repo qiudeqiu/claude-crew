@@ -8,7 +8,13 @@ import {
   setConversation,
   clearConversation,
 } from "./state.js";
-import { cancelButton, menuButton } from "./keyboards.js";
+import {
+  cancelButton,
+  menuButton,
+  sendOrEdit,
+  chunkRows,
+  SEPARATOR,
+} from "./keyboards.js";
 import { getLang, usersMsg, common } from "./i18n.js";
 
 // ── User management view ──
@@ -27,7 +33,7 @@ export async function showUserManagement(
 
   const lines = [
     m.title,
-    "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n",
+    `${SEPARATOR}\n`,
     m.adminsTitle,
     ...admins.map((a) => `  \u2022 ${a}`),
     "",
@@ -91,10 +97,8 @@ async function showBotUsers(
   const users = bot.allowedUsers ?? [];
   const lines = [
     m.botUsersTitle(username),
-    "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n",
-    users.length > 0
-      ? users.map((u) => `  \u2022 ${u}`).join("\n")
-      : m.noUsers,
+    `${SEPARATOR}\n`,
+    users.length > 0 ? users.map((u) => `  \u2022 ${u}`).join("\n") : m.noUsers,
   ];
 
   const buttons: InlineKeyboardButton[][] = [
@@ -159,7 +163,9 @@ export async function handleUserCallback(
       await api
         .editMessageText(chatId, messageId, m.cantRemoveLast, {
           reply_markup: {
-            inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }]],
+            inline_keyboard: [
+              [{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }],
+            ],
           },
         })
         .catch(() => {});
@@ -172,7 +178,9 @@ export async function handleUserCallback(
     await api
       .editMessageText(chatId, messageId, m.adminRemoved(adminId), {
         reply_markup: {
-          inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }]],
+          inline_keyboard: [
+            [{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }],
+          ],
         },
       })
       .catch(() => {});
@@ -189,7 +197,9 @@ export async function handleUserCallback(
     const username = data.slice(5);
     await api
       .editMessageText(chatId, messageId, m.addUserPrompt(username), {
-        reply_markup: { inline_keyboard: cancelButton(`u:b:${username}`, lang) },
+        reply_markup: {
+          inline_keyboard: cancelButton(`u:b:${username}`, lang),
+        },
       })
       .catch(() => {});
     setConversation(userId, chatId, "user:awaitUser", { targetBot: username });
@@ -206,7 +216,9 @@ export async function handleUserCallback(
     const bot = pool.bots.find((b) => b.username === username);
     if (!bot) return false;
 
-    bot.allowedUsers = (bot.allowedUsers ?? []).filter((u) => u !== targetUserId);
+    bot.allowedUsers = (bot.allowedUsers ?? []).filter(
+      (u) => u !== targetUserId,
+    );
     savePool(pool);
     log(`USERS: removed ${targetUserId} from @${username} by ${userId}`);
 
@@ -258,7 +270,9 @@ export async function handleUserText(
     await api
       .sendMessage(chatId, m.adminAdded(input), {
         reply_markup: {
-          inline_keyboard: [[{ text: `\u25c0\ufe0f ${m.userMgmt}`, callback_data: "u:l" }]],
+          inline_keyboard: [
+            [{ text: `\u25c0\ufe0f ${m.userMgmt}`, callback_data: "u:l" }],
+          ],
         },
       })
       .catch(() => {});
@@ -270,7 +284,9 @@ export async function handleUserText(
     if (!/^\d+$/.test(input)) {
       await api
         .sendMessage(chatId, m.invalidId, {
-          reply_markup: { inline_keyboard: cancelButton(`u:b:${targetBot}`, lang) },
+          reply_markup: {
+            inline_keyboard: cancelButton(`u:b:${targetBot}`, lang),
+          },
         })
         .catch(() => {});
       return true;
@@ -285,7 +301,9 @@ export async function handleUserText(
 
     const users = bot.allowedUsers ?? [];
     if (users.includes(input)) {
-      await api.sendMessage(chatId, m.alreadyUser(input, username)).catch(() => {});
+      await api
+        .sendMessage(chatId, m.alreadyUser(input, username))
+        .catch(() => {});
       clearConversation(userId, chatId);
       return true;
     }
@@ -299,7 +317,12 @@ export async function handleUserText(
       .sendMessage(chatId, m.userAdded(input, username), {
         reply_markup: {
           inline_keyboard: [
-            [{ text: `\u25c0\ufe0f @${username}`, callback_data: `u:b:${username}` }],
+            [
+              {
+                text: `\u25c0\ufe0f @${username}`,
+                callback_data: `u:b:${username}`,
+              },
+            ],
           ],
         },
       })

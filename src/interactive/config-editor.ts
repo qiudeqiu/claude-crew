@@ -9,7 +9,12 @@ import {
   clearConversation,
 } from "./state.js";
 import { validatePath } from "./validate.js";
-import { cancelButton, menuButton } from "./keyboards.js";
+import {
+  cancelButton,
+  menuButton,
+  sendOrEdit,
+  SEPARATOR,
+} from "./keyboards.js";
 import {
   getLang,
   configMsg,
@@ -150,7 +155,7 @@ export async function showGlobalConfig(
   const me = pool.masterExecute ?? false;
 
   const text =
-    `${cm.globalTitle}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
+    `${cm.globalTitle}\n${SEPARATOR}\u2501\u2501\u2501\u2501\u2501\n\n` +
     `\ud83d\udee1\ufe0f permissionMode: ${pm}\n   ${(od as Record<string, string>)[`pm_${pm}`]}\n\n` +
     `\ud83d\udd10 accessLevel: ${al}\n   ${(od as Record<string, string>)[`al_${al}`]}\n\n` +
     `\ud83e\udd16 masterExecute: ${me}\n   ${(od as Record<string, string>)[`me_${me}`]}\n\n` +
@@ -219,7 +224,7 @@ export async function showBotConfig(
       : `${bot.accessLevel ?? globalAl} ${cm.globalIs(globalAl)}`;
 
   const text =
-    `${cm.botConfigTitle(username)}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
+    `${cm.botConfigTitle(username)}\n${SEPARATOR}\n\n` +
     `\ud83d\udee1\ufe0f permissionMode: ${pmDisplay}\n   ${fd.pm}\n\n` +
     `\ud83d\udd10 accessLevel: ${alDisplay}\n   ${fd.al}\n\n` +
     `\ud83d\udcc2 project: ${bot.assignedProject ?? "(none)"}\n   ${fd.ap}\n\n` +

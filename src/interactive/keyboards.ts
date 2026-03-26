@@ -1,8 +1,39 @@
+import type { Api } from "grammy";
 import type { InlineKeyboardButton } from "grammy/types";
 import type { Lang } from "./i18n.js";
 import { common, menuMsg } from "./i18n.js";
 
 type Row = InlineKeyboardButton[];
+
+// ── Shared constants ──
+
+export const SEPARATOR = "\u2501".repeat(15);
+
+// ── Shared helpers ──
+
+export async function sendOrEdit(
+  api: Api,
+  chatId: string,
+  text: string,
+  messageId?: number,
+  opts?: { reply_markup?: { inline_keyboard: Row[] } },
+): Promise<void> {
+  if (messageId) {
+    await api.editMessageText(chatId, messageId, text, opts).catch(() => {});
+  } else {
+    await api.sendMessage(chatId, text, opts).catch(() => {});
+  }
+}
+
+export function chunkRows(buttons: InlineKeyboardButton[], perRow = 2): Row[] {
+  const rows: Row[] = [];
+  for (let i = 0; i < buttons.length; i += perRow) {
+    rows.push(buttons.slice(i, i + perRow));
+  }
+  return rows;
+}
+
+// ── Keyboard builders ──
 
 export function confirmRow(
   yesData: string,
@@ -26,7 +57,9 @@ export function singleButton(label: string, data: string): Row[] {
 
 export function restartRow(lang: Lang = "en"): Row[] {
   const c = common(lang);
-  return [[{ text: `\ud83d\udd04 ${c.restartNow}`, callback_data: "o:restart" }]];
+  return [
+    [{ text: `\ud83d\udd04 ${c.restartNow}`, callback_data: "o:restart" }],
+  ];
 }
 
 export function cancelButton(backData: string, lang: Lang = "en"): Row[] {

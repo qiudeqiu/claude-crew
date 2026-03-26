@@ -8,7 +8,12 @@ import { handleUserCallback, handleUserText } from "./user-management.js";
 import { showBotList } from "./bot-management.js";
 import { showGlobalConfig } from "./config-editor.js";
 import { showUserManagement } from "./user-management.js";
-import { mainMenuKeyboard, menuButton } from "./keyboards.js";
+import {
+  mainMenuKeyboard,
+  menuButton,
+  sendOrEdit,
+  SEPARATOR,
+} from "./keyboards.js";
 import { getLang, menuMsg, langMsg, common, type Lang } from "./i18n.js";
 import { updateDashboard } from "../dashboard.js";
 
@@ -39,18 +44,14 @@ export async function showMainMenu(
     pool.bots.find((b) => b.role === "master")?.username ?? "master";
 
   const text =
-    `${m.title}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
+    `${m.title}\n${SEPARATOR}\n\n` +
     `${m.projectsOnline(online)}\n\n` +
     `${m.projects}\n${projects}\n\n` +
     m.textCmds(masterName);
 
-  const opts = { reply_markup: { inline_keyboard: mainMenuKeyboard(lang) } };
-  const api = managed.bot.api;
-  if (messageId) {
-    await api.editMessageText(chatId, messageId, text, opts).catch(() => {});
-  } else {
-    await api.sendMessage(chatId, text, opts).catch(() => {});
-  }
+  await sendOrEdit(managed.bot.api, chatId, text, messageId, {
+    reply_markup: { inline_keyboard: mainMenuKeyboard(lang) },
+  });
 }
 
 // ── Callback router ──
@@ -144,7 +145,7 @@ async function handleMenuCallback(
       const text =
         jobs.length === 0
           ? m.noTasks(masterName)
-          : `${m.tasksTitle}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
+          : `${m.tasksTitle}\n${SEPARATOR}\n\n` +
             jobs
               .map((j) => {
                 const status = j.enabled ? "\ud83d\udfe2" : "\u23f8";

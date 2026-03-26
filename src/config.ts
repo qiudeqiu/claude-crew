@@ -109,6 +109,31 @@ export function getBotPermissionMode(
   return botConfig.permissionMode ?? loadPool().permissionMode ?? "allowAll";
 }
 
+export function getMasterName(pool?: BotPool): string {
+  const p = pool ?? loadPool();
+  return p.bots.find((b) => b.role === "master")?.username ?? "master";
+}
+
+export function createProjectBot(
+  token: string,
+  username: string,
+  project: string,
+  path: string,
+  pool?: BotPool,
+): PoolBot {
+  const p = pool ?? loadPool();
+  return {
+    token,
+    username,
+    role: "project",
+    assignedProject: project,
+    assignedPath: path,
+    accessLevel: "readWrite",
+    permissionMode: p.permissionMode ?? "allowAll",
+    allowedUsers: [],
+  };
+}
+
 export function validateConfig(): void {
   const admins = getAdmins();
   if (admins.length === 0) {

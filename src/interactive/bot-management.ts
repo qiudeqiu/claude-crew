@@ -1,6 +1,6 @@
 import type { Api } from "grammy";
 import type { ManagedBot } from "../types.js";
-import { loadPool, savePool } from "../config.js";
+import { loadPool, savePool, createProjectBot } from "../config.js";
 import { log } from "../logger.js";
 import { botByUsername } from "../state.js";
 import {
@@ -9,7 +9,15 @@ import {
   clearConversation,
 } from "./state.js";
 import { validateBotToken, validatePath } from "./validate.js";
-import { confirmRow, restartRow, cancelButton, menuButton } from "./keyboards.js";
+import {
+  confirmRow,
+  restartRow,
+  cancelButton,
+  menuButton,
+  sendOrEdit,
+  chunkRows,
+  SEPARATOR,
+} from "./keyboards.js";
 import { getLang, botsMsg, common } from "./i18n.js";
 
 // ── Bot list ──
@@ -25,7 +33,7 @@ export async function showBotList(
   const pool = loadPool();
   const bots = pool.bots;
 
-  const lines = [m.title, "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n"];
+  const lines = [m.title, `${SEPARATOR}\n`];
   if (bots.length === 0) {
     lines.push(`(empty)`);
   } else {
@@ -47,20 +55,15 @@ export async function showBotList(
     callback_data: `b:d:${b.username}`,
   }));
 
-  const rows: Array<Array<{ text: string; callback_data: string }>> = [];
-  for (let i = 0; i < botButtons.length; i += 2) {
-    rows.push(botButtons.slice(i, i + 2));
-  }
-  rows.push([{ text: m.addBot, callback_data: "b:a" }]);
-  rows.push(...menuButton(lang));
+  const rows = [
+    ...chunkRows(botButtons),
+    [{ text: m.addBot, callback_data: "b:a" }],
+    ...menuButton(lang),
+  ];
 
-  const opts = { reply_markup: { inline_keyboard: rows } };
-  const text = lines.join("\n");
-  if (messageId) {
-    await api.editMessageText(chatId, messageId, text, opts).catch(() => {});
-  } else {
-    await api.sendMessage(chatId, text, opts).catch(() => {});
-  }
+  await sendOrEdit(api, chatId, lines.join("\n"), messageId, {
+    reply_markup: { inline_keyboard: rows },
+  });
 }
 
 // ── Bot detail ──
@@ -77,24 +80,23 @@ export async function showBotDetail(
   const pool = loadPool();
   const bot = pool.bots.find((b) => b.username === username);
   if (!bot) {
-    const text = m.notFound(username);
-    if (messageId) {
-      await api.editMessageText(chatId, messageId, text).catch(() => {});
-    } else {
-      await api.sendMessage(chatId, text).catch(() => {});
-    }
+    await sendOrEdit(api, chatId, m.notFound(username), messageId);
     return;
   }
 
   const globalPm = pool.permissionMode ?? "allowAll";
   const globalAl = pool.accessLevel ?? "readWrite";
   const pmNote =
-    bot.permissionMode === globalPm ? ` ${m.matchesGlobal}` : ` ${m.globalIs(globalPm)}`;
+    bot.permissionMode === globalPm
+      ? ` ${m.matchesGlobal}`
+      : ` ${m.globalIs(globalPm)}`;
   const alNote =
-    bot.accessLevel === globalAl ? ` ${m.matchesGlobal}` : ` ${m.globalIs(globalAl)}`;
+    bot.accessLevel === globalAl
+      ? ` ${m.matchesGlobal}`
+      : ` ${m.globalIs(globalAl)}`;
 
   const text =
-    `\ud83e\udd16 @${username}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
+    `\ud83e\udd16 @${username}\n${SEPARATOR}\n\n` +
     `${m.project}: ${bot.assignedProject ?? m.none}\n` +
     `${m.path}: ${bot.assignedPath ?? m.none}\n` +
     `${m.access}: ${bot.accessLevel ?? "readWrite"}${alNote}\n` +
@@ -112,15 +114,9 @@ export async function showBotDetail(
     ],
   ];
 
-  if (messageId) {
-    await api
-      .editMessageText(chatId, messageId, text, { reply_markup: { inline_keyboard: keyboard } })
-      .catch(() => {});
-  } else {
-    await api
-      .sendMessage(chatId, text, { reply_markup: { inline_keyboard: keyboard } })
-      .catch(() => {});
-  }
+  await sendOrEdit(api, chatId, text, messageId, {
+    reply_markup: { inline_keyboard: keyboard },
+  });
 }
 
 // ── Callback handler ──
@@ -181,7 +177,9 @@ export async function handleBotCallback(
     const pool = loadPool();
     const filtered = pool.bots.filter((b) => b.username !== username);
     if (filtered.length === pool.bots.length) {
-      await api.editMessageText(chatId, messageId, m.notFound(username)).catch(() => {});
+      await api
+        .editMessageText(chatId, messageId, m.notFound(username))
+        .catch(() => {});
       return true;
     }
 
@@ -218,7 +216,9 @@ export async function handleBotText(
   const api = managed.bot.api;
   const lang = getLang();
   const m = botsMsg(lang);
-  const cancelKb = { reply_markup: { inline_keyboard: cancelButton("b:l", lang) } };
+  const cancelKb = {
+    reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
+  };
 
   if (state.step === "bot:awaitToken") {
     const token = text.trim();
@@ -233,13 +233,20 @@ export async function handleBotText(
       return true;
     }
 
-    const statusMsg = await api.sendMessage(chatId, m.validating).catch(() => null);
+    const statusMsg = await api
+      .sendMessage(chatId, m.validating)
+      .catch(() => null);
     const result = await validateBotToken(token);
 
     if (!result.ok) {
       if (statusMsg) {
         await api
-          .editMessageText(chatId, statusMsg.message_id, m.invalidTokenApi, cancelKb)
+          .editMessageText(
+            chatId,
+            statusMsg.message_id,
+            m.invalidTokenApi,
+            cancelKb,
+          )
           .catch(() => {});
       }
       return true;
@@ -247,7 +254,12 @@ export async function handleBotText(
 
     if (statusMsg) {
       await api
-        .editMessageText(chatId, statusMsg.message_id, m.foundBot(result.username!), cancelKb)
+        .editMessageText(
+          chatId,
+          statusMsg.message_id,
+          m.foundBot(result.username!),
+          cancelKb,
+        )
         .catch(() => {});
     }
     setConversation(userId, chatId, "bot:awaitProject", {
@@ -271,7 +283,9 @@ export async function handleBotText(
   if (state.step === "bot:awaitPath") {
     const path = text.trim();
     if (!validatePath(path)) {
-      await api.sendMessage(chatId, m.invalidPath(path), cancelKb).catch(() => {});
+      await api
+        .sendMessage(chatId, m.invalidPath(path), cancelKb)
+        .catch(() => {});
       return true;
     }
 
@@ -280,12 +294,22 @@ export async function handleBotText(
     await api
       .sendMessage(
         chatId,
-        `${m.summaryTitle}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n` +
+        `${m.summaryTitle}\n${SEPARATOR}\n\n` +
           `${m.bot}: @${s.data.username}\n` +
           `${m.project}: ${s.data.project}\n` +
           `${m.path}: ${path}\n\n` +
           `${common(lang).save}?`,
-        { reply_markup: { inline_keyboard: confirmRow("b:confirm", "b:l", undefined, undefined, lang) } },
+        {
+          reply_markup: {
+            inline_keyboard: confirmRow(
+              "b:confirm",
+              "b:l",
+              undefined,
+              undefined,
+              lang,
+            ),
+          },
+        },
       )
       .catch(() => {});
     return true;
@@ -312,16 +336,7 @@ async function finalizeAddBot(
   const lang = getLang();
   const m = botsMsg(lang);
   const pool = loadPool();
-  const newBot = {
-    token,
-    username,
-    role: "project" as const,
-    assignedProject: project,
-    assignedPath: path,
-    accessLevel: "readWrite" as const,
-    permissionMode: pool.permissionMode ?? ("allowAll" as const),
-    allowedUsers: [] as string[],
-  };
+  const newBot = createProjectBot(token, username, project, path, pool);
 
   savePool({ ...pool, bots: [...pool.bots, newBot] });
   log(`BOT_MGMT: added @${username} → ${project} (${path}) by ${userId}`);
