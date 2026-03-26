@@ -210,25 +210,11 @@ cd claude-crew
 bun install
 ```
 
-### 第二步：在 Telegram 创建机器人
+### 第二步：创建主控机器人
 
-打开 [@BotFather](https://t.me/BotFather)：
+打开 [@BotFather](https://t.me/BotFather)，发送 `/newbot`，保存 token。
 
-1. 发送 `/newbot`，选择名称和用户名
-2. **保存 token**（格式：`123456789:AAH...`）
-
-现在只需要创建**主控机器人**。项目机器人可以之后通过 `@master bots` 在 Telegram 中添加。
-
-**需要多少个机器人？**
-
-| 角色 | 数量 | 用途 |
-|------|------|------|
-| 主控机器人 | 1 | 控制中心：菜单、看板、定时任务、设置向导、bot/配置/用户管理 |
-| 项目机器人 | 每个项目 1 个 | 在对应项目目录运行 Claude Code |
-
-例：3 个项目 = 1 主控 + 3 项目机器人 = 共 4 个
-
-> 主控机器人必须有。项目机器人可以之后通过 `@master bots` 在 Telegram 中添加。
+> 项目机器人之后在 Telegram 中通过 `@master bots` 添加，现在不需要创建。
 
 ### 第三步：运行安装脚本
 

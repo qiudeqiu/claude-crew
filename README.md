@@ -210,25 +210,11 @@ cd claude-crew
 bun install
 ```
 
-### Step 2: Create Bots in Telegram
+### Step 2: Create a Master Bot
 
-Open [@BotFather](https://t.me/BotFather):
+Open [@BotFather](https://t.me/BotFather), send `/newbot`, and save the token.
 
-1. Send `/newbot`, choose a name and username
-2. **Save the token** (format: `123456789:AAH...`)
-
-You only need the **master bot** now. Project bots can be created later via `@master bots` in Telegram.
-
-**How many bots?**
-
-| Role | Count | Purpose |
-|------|-------|---------|
-| Master bot | **1 (required)** | Control center: menu, dashboard, cron, setup, bot/config/user management |
-| Project bot | 1 per project | Runs Claude Code in that project directory |
-
-Example: 3 projects = 1 master + 3 project bots = 4 bots total.
-
-> The master bot is required. You can also add project bots later via `@master bots` in Telegram.
+> Project bots are added later from Telegram via `@master bots` — you don't need to create them now.
 
 ### Step 3: Run Setup
 
