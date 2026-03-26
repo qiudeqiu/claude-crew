@@ -116,7 +116,6 @@ Reply to any message — text, photo, voice, file, or sticker — while @mention
 | Setup from phone | ✅ Guided wizard in Telegram | ❌ Terminal only | ❌ Terminal config | ✅ QR pairing |
 | Manage from phone | ✅ Button menus for bots, config, users | ❌ | ❌ | Partial |
 | Zero terminal after setup | ✅ One-time `setup.sh`, then all in Telegram | ❌ Always terminal | ❌ | ✅ |
-| Multi-language UI | ✅ EN / 中文 | ❌ | ❌ | ❌ |
 | @mention routing in group | ✅ | ❌ | ❌ | ❌ |
 | Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
