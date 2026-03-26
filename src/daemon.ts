@@ -155,30 +155,23 @@ async function main(): Promise<void> {
     }, i * BOT_START_STAGGER_MS);
   }
 
-  // Restart notification
+  // On startup: send main menu to group
   setTimeout(async () => {
     if (!daemon.masterBot) return;
     const pool = loadPool();
     if (!pool.sharedGroupId) return;
-    try {
-      if (existsSync(RESTART_NOTE_FILE)) {
-        const note = JSON.parse(readFileSync(RESTART_NOTE_FILE, "utf8"));
-        await daemon.masterBot.bot.api.sendMessage(
-          pool.sharedGroupId,
-          `🔄 Daemon restarted\n📂 ${note.project ?? "?"}\n📝 ${note.summary ?? ""}`,
-        );
+
+    // Clean up restart note if present
+    if (existsSync(RESTART_NOTE_FILE)) {
+      try {
         unlinkSync(RESTART_NOTE_FILE);
-      } else {
-        const tail = existsSync(LOG_FILE)
-          ? readFileSync(LOG_FILE, "utf8").slice(-2000)
-          : "";
-        if (tail.includes("Shutting down...") && tail.includes("INVOKE:")) {
-          await daemon.masterBot.bot.api.sendMessage(
-            pool.sharedGroupId,
-            `🔄 Daemon restarted (triggered by project bot)`,
-          );
-        }
-      }
+      } catch {}
+    }
+
+    // Send menu
+    try {
+      const { showMainMenu } = await import("./interactive/index.js");
+      await showMainMenu(daemon.masterBot!, pool.sharedGroupId);
     } catch {}
   }, RESTART_NOTIFY_DELAY_MS);
 
