@@ -35,6 +35,43 @@ export function setupBot(managed: ManagedBot): void {
     return next();
   });
 
+  // Auto-detect: master bot added to a group while sharedGroupId is empty
+  if (config.role === "master") {
+    tgBot.on("my_chat_member", async (ctx) => {
+      const chat = ctx.myChatMember.chat;
+      if (chat.type !== "group" && chat.type !== "supergroup") return;
+      const newStatus = ctx.myChatMember.new_chat_member.status;
+      if (newStatus !== "member" && newStatus !== "administrator") return;
+
+      const pool = loadPool();
+      if (pool.sharedGroupId) return; // already bound
+
+      const from = ctx.myChatMember.from;
+      if (!isAdmin(String(from.id))) return;
+
+      const lang = getLang();
+      const m = (await import("./interactive/i18n.js")).onboardMsg(lang);
+      const c = (await import("./interactive/i18n.js")).common(lang);
+      const chatId = String(chat.id);
+
+      await tgBot.api
+        .sendMessage(chatId, m.groupDetected, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: `\u2705 ${m.yesUseGroup}`,
+                  callback_data: "o:setgroup",
+                },
+                { text: `\u274c ${c.cancel}`, callback_data: "o:cancel" },
+              ],
+            ],
+          },
+        })
+        .catch(() => {});
+    });
+  }
+
   // Callback handler: interactive setup + approval
   tgBot.on("callback_query:data", async (ctx) => {
     if (!ctx.from) return;
@@ -220,6 +257,20 @@ export function setupBot(managed: ManagedBot): void {
     // Master bot: interactive conversations + commands
     if (config.role === "master") {
       const userId = String(ctx.from.id);
+
+      // No group bound yet → guide user
+      if (!loadPool().sharedGroupId) {
+        if (chatType === "private") {
+          // DM: tell user to add bot to group
+          const lang = getLang();
+          const m = (await import("./interactive/i18n.js")).onboardMsg(lang);
+          await tgBot.api.sendMessage(chatId, m.dmOnly).catch(() => {});
+          return;
+        }
+        // In a group but not bound → auto-trigger setup
+        await startOnboarding(managed, chatId, userId);
+        return;
+      }
 
       // Check active interactive conversation first (text input)
       const interactiveHandled = await routeText(

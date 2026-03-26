@@ -460,7 +460,15 @@ export function onboardMsg(lang: Lang) {
   return lang === "zh"
     ? {
         dmOnly:
-          "\u2139\ufe0f 设置需要在群组中进行。\n\n先把我添加到群组，然后在群里输入 setup。",
+          "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
+          "下一步：\n" +
+          "1\ufe0f\u20e3 创建一个 Telegram 私密群组\n" +
+          "2\ufe0f\u20e3 把我拉进群组\n" +
+          "3\ufe0f\u20e3 在 @BotFather 中关闭我的 Group Privacy：\n" +
+          "   /mybots \u2192 选择我 \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
+          "拉进群后我会自动发起设置向导 \ud83d\ude80",
+        groupDetected:
+          "\ud83d\udc4b 检测到新群组！\n\n是否将此群组设为共享控制群组？\n\n设置后，所有项目机器人和管理操作都将在此群组中进行。",
         alreadySet: "\u2705 此群组已配置为共享群组。\n\n使用 config 管理设置。",
         otherGroup:
           "\u26a0\ufe0f 共享群组已在其他聊天中配置。\n\n请在该群组中使用 config 修改。",
@@ -504,7 +512,15 @@ export function onboardMsg(lang: Lang) {
       }
     : {
         dmOnly:
-          "\u2139\ufe0f Setup works best in a group.\n\nAdd me to a group first, then type setup there.",
+          "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
+          "Next steps:\n" +
+          "1\ufe0f\u20e3 Create a private Telegram group\n" +
+          "2\ufe0f\u20e3 Add me to the group\n" +
+          "3\ufe0f\u20e3 Disable my Group Privacy in @BotFather:\n" +
+          "   /mybots \u2192 select me \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
+          "I'll auto-start the setup wizard once I'm in the group \ud83d\ude80",
+        groupDetected:
+          "\ud83d\udc4b New group detected!\n\nSet this group as your shared control group?\n\nOnce set, all project bots and management will happen here.",
         alreadySet:
           "\u2705 This group is already configured as the shared group.\n\nUse config to manage settings.",
         otherGroup:
