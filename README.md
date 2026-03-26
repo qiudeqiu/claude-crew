@@ -13,7 +13,9 @@
 
 **Claude Code — Every Project, Anywhere.**
 
-One bot to assemble your Claude Code project crew. Go solo and run everything from one chat, or bring your team into one group to divide and conquer.
+One bot to assemble your Claude Code project crew.
+
+claude-crew turns a single Telegram bot into a complete project management team. Your **master bot** is the control center — add project bots, configure settings, manage team access, and monitor all projects from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code tasks on @mention. Go solo or invite your team — one group, all projects, everyone in their lane.
 
 ## 🎯 Three Ways to Use
 
@@ -35,11 +37,53 @@ Pull all bots into one group. @mention to switch between projects — no context
 
 ![Team Mode](docs/scene-team.png)
 
-## ✨ Features
+## 🤖 Master Bot — Your Control Center
+
+The master bot manages everything. Send `menu` to open the interactive button menu — no commands to memorize.
+
+### Guided setup
+
+A step-by-step wizard walks you through first-time configuration: set the shared group, create project bots via @BotFather, assign projects — all from Telegram.
+
+<!-- TODO: screenshot of setup wizard -->
+
+### Bot management
+
+Add, remove, and configure project bots with inline buttons. Token validation, project assignment, and one-click restart built in.
+
+<!-- TODO: screenshot of bot management -->
+
+### Config editor
+
+Edit all global and per-bot settings via buttons — each field includes a description of what it does, and enum options explain their effects.
+
+<!-- TODO: screenshot of config editor -->
+
+### User management
+
+Add admins and per-bot members by user ID. Last-admin protection prevents lockout.
+
+### Pinned dashboard
+
+Auto-refreshing pinned message showing all projects at a glance — git branch, last commit, context usage, cost, and rate limit countdown. Includes master bot identity and command reference.
+
+![Dashboard](docs/feat-dashboard.png)
+
+### Cron scheduler
+
+Schedule recurring tasks per project bot — daily at a fixed time or every N minutes.
+
+### Bilingual UI
+
+Switch between English and Chinese with one tap. All menus, prompts, and dashboard follow the selected language.
+
+## ⚡ Project Bots — Your Dev Team
+
+Each project bot is assigned to a codebase. @mention it in the group (or DM it directly) to run Claude Code tasks.
 
 ### Instant feedback
 
-Your message gets a 👀 reaction the moment a bot picks it up — you always know your command was received.
+Your message gets a 👀 reaction the moment a bot picks it up — you always know your request was received.
 
 ![Acknowledged](docs/feat-ack.png)
 
@@ -55,34 +99,13 @@ Switch between pre-authorized mode (fast, no prompts) and approval mode (button 
 
 ![Permission](docs/feat-permission.png)
 
-### Pinned dashboard
+### Voice & photo
 
-Master bot posts a pinned dashboard showing all projects at a glance — git status, context window usage, cost, and rate limit countdown.
+Send a photo for visual analysis, or reply with a voice message for hands-free commands. Voice is transcribed via Whisper and passed to Claude.
 
-![Dashboard](docs/feat-dashboard.png)
+### Quote anything
 
-### Interactive management
-
-Master bot provides a full button menu — manage bots, edit config, control users, all from Telegram. No terminal needed after initial setup.
-
-### Bilingual UI
-
-Switch between English and Chinese with one tap. All menus, prompts, and dashboard follow the selected language.
-
-### And more
-
-- **One bot per project** — each codebase gets a dedicated Telegram bot
-- **@mention = execute** — `@bot fix the login bug` runs Claude Code in that project
-- **Reply to continue** — reply to a bot's message to keep the conversation going
-- **Quote anything** — reply to text, photos, or voice while @mentioning a bot
-- **Guided setup** — step-by-step wizard adds bots, sets group, configures settings
-- **Bot management** — add, remove, configure project bots via buttons
-- **Config editor** — edit all settings with descriptions and validation
-- **User management** — admins + per-bot member control via buttons
-- **Dashboard** — pinned message: git status, context usage, cost, commands reference
-- **Cron** — schedule recurring tasks per bot
-- **Periodic memory** — auto-saves conversation context for active projects
-- **Voice & photo** — voice transcription via Whisper, image analysis via vision
+Reply to any message — text, photo, voice, file, or sticker — while @mentioning a bot. The quoted content is automatically included in the prompt.
 
 ## 📊 Comparison
 
@@ -199,12 +222,12 @@ Open [@BotFather](https://t.me/BotFather):
 
 | Role | Count | Purpose |
 |------|-------|---------|
-| Master bot | **1 (required)** | Dashboard, help, status, search, cron, restart/memory notifications |
+| Master bot | **1 (required)** | Control center: menu, dashboard, cron, setup, bot/config/user management |
 | Project bot | 1 per project | Runs Claude Code in that project directory |
 
 Example: 3 projects = 1 master + 3 project bots = 4 bots total.
 
-> The master bot is required. It handles dashboard, global notifications (restart, memory saves), and admin commands.
+> The master bot is required. You can also add project bots later via `@master bots` in Telegram.
 
 ### Step 3: Run Setup
 
@@ -233,6 +256,8 @@ bash scripts/manage-pool.sh add <project_token_2>
 bash scripts/manage-pool.sh list
 ```
 
+> **Alternative:** Skip this step. After starting the daemon, use `@master bots` → Add Bot in Telegram to add project bots interactively.
+
 ### Step 5: Create Telegram Group
 
 1. Create a **private group** in Telegram
@@ -255,6 +280,8 @@ bash scripts/manage-pool.sh init-group
 bash scripts/manage-pool.sh set-group <group_id>
 ```
 
+> **Alternative:** Use `@master setup` in the group to set the group ID interactively.
+
 To find the group ID manually:
 ```bash
 curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" \
@@ -276,6 +303,8 @@ bash scripts/manage-pool.sh assign frontend_bot my-app ~/my-app
 bash scripts/manage-pool.sh assign api_bot backend ~/backend
 ```
 
+> **Alternative:** Project assignment is part of the `@master bots` → Add Bot flow in Telegram.
+
 ### Step 8: Start
 
 ```bash
@@ -296,15 +325,6 @@ bash scripts/daemon.sh status   # verify all bots online
 | Quote + ask | Reply to any message + `@bot` | Select message → Reply → `@bot explain this` |
 | Photo analysis | Photo + `@bot caption` | Photo + `@api_bot what's this error?` |
 | Voice command | Reply to bot with voice | Record voice on bot's message |
-
-### Quoting Messages
-
-When you reply to a message while @mentioning a bot, the quoted content is automatically included:
-
-- **Quoted text** — full text passed to Claude
-- **Quoted photo** — downloaded and analyzed by Claude
-- **Quoted voice** — transcribed and passed as text
-- **Quoted file** — filename and type included
 
 ### Master Bot Commands
 
@@ -342,7 +362,7 @@ daemon.sh logs 200   # Last 200 lines
 
 ### Access & Permission (Two-Layer Control)
 
-Permissions are configured in two layers. Set globally or per-bot in `bot-pool.json`:
+Permissions are configured in two layers. Set globally or per-bot — via `@master config` button menu or directly in `bot-pool.json`:
 
 **Layer 1: Access Level** (`accessLevel`) — what the bot CAN do:
 
@@ -412,7 +432,8 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
   "sessionTimeoutMinutes": 10,
   "dashboardIntervalMinutes": 30,
   "memoryIntervalMinutes": 120,
-  "whisperLanguage": ""
+  "whisperLanguage": "",
+  "language": "en"
 }
 ```
 
@@ -423,6 +444,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | `admins` | **(required)** | Admin user ID list. Admins can use **all** bots. |
 | `accessLevel` | `"readWrite"` | Global default. `"readWrite"` = full access. `"readOnly"` = read/search only, no writes. |
 | `permissionMode` | `"allowAll"` | Global default (only when readWrite). `"allowAll"` = pre-authorize. `"auto"` = background safety classifier (Team plan required). `"approve"` = button confirmation. |
+| `language` | `"en"` | Menu language. `"en"` or `"zh"`. Switchable via menu button. |
 | `memoryIntervalMinutes` | `120` | Auto-save conversation memory for active projects (minutes). `0` = disabled. |
 | `masterExecute` | `false` | Allow master bot to run Claude tasks (not just admin commands). |
 | `maxConcurrent` | `3` | Maximum parallel Claude invocations across all bots. |
