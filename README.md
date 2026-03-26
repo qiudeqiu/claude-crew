@@ -13,7 +13,7 @@
 
 **Claude Code — Every Project, Anywhere.**
 
-One bot to build your Claude Code project management crew. Go solo and run everything from one chat, or bring your team into one group to divide and conquer.
+One bot to assemble your Claude Code project crew. Go solo and run everything from one chat, or bring your team into one group to divide and conquer.
 
 ## 🎯 Three Ways to Use
 
@@ -61,18 +61,28 @@ Master bot posts a pinned dashboard showing all projects at a glance — git sta
 
 ![Dashboard](docs/feat-dashboard.png)
 
+### Interactive management
+
+Master bot provides a full button menu — manage bots, edit config, control users, all from Telegram. No terminal needed after initial setup.
+
+### Bilingual UI
+
+Switch between English and Chinese with one tap. All menus, prompts, and dashboard follow the selected language.
+
 ### And more
 
 - **One bot per project** — each codebase gets a dedicated Telegram bot
 - **@mention = execute** — `@bot fix the login bug` runs Claude Code in that project
 - **Reply to continue** — reply to a bot's message to keep the conversation going
 - **Quote anything** — reply to text, photos, or voice while @mentioning a bot
-- **Master bot** — dashboard, search, cron, restart/memory notifications (required)
-- **Dashboard** — pinned message: git status, context usage, cost, rate limit countdown
+- **Guided setup** — step-by-step wizard adds bots, sets group, configures settings
+- **Bot management** — add, remove, configure project bots via buttons
+- **Config editor** — edit all settings with descriptions and validation
+- **User management** — admins + per-bot member control via buttons
+- **Dashboard** — pinned message: git status, context usage, cost, commands reference
 - **Cron** — schedule recurring tasks per bot
 - **Periodic memory** — auto-saves conversation context for active projects
 - **Voice & photo** — voice transcription via Whisper, image analysis via vision
-- **Multi-user access** — admins + per-bot member control
 
 ## 📊 Comparison
 
@@ -80,15 +90,17 @@ Master bot posts a pinned dashboard showing all projects at a glance — git sta
 |-----------|:-:|:-:|:-:|:-:|
 | Multi-project orchestration | ✅ One bot per project | ❌ Single session | ❌ Single bot | ❌ Single session |
 | Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | ❌ Solo only |
+| Setup from phone | ✅ Guided wizard in Telegram | ❌ Terminal only | ❌ Terminal config | ✅ QR pairing |
+| Manage from phone | ✅ Button menus for bots, config, users | ❌ | ❌ | Partial |
+| Zero terminal after setup | ✅ One-time `setup.sh`, then all in Telegram | ❌ Always terminal | ❌ | ✅ |
+| Multi-language UI | ✅ EN / 中文 | ❌ | ❌ | ❌ |
 | @mention routing in group | ✅ | ❌ | ❌ | ❌ |
 | Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
 | Permission modes | ✅ allowAll / auto / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
-| Zero-install client | ✅ Telegram already on your phone | ❌ Terminal only | ✅ Telegram | Web app or native app (QR pairing) |
+| Client requirement | Telegram (any device) | Terminal only | Telegram | Native app / Web app |
 | Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
-| E2E encryption | Telegram transport | N/A | Telegram transport | ✅ Zero-knowledge |
-| Native mobile UX | Telegram (good enough) | ❌ | Telegram | ✅ Polished native app |
 
 ## 📋 Recommendations
 
