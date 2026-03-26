@@ -21,7 +21,7 @@
   <img src="docs/concept.png" alt="claude-crew concept" width="100%">
 </p>
 
-## 📊 方案对比
+## 📊 远程方案对比
 
 | 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 | Happy Coder |
 |-----|:-:|:-:|:-:|:-:|

@@ -21,7 +21,7 @@ A remote Claude Code solution for cross-device, multi-project parallel developme
   <img src="docs/concept.png" alt="claude-crew concept" width="100%">
 </p>
 
-## 📊 Comparison
+## 📊 Remote Solutions Comparison
 
 | Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
 |-----------|:-:|:-:|:-:|:-:|
