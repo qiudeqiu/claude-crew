@@ -474,6 +474,7 @@ manage-pool.sh release [项目名]              # 释放分配
 manage-pool.sh remove <用户名>               # 移除机器人
 manage-pool.sh set-group <ID>               # 设置群组 ID
 manage-pool.sh init-group                   # 自动检测群组
+manage-pool.sh set-mode <allowAll|approve>  # 设置权限模式
 ```
 
 ## 🏗 架构

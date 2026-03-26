@@ -101,7 +101,7 @@ if [ ! -f "$INSTALL_DIR/bot-pool.json" ]; then
   "sharedGroupId": "",
   "accessLevel": "readWrite",
   "permissionMode": "allowAll",
-  "masterExecute": true,
+  "masterExecute": false,
   "maxConcurrent": 3,
   "rateLimitSeconds": 5,
   "sessionTimeoutMinutes": 10,
@@ -124,7 +124,7 @@ if not pool.get('admins'):
 tokens = [b['token'] for b in pool['bots']]
 if os.environ['TK'] not in tokens:
     pool['bots'].insert(0, {'token': os.environ['TK'], 'username': os.environ['UN'], 'role': 'master'})
-pool['masterExecute'] = True
+pool.setdefault('masterExecute', False)
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 " 2>/dev/null
   echo "✅ Master bot added to existing config"

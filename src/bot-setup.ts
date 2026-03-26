@@ -101,7 +101,8 @@ export function setupBot(managed: ManagedBot): void {
 
     // Approval callbacks
     if (!isAdmin(userId)) {
-      await ctx.answerCallbackQuery({ text: "\u26d4 Admin only" });
+      const s = setupMsg(getLang());
+      await ctx.answerCallbackQuery({ text: s.adminOnly });
       return;
     }
     if (!data.startsWith("approve:")) return;
@@ -109,7 +110,8 @@ export function setupBot(managed: ManagedBot): void {
     const [, action, approvalId] = data.split(":");
     const pending = pendingApprovals.get(approvalId!);
     if (!pending) {
-      await ctx.answerCallbackQuery({ text: "\u23f0 Expired" });
+      const s = setupMsg(getLang());
+      await ctx.answerCallbackQuery({ text: s.expired });
       return;
     }
 
@@ -117,9 +119,8 @@ export function setupBot(managed: ManagedBot): void {
     const approved = action === "yes";
     pending.resolve(approved ? WRITE_TOOLS : null);
 
-    const label = approved
-      ? "\u2705 Authorized, retrying..."
-      : "\u274c Skipped";
+    const s = setupMsg(getLang());
+    const label = approved ? s.authorized : s.skipped;
     await ctx.answerCallbackQuery({ text: label });
     const msg = ctx.callbackQuery.message;
     if (msg && "text" in msg && msg.text) {
@@ -199,8 +200,9 @@ export function setupBot(managed: ManagedBot): void {
       ])
       .catch(() => {});
 
+    const sv = setupMsg(getLang());
     const statusMsg = await tgBot.api
-      .sendMessage(chatId, "\ud83c\udfa4 Transcribing voice...")
+      .sendMessage(chatId, sv.transcribing)
       .catch(() => null);
 
     const result = await transcribeVoice(
@@ -211,11 +213,7 @@ export function setupBot(managed: ManagedBot): void {
     if (!result || !result.text) {
       if (statusMsg) {
         await tgBot.api
-          .editMessageText(
-            chatId,
-            statusMsg.message_id,
-            "\u26a0\ufe0f Voice transcription failed",
-          )
+          .editMessageText(chatId, statusMsg.message_id, sv.transcribeFailed)
           .catch(() => {});
       }
       return;
@@ -226,7 +224,7 @@ export function setupBot(managed: ManagedBot): void {
         .editMessageText(
           chatId,
           statusMsg.message_id,
-          `\ud83c\udfa4 Transcription: ${result.text}`,
+          sv.transcription(result.text),
         )
         .catch(() => {});
     }

@@ -582,12 +582,26 @@ export function setupMsg(lang: Lang) {
         noProject: (u: string) => `\u26a0\ufe0f @${u} 未分配项目`,
         masterOnly: (master: string) =>
           `\u2139\ufe0f 此命令需要发给主控机器人 @${master}\n\n在群里 @${master} 后跟命令即可。`,
+        adminOnly: "\u26d4 仅管理员",
+        expired: "\u23f0 已过期",
+        authorized: "\u2705 已授权，正在重试...",
+        skipped: "\u274c 已跳过",
+        transcribing: "\ud83c\udfa4 正在转写语音...",
+        transcribeFailed: "\u26a0\ufe0f 语音转写失败",
+        transcription: (text: string) => `\ud83c\udfa4 转写: ${text}`,
       }
     : {
         busy: "\u23f3 Processing previous message...",
         noProject: (u: string) => `\u26a0\ufe0f @${u} No project assigned`,
         masterOnly: (master: string) =>
           `\u2139\ufe0f This command must be sent to the master bot @${master}\n\n@mention @${master} followed by the command.`,
+        adminOnly: "\u26d4 Admin only",
+        expired: "\u23f0 Expired",
+        authorized: "\u2705 Authorized, retrying...",
+        skipped: "\u274c Skipped",
+        transcribing: "\ud83c\udfa4 Transcribing voice...",
+        transcribeFailed: "\u26a0\ufe0f Voice transcription failed",
+        transcription: (text: string) => `\ud83c\udfa4 Transcription: ${text}`,
       };
 }
 
