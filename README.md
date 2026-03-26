@@ -15,18 +15,34 @@
 
 One bot to assemble your Claude Code project crew.
 
-claude-crew turns a single Telegram bot into a complete project management team. Your **master bot** is the control center — add project bots, configure settings, manage team access, and monitor all projects from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code tasks on @mention. Go solo or invite your team — one group, all projects, everyone in their lane.
+A remote Claude Code solution for cross-device, multi-project parallel development — elegantly managed through one Telegram interface. Your **master bot** is the control center: add project bots, configure settings, manage team access, and monitor everything from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code on @mention. Go solo or invite your team — one group, all projects, everyone in their lane.
 
 <p align="center">
   <img src="docs/concept.png" alt="claude-crew concept" width="100%">
 </p>
+
+## 📊 Comparison
+
+| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
+|-----------|:-:|:-:|:-:|:-:|
+| Multi-project orchestration | ✅ One bot per project | ❌ Single session | ❌ Single bot | ❌ Single session |
+| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | ❌ Solo only |
+| Setup from phone | ✅ Guided wizard in Telegram | ❌ Terminal only | ❌ Terminal config | ✅ QR pairing |
+| Manage from phone | ✅ Button menus for bots, config, users | ❌ | ❌ | Partial |
+| Zero terminal after setup | ✅ One-time `setup.sh`, then all in Telegram | ❌ Always terminal | ❌ | ✅ |
+| @mention routing in group | ✅ | ❌ | ❌ | ❌ |
+| Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
+| Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
+| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
+| Permission modes | ✅ allowAll / auto / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
+| Client requirement | Telegram (any device) | Terminal only | Telegram | Native app / Web app |
+| Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
 
 ## Table of Contents
 
 - [Three Ways to Use](#-three-ways-to-use)
 - [Master Bot — Your Control Center](#-master-bot--your-control-center)
 - [Project Bots — Your Dev Team](#-project-bots--your-dev-team)
-- [Comparison](#-comparison)
 - [Recommendations](#-recommendations)
 - [Prerequisites](#-prerequisites)
 - [Quick Start](#-quick-start)
@@ -130,23 +146,6 @@ Send a photo for visual analysis, or reply with a voice message for hands-free c
 ### Quote anything
 
 Reply to any message — text, photo, voice, file, or sticker — while @mentioning a bot. The quoted content is automatically included in the prompt.
-
-## 📊 Comparison
-
-| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
-|-----------|:-:|:-:|:-:|:-:|
-| Multi-project orchestration | ✅ One bot per project | ❌ Single session | ❌ Single bot | ❌ Single session |
-| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | ❌ Solo only |
-| Setup from phone | ✅ Guided wizard in Telegram | ❌ Terminal only | ❌ Terminal config | ✅ QR pairing |
-| Manage from phone | ✅ Button menus for bots, config, users | ❌ | ❌ | Partial |
-| Zero terminal after setup | ✅ One-time `setup.sh`, then all in Telegram | ❌ Always terminal | ❌ | ✅ |
-| @mention routing in group | ✅ | ❌ | ❌ | ❌ |
-| Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
-| Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
-| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
-| Permission modes | ✅ allowAll / auto / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
-| Client requirement | Telegram (any device) | Terminal only | Telegram | Native app / Web app |
-| Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
 
 ## 📋 Recommendations
 
