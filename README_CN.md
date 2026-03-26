@@ -352,7 +352,17 @@ daemon.sh autostart      # 启用开机自启
 daemon.sh no-autostart   # 禁用开机自启
 ```
 
-> **开机自启：** daemon 默认不会在系统重启后自动恢复。运行 `daemon.sh autostart` 将其注册为系统登录启动项（macOS launchd / Linux systemd 用户服务）。无需 sudo — 以你的用户账户运行。安装脚本会在安装末尾询问是否启用。
+> **工作原理：** 只要 daemon 在运行，所有 Telegram bot 就在线可用，不需要其他进程。如果电脑重启或 daemon 停止，bot 会离线，直到重新启动 daemon。
+>
+> **重启后 bot 离线了？** 在终端运行：
+> ```bash
+> ~/.claude/channels/telegram/daemon.sh start
+> ```
+> 想避免每次手动启动？启用开机自启，daemon 会在登录时自动启动：
+> ```bash
+> ~/.claude/channels/telegram/daemon.sh autostart
+> ```
+> 无需 sudo — 以你的用户账户运行。安装脚本会在安装末尾询问是否启用。用 `daemon.sh no-autostart` 禁用。
 
 ## ⚙️ 配置
 

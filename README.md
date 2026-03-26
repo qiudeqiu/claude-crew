@@ -343,7 +343,17 @@ daemon.sh autostart      # Enable auto-start on login
 daemon.sh no-autostart   # Disable auto-start
 ```
 
-> **Auto-start:** The daemon does not survive system restarts by default. Run `daemon.sh autostart` to register it with your OS login (macOS launchd / Linux systemd user service). No sudo required — it runs under your user account. The setup script will ask you about this during installation.
+> **How it works:** As long as the daemon is running, all Telegram bots are online and responsive — no other processes needed. If your computer restarts or the daemon stops, bots go offline until the daemon is started again.
+>
+> **If bots go offline after a reboot**, run this in terminal to bring them back:
+> ```bash
+> ~/.claude/channels/telegram/daemon.sh start
+> ```
+> To avoid this, enable auto-start so the daemon launches automatically on login:
+> ```bash
+> ~/.claude/channels/telegram/daemon.sh autostart
+> ```
+> No sudo required — runs under your user account. The setup script will ask you about this during installation. Disable with `daemon.sh no-autostart`.
 
 ## ⚙️ Configuration
 
