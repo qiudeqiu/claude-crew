@@ -25,18 +25,17 @@ A remote Claude Code solution for cross-device, multi-project parallel developme
 
 | Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
 |-----------|:-:|:-:|:-:|:-:|
-| Multi-project orchestration | ✅ One bot per project | ❌ Single session | ❌ Single bot | ✅ Multi-session |
-| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial (pair programming) |
-| Setup from phone | ✅ Guided wizard in Telegram | ❌ Terminal only | ❌ Terminal config | ✅ QR pairing |
-| Manage from phone | ✅ Button menus for bots, config, users | ✅ claude.ai / mobile app | ✅ Telegram | Partial |
-| Background daemon | ✅ Runs in background with watchdog + auto-start | ❌ Terminal must stay open | ❌ Terminal must stay open | ❌ Terminal must stay open |
-| @mention routing in group | ✅ | ❌ | ❌ | ❌ |
-| Pinned dashboard | ✅ Git, context, cost, rate limit | ❌ | ❌ | ❌ |
+| @mention project switching | ✅ @bot in group chat | ❌ Switch in app UI | ❌ Single bot only | ❌ Switch in app UI |
+| Add new project from phone | ✅ 30s, button wizard | ❌ Terminal required | ❌ Terminal required | ❌ Terminal required |
+| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial |
+| Background daemon | ✅ Watchdog + auto-start | ❌ Terminal must stay open | ❌ Terminal must stay open | ❌ Terminal must stay open |
+| Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
+| Multi-project support | ✅ One bot per project | ✅ Server mode / multi-process | ❌ Single bot | ✅ Multi-session |
+| Per-project context isolation | ✅ Each bot = isolated session | ✅ Each process isolated | ❌ Mixed in one session | ✅ Each process isolated |
+| Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
-| Permission modes | ✅ allowAll / auto / approve / readOnly | ✅ | ✅ Pairing + allowlist | ✅ |
 | Client requirement | Telegram (any device) | Web / Mobile app | Telegram | Native app / Web app |
-| Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
 
 ## Table of Contents
 
