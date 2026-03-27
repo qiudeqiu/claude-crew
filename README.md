@@ -75,47 +75,21 @@ Pull all bots into one group. @mention to switch between projects — no context
 
 ## 🤖 Master Bot — Your Control Center
 
-The master bot manages everything. Send `menu` to open the interactive button menu — no commands to memorize.
+The master bot is your management backend on Telegram. Send `menu` to open the interactive button menu — everything is button-driven, no commands to memorize.
 
-### Guided setup
+### Full control from your phone
 
-A step-by-step wizard walks you through first-time configuration: set the shared group, create project bots via @BotFather, assign projects — all from Telegram.
+Add project bots, configure permissions, manage team access — all through inline button menus. Every setting includes a description of what it does, so you can customize the entire system without reading docs. No terminal needed after initial setup.
 
-<!-- TODO: screenshot of setup wizard -->
+### Live project dashboard
 
-### Bot management
-
-Add, remove, and configure project bots with inline buttons. Token validation, project assignment, and one-click restart built in.
-
-<!-- TODO: screenshot of bot management -->
-
-### Config editor
-
-Edit all global and per-bot settings via buttons — each field includes a description of what it does, and enum options explain their effects.
-
-<!-- TODO: screenshot of config editor -->
-
-### User management
-
-Add admins and per-bot members by user ID. Last-admin protection prevents lockout.
-
-### Pinned dashboard
-
-Auto-refreshing pinned message showing all projects at a glance — git branch, last commit, context usage, cost, and rate limit countdown. Includes master bot identity and command reference.
+A pinned message that auto-refreshes with all your projects at a glance — git branch, last commit, context usage, cost, and rate limit countdown. Your team's mission control.
 
 ![Dashboard](docs/feat-dashboard.png)
 
-### Cron scheduler
+### Scheduled tasks & persistent memory
 
-Schedule recurring tasks per project bot — daily at a fixed time or every N minutes.
-
-### Periodic memory
-
-Automatically saves conversation context for active projects at a configurable interval. Claude reads these memory files to recover context across sessions — so it remembers what was discussed and decided, even though each task runs independently.
-
-### Bilingual UI
-
-Switch between English and Chinese with one tap. All menus, prompts, and dashboard follow the selected language.
+Set up recurring tasks per bot (daily or every N minutes) — code reviews, health checks, report generation. Combined with automatic memory saves, Claude remembers project context across sessions, so every task picks up where the last one left off.
 
 ## ⚡ Project Bots — Your Dev Team
 
