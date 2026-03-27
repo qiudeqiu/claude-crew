@@ -7,6 +7,7 @@ import {
   getConfig,
   getBotAccessLevel,
   getBotPermissionMode,
+  getBotModel,
   WRITE_TOOLS,
   READONLY_DISALLOWED,
   TYPING_INTERVAL_MS,
@@ -29,6 +30,7 @@ export async function runClaude(
     allowedTools?: string;
     disallowedTools?: string;
     permissionMode?: string;
+    model?: string;
     appendSystemPrompt?: string;
     onProgress?: (label: string) => void;
     resume?: boolean;
@@ -42,6 +44,7 @@ export async function runClaude(
     "--output-format",
     "stream-json",
     ...(opts.permissionMode ? ["--permission-mode", opts.permissionMode] : []),
+    ...(opts.model ? ["--model", opts.model] : []),
     ...(opts.appendSystemPrompt
       ? ["--append-system-prompt", opts.appendSystemPrompt]
       : []),
@@ -245,6 +248,7 @@ export async function invokeClaudeAndReply(
   const project = config.assignedProject ?? config.username ?? "?";
   const dir = config.assignedPath ?? homedir();
   const mode = getBotPermissionMode(config);
+  const botModel = getBotModel(config);
   const cfg = getConfig();
 
   const s = setupMsg(getLang());
@@ -336,6 +340,7 @@ export async function invokeClaudeAndReply(
       // ReadOnly: hard-restrict to read-only tools via --disallowedTools
       result = await runClaude(dir, prompt, {
         disallowedTools: READONLY_DISALLOWED,
+        model: botModel,
         appendSystemPrompt:
           (systemPrompt ? systemPrompt + "\n\n" : "") +
           "You are in read-only mode. You cannot edit, write, or create files. Only read, search, and analyze.",
@@ -344,6 +349,7 @@ export async function invokeClaudeAndReply(
     } else if (mode === "approve") {
       // ReadWrite + Approve: first run without write tools, then ask
       result = await runClaude(dir, prompt, {
+        model: botModel,
         appendSystemPrompt: systemPrompt,
         onProgress,
       });
@@ -388,6 +394,7 @@ export async function invokeClaudeAndReply(
               "\n\nTools authorized. After execution, reply with a text summary of the results instead of only returning tool calls.",
             {
               allowedTools: approved,
+              model: botModel,
               appendSystemPrompt: systemPrompt,
               onProgress,
               resume: false,
@@ -409,6 +416,7 @@ export async function invokeClaudeAndReply(
       // ReadWrite + Auto: use Claude Code's auto mode with background classifier
       result = await runClaude(dir, prompt, {
         permissionMode: "auto",
+        model: botModel,
         appendSystemPrompt: systemPrompt,
         onProgress,
       });
@@ -416,6 +424,7 @@ export async function invokeClaudeAndReply(
       // ReadWrite + AllowAll: pre-authorize everything
       result = await runClaude(dir, prompt, {
         allowedTools: WRITE_TOOLS,
+        model: botModel,
         appendSystemPrompt: systemPrompt,
         onProgress,
       });

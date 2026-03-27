@@ -109,6 +109,11 @@ export function getBotPermissionMode(
   return botConfig.permissionMode ?? loadPool().permissionMode ?? "allowAll";
 }
 
+export function getBotModel(botConfig: PoolBot): string | undefined {
+  const model = botConfig.model ?? loadPool().model;
+  return model || undefined;
+}
+
 export function getMasterName(pool?: BotPool): string {
   const p = pool ?? loadPool();
   return p.bots.find((b) => b.role === "master")?.username ?? "master";

@@ -9,6 +9,7 @@ export type PoolBot = {
   accessLevel?: "readWrite" | "readOnly";
   permissionMode?: "allowAll" | "approve" | "auto";
   allowedUsers?: string[];
+  model?: string;
 };
 
 export type BotPool = {
@@ -25,6 +26,7 @@ export type BotPool = {
   dashboardIntervalMinutes?: number;
   whisperLanguage?: string;
   language?: string;
+  model?: string;
 };
 
 export type ManagedBot = {

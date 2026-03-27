@@ -99,6 +99,12 @@ const GLOBAL_FIELDS: Record<string, FieldDef> = {
     hintKey: "mi",
   },
   wl: { key: "whisperLanguage", descKey: "wl", type: "string", hintKey: "wl" },
+  md: {
+    key: "model",
+    descKey: "md",
+    options: ["sonnet", "opus", "haiku"],
+    optionDescKeys: ["md_sonnet", "md_opus", "md_haiku"],
+  },
 };
 
 const BOT_FIELDS: Record<string, FieldDef> = {
@@ -116,6 +122,12 @@ const BOT_FIELDS: Record<string, FieldDef> = {
   },
   ap: { key: "assignedProject", descKey: "ap", type: "string", hintKey: "ap" },
   ph: { key: "assignedPath", descKey: "ph", type: "string", hintKey: "ph" },
+  md: {
+    key: "model",
+    descKey: "md",
+    options: ["inherit", "sonnet", "opus", "haiku"],
+    optionDescKeys: ["md_inherit", "md_sonnet", "md_opus", "md_haiku"],
+  },
 };
 
 function getFieldLabel(key: string): string {
@@ -164,7 +176,8 @@ export async function showGlobalConfig(
     `\u23f0 sessionTimeout: ${pool.sessionTimeoutMinutes ?? 10} min\n   ${fd.st}\n\n` +
     `\ud83d\udcca dashboardInterval: ${pool.dashboardIntervalMinutes ?? 30} min \u26a1\n   ${fd.di}\n\n` +
     `\ud83e\udde0 memoryInterval: ${pool.memoryIntervalMinutes ?? 120} min\n   ${fd.mi}\n\n` +
-    `\ud83c\udfa4 whisperLanguage: ${pool.whisperLanguage || "(auto)"}\n   ${fd.wl}`;
+    `\ud83c\udfa4 whisperLanguage: ${pool.whisperLanguage || "(auto)"}\n   ${fd.wl}\n\n` +
+    `\ud83e\udd16 model: ${pool.model || "(default)"}\n   ${fd.md}`;
 
   const buttons: InlineKeyboardButton[][] = [
     [
@@ -183,7 +196,10 @@ export async function showGlobalConfig(
       { text: "dashboardInterval \u26a1", callback_data: "c:ge:di" },
       { text: "memoryInterval", callback_data: "c:ge:mi" },
     ],
-    [{ text: "whisperLanguage", callback_data: "c:ge:wl" }],
+    [
+      { text: "whisperLanguage", callback_data: "c:ge:wl" },
+      { text: "model", callback_data: "c:ge:md" },
+    ],
     ...menuButton(lang),
   ];
 
@@ -239,6 +255,7 @@ export async function showBotConfig(
       { text: "project", callback_data: `c:be:${username}:ap` },
       { text: "path", callback_data: `c:be:${username}:ph` },
     ],
+    [{ text: "model", callback_data: `c:be:${username}:md` }],
     [{ text: `\u25c0\ufe0f ${c.back}`, callback_data: `b:d:${username}` }],
   ];
 

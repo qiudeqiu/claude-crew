@@ -335,6 +335,7 @@ export function fieldDesc(lang: Lang) {
         wl: "语音转写的语言提示（Whisper）。空 = 自动检测。",
         ap: "此机器人管理的项目显示名称",
         ph: "项目目录在磁盘上的绝对路径",
+        md: "Claude 模型选择。不同模型在速度、能力和成本之间有不同取舍。",
       }
     : {
         pm: "How write operations (file edits, shell commands) are authorized",
@@ -348,6 +349,7 @@ export function fieldDesc(lang: Lang) {
         wl: "Language hint for voice transcription (Whisper). Empty = auto-detect.",
         ap: "Display name for the project this bot manages",
         ph: "Absolute path to the project directory on disk",
+        md: "Claude model selection. Different models trade off speed, capability, and cost.",
       };
 }
 
@@ -366,6 +368,10 @@ export function optDesc(lang: Lang) {
         al_inherit: "使用全局 accessLevel 设置",
         me_true: "主控机器人可以直接执行 Claude 任务",
         me_false: "主控机器人仅处理管理命令（help、status 等）",
+        md_sonnet: "均衡之选 — 速度快，能力强，性价比高",
+        md_opus: "最强推理 — 复杂架构和深度分析",
+        md_haiku: "最快最便宜 — 简单查询和轻量任务",
+        md_inherit: "使用全局 model 设置",
       }
     : {
         pm_allowAll:
@@ -381,6 +387,12 @@ export function optDesc(lang: Lang) {
         al_inherit: "Use the global accessLevel setting",
         me_true: "Master bot can execute Claude tasks when messaged directly",
         me_false: "Master bot only handles admin commands (help, status, etc.)",
+        md_sonnet: "Balanced \u2014 fast, capable, cost-effective",
+        md_opus:
+          "Strongest reasoning \u2014 complex architecture and deep analysis",
+        md_haiku:
+          "Fastest and cheapest \u2014 simple queries and lightweight tasks",
+        md_inherit: "Use the global model setting",
       };
 }
 
