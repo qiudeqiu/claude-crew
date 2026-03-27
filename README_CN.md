@@ -30,7 +30,7 @@
 | 多项目（上下文隔离） | ✅ 每个项目一个 bot | ✅ 每个项目一个进程 | ❌ 单 session | ✅ 每个项目一个 session |
 | 项目切换 | ✅ 群内 @mention | 在 app 里切 session | 不适用（单 bot） | 在 app 里切 session |
 | 手机上加新项目 | ✅ 按钮向导 | ❌ 需回终端 | ❌ 需回终端 | ✅ app 内填路径 |
-| 团队协作 | ✅ 2-10 人，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 | 部分 |
+| 团队协作 | ✅ 共享群聊，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 | ✅ 设备授权 |
 | 进程管理 | ✅ 内置 daemon + watchdog + 开机自启 | 手动（tmux / systemd） | 手动（tmux / systemd） | ✅ 内置 daemon |
 | 统一仪表盘 | ✅ 全部项目状态置顶一条消息 | ❌ | ❌ | ❌ |
 | 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本 |

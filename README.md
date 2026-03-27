@@ -30,7 +30,7 @@ Each solution has its sweet spot. Pick the one that fits your workflow:
 | Multi-project (isolated context) | ✅ One bot per project | ✅ One process per project | ❌ Single session | ✅ One session per project |
 | Project switching | ✅ @mention in group chat | Switch in app UI | N/A (single bot) | Switch in app UI |
 | Add project from phone | ✅ Button wizard | ❌ Terminal required | ❌ Terminal required | ✅ Enter path in app |
-| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial |
+| Team collaboration | ✅ Shared group chat, per-bot permissions | ❌ Solo only | ❌ Solo only | ✅ Via device authorization |
 | Process management | ✅ Built-in daemon + watchdog + auto-start | Manual (tmux / systemd) | Manual (tmux / systemd) | ✅ Built-in daemon |
 | Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
