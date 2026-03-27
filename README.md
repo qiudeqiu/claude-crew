@@ -27,14 +27,13 @@ Each solution has its sweet spot. Pick the one that fits your workflow:
 
 | Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
 |-----------|:-:|:-:|:-:|:-:|
-| @mention project switching | ✅ @bot in group chat | ❌ Switch in app UI | ❌ Single bot only | ❌ Switch in app UI |
-| Add new project from phone | ✅ 30s, button wizard | ❌ Terminal required | ❌ Terminal required | ❌ Terminal required |
+| Multi-project (isolated context) | ✅ One bot per project | ✅ One process per project | ❌ Single session | ✅ One session per project |
+| Project switching | ✅ @mention in group chat | Switch in app UI | N/A (single bot) | Switch in app UI |
+| Add project from phone | ✅ 30s, button wizard | ❌ Terminal required | ❌ Terminal required | ❌ Terminal required |
 | Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial |
-| Background daemon | ✅ Watchdog + auto-start | ❌ Terminal must stay open | ❌ Terminal must stay open | ❌ Terminal must stay open |
+| Process management | ✅ Built-in daemon + watchdog + auto-start | Manual (tmux / systemd) | Manual (tmux / systemd) | Manual (tmux / systemd) |
 | Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
-| Multi-project support | ✅ One bot per project | ✅ Server mode / multi-process | ❌ Single bot | ✅ Multi-session |
-| Per-project context isolation | ✅ Each bot = isolated session | ✅ Each process isolated | ❌ Mixed in one session | ✅ Each process isolated |
 | Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
 | Multi-model support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |

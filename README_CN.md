@@ -27,14 +27,13 @@
 
 | 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 | Happy Coder |
 |-----|:-:|:-:|:-:|:-:|
-| @mention 切项目 | ✅ 群内 @bot 直接指挥 | ❌ 在 app 里切 session | ❌ 仅单 bot | ❌ 在 app 里切 session |
+| 多项目（上下文隔离） | ✅ 每个项目一个 bot | ✅ 每个项目一个进程 | ❌ 单 session | ✅ 每个项目一个 session |
+| 项目切换 | ✅ 群内 @mention | 在 app 里切 session | 不适用（单 bot） | 在 app 里切 session |
 | 手机上加新项目 | ✅ 30 秒，按钮向导 | ❌ 需回终端 | ❌ 需回终端 | ❌ 需回终端 |
 | 团队协作 | ✅ 2-10 人，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 | 部分 |
-| 后台常驻 | ✅ watchdog + 开机自启 | ❌ 需保持终端 | ❌ 需保持终端 | ❌ 需保持终端 |
+| 进程管理 | ✅ 内置 daemon + watchdog + 开机自启 | 手动（tmux / systemd） | 手动（tmux / systemd） | 手动（tmux / systemd） |
 | 统一仪表盘 | ✅ 全部项目状态置顶一条消息 | ❌ | ❌ | ❌ |
 | 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本 |
-| 多项目支持 | ✅ 一个 bot 一个项目 | ✅ Server 模式 / 多进程 | ❌ 仅单 bot | ✅ 多 session |
-| 项目上下文隔离 | ✅ 每个 bot = 独立 session | ✅ 每个进程独立 | ❌ 混在同一 session | ✅ 每个进程独立 |
 | 手机端管理 | ✅ 按钮菜单 | ✅ claude.ai / 移动端 | ✅ Telegram | ✅ 原生 app |
 | 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
 | 多模型支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini |
