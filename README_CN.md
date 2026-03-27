@@ -23,19 +23,18 @@
 
 ## 📊 远程方案对比
 
-| 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 | Happy Coder |
-|-----|:-:|:-:|:-:|:-:|
-| @mention 切项目 | ✅ 群内 @bot 直接指挥 | ❌ 在 app 里切 session | ❌ 仅单 bot | ❌ 在 app 里切 session |
-| 手机上加新项目 | ✅ 30 秒，按钮向导 | ❌ 需回终端 | ❌ 需回终端 | ❌ 需回终端 |
-| 团队协作 | ✅ 2-10 人，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 | 部分 |
-| 后台常驻 | ✅ watchdog + 开机自启 | ❌ 需保持终端 | ❌ 需保持终端 | ❌ 需保持终端 |
-| 统一仪表盘 | ✅ 全部项目状态置顶一条消息 | ❌ | ❌ | ❌ |
-| 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本 |
-| 多项目支持 | ✅ 一个 bot 一个项目 | ✅ Server 模式 / 多进程 | ❌ 仅单 bot | ✅ 多 session |
-| 项目上下文隔离 | ✅ 每个 bot = 独立 session | ✅ 每个进程独立 | ❌ 混在同一 session | ✅ 每个进程独立 |
-| 手机端管理 | ✅ 按钮菜单 | ✅ claude.ai / 移动端 | ✅ Telegram | ✅ 原生 app |
-| 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
-| 客户端要求 | Telegram（任意设备） | Web / 移动端 app | Telegram | 原生 app / Web app |
+| 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 |
+|-----|:-:|:-:|:-:|
+| @mention 切项目 | ✅ 群内 @bot 直接指挥 | ❌ 在 app 里切 session | ❌ 仅单 bot |
+| 手机上加新项目 | ✅ 30 秒，按钮向导 | ❌ 需回终端 | ❌ 需回终端 |
+| 团队协作 | ✅ 2-10 人，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 |
+| 后台常驻 | ✅ watchdog + 开机自启 | ❌ 需保持终端 | ❌ 需保持终端 |
+| 统一仪表盘 | ✅ 全部项目状态置顶一条消息 | ❌ | ❌ |
+| 内置定时任务 | ✅ | 需系统 cron | 需系统 cron |
+| 多项目支持 | ✅ 一个 bot 一个项目 | ✅ Server 模式 / 多进程 | ❌ 仅单 bot |
+| 项目上下文隔离 | ✅ 每个 bot = 独立 session | ✅ 每个进程独立 | ❌ 混在同一 session |
+| 手机端管理 | ✅ 按钮菜单 | ✅ claude.ai / 移动端 | ✅ Telegram |
+| 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ |
 
 ## 目录
 

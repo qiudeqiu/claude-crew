@@ -23,19 +23,18 @@ A remote Claude Code solution for cross-device, multi-project parallel developme
 
 ## 📊 Remote Solutions Comparison
 
-| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
-|-----------|:-:|:-:|:-:|:-:|
-| @mention project switching | ✅ @bot in group chat | ❌ Switch in app UI | ❌ Single bot only | ❌ Switch in app UI |
-| Add new project from phone | ✅ 30s, button wizard | ❌ Terminal required | ❌ Terminal required | ❌ Terminal required |
-| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial |
-| Background daemon | ✅ Watchdog + auto-start | ❌ Terminal must stay open | ❌ Terminal must stay open | ❌ Terminal must stay open |
-| Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ |
-| Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
-| Multi-project support | ✅ One bot per project | ✅ Server mode / multi-process | ❌ Single bot | ✅ Multi-session |
-| Per-project context isolation | ✅ Each bot = isolated session | ✅ Each process isolated | ❌ Mixed in one session | ✅ Each process isolated |
-| Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app |
-| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
-| Client requirement | Telegram (any device) | Web / Mobile app | Telegram | Native app / Web app |
+| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin |
+|-----------|:-:|:-:|:-:|
+| @mention project switching | ✅ @bot in group chat | ❌ Switch in app UI | ❌ Single bot only |
+| Add new project from phone | ✅ 30s, button wizard | ❌ Terminal required | ❌ Terminal required |
+| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only |
+| Background daemon | ✅ Watchdog + auto-start | ❌ Terminal must stay open | ❌ Terminal must stay open |
+| Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ |
+| Built-in cron scheduler | ✅ | Via system cron | Via system cron |
+| Multi-project support | ✅ One bot per project | ✅ Server mode / multi-process | ❌ Single bot |
+| Per-project context isolation | ✅ Each bot = isolated session | ✅ Each process isolated | ❌ Mixed in one session |
+| Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram |
+| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ |
 
 ## Table of Contents
 
