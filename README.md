@@ -166,6 +166,17 @@ Reply to any message — text, photo, voice, file, or sticker — while @mention
 - **Lower `maxConcurrent`** if you're on a rate-limited Claude plan (default 3 may be too many)
 - **Set `whisperLanguage`** explicitly (e.g. `"zh"`, `"en"`) for better voice recognition accuracy
 
+### Cost awareness
+
+Each task runs as an independent `claude -p` session — context does not carry over between messages. This is by design to support multi-project parallel execution, but it means:
+
+- **`approve` mode costs more** — each task that needs write access runs Claude twice (read-only first, then retry with approved tools). Use `allowAll` or `auto` if you trust the environment.
+- **Quoting images is expensive** — a single screenshot can use 50K+ tokens. Prefer text descriptions when possible.
+- **Memory files grow over time** — they are loaded into every session. Periodically clean up `~/.claude/projects/*/memory/` if costs increase.
+- **Cron tasks are full sessions** — each scheduled task is a complete Claude invocation. Use longer intervals for non-urgent tasks.
+
+> **Tip:** The dashboard shows cost per invocation and cumulative session cost. Monitor it to understand your usage patterns.
+
 ### What this project does NOT do
 
 - **No Docker isolation** — all bots run in the same process with access to the local filesystem. The built-in permission system (accessLevel + permissionMode + allowedUsers) provides sufficient control for personal and small-team use, but is not a security boundary for untrusted users.
