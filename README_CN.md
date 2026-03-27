@@ -50,7 +50,7 @@
 - **单项目、个人、要官方支持** → [Claude Code Remote](https://code.claude.com/docs/en/remote-control) — 官方一手方案，开箱即用
 - **单项目、个人、偏好 Telegram** → [Claude Code Telegram 插件](https://code.claude.com/docs/en/channels) — 轻量官方插件
 - **多项目、想用多种模型或原生 app** → [Happy Coder](https://happy.engineering/) — 支持 Claude、Codex、Gemini，精致的移动端体验
-- **多项目、团队、要 @mention 集群管理** → **claude-crew** — 全员在同一个群里：@mention 并行派发任务，实时看到所有进度和结果，随时沟通讨论，即时对结果作出反应。团队权限、仪表盘、定时任务，全在 Telegram 内完成
+- **多项目、团队、要 @mention 集群管理** → **[claude-crew](https://github.com/qiudeqiu/claude-crew)** — 全员在同一个群里：@mention 并行派发任务，实时看到所有进度和结果，随时沟通讨论，即时对结果作出反应。团队权限、仪表盘、定时任务，全在 Telegram 内完成
 
 ## 目录
 

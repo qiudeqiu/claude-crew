@@ -50,7 +50,7 @@ Each solution has its sweet spot. Pick the one that fits your workflow:
 - **One project, solo, want official support** → [Claude Code Remote](https://code.claude.com/docs/en/remote-control) — first-party, zero setup beyond `claude`
 - **One project, solo, prefer Telegram** → [Claude Code Telegram Plugin](https://code.claude.com/docs/en/channels) — lightweight, official plugin
 - **Multiple projects, want multi-model or a native app** → [Happy Coder](https://happy.engineering/) — supports Claude, Codex, Gemini with a polished mobile experience
-- **Multiple projects, team, want @mention cluster management** → **claude-crew** — everyone works in one group: @mention to dispatch tasks in parallel, see all progress and results in real time, chat with each other, and react instantly. Team permissions, dashboard, cron — all via Telegram
+- **Multiple projects, team, want @mention cluster management** → **[claude-crew](https://github.com/qiudeqiu/claude-crew)** — everyone works in one group: @mention to dispatch tasks in parallel, see all progress and results in real time, chat with each other, and react instantly. Team permissions, dashboard, cron — all via Telegram
 
 ## Table of Contents
 
