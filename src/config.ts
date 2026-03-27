@@ -117,7 +117,7 @@ export function getBotAccessLevel(
 export function getBotPermissionMode(
   botConfig: PoolBot,
 ): "allowAll" | "approve" | "auto" {
-  return botConfig.permissionMode ?? loadPool().permissionMode ?? "allowAll";
+  return botConfig.permissionMode ?? loadPool().permissionMode ?? "approve";
 }
 
 export function getBotModel(botConfig: PoolBot): string | undefined {
@@ -145,7 +145,7 @@ export function createProjectBot(
     assignedProject: project,
     assignedPath: path,
     accessLevel: "readWrite",
-    permissionMode: p.permissionMode ?? "allowAll",
+    permissionMode: p.permissionMode ?? "approve",
     allowedUsers: [],
   };
 }
@@ -170,7 +170,7 @@ export function migrateConfig(): string[] {
   // Global defaults
   const globalDefaults: Record<string, unknown> = {
     accessLevel: "readWrite",
-    permissionMode: "allowAll",
+    permissionMode: "approve",
     masterExecute: false,
     maxConcurrent: DEFAULT_MAX_CONCURRENT,
     rateLimitSeconds: DEFAULT_RATE_LIMIT_S,

@@ -100,7 +100,7 @@ if [ ! -f "$INSTALL_DIR/bot-pool.json" ]; then
   ],
   "sharedGroupId": "",
   "accessLevel": "readWrite",
-  "permissionMode": "allowAll",
+  "permissionMode": "approve",
   "masterExecute": false,
   "maxConcurrent": 3,
   "rateLimitSeconds": 5,

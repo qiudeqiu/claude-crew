@@ -63,10 +63,11 @@ if os.environ['RL'] == 'project':
     bot['assignedProject'] = ''
     bot['assignedPath'] = ''
     bot['accessLevel'] = 'readWrite'
-    bot['permissionMode'] = pool.get('permissionMode', 'allowAll')
+    bot['permissionMode'] = pool.get('permissionMode', 'approve')
     bot['allowedUsers'] = []
 pool['bots'].append(bot)
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+os.chmod(os.environ['POOL'], 0o600)
 "
     ROLE_LABEL="Project bot"
     if [ "$IS_MASTER" = "true" ]; then ROLE_LABEL="🏠 Master bot"; fi
@@ -113,6 +114,7 @@ for b in pool['bots']:
         b.pop('assignedPath', None)
         count += 1
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+os.chmod(os.environ['POOL'], 0o600)
 print(f'✅ Released {count} bot(s)')
 " 2>/dev/null
     ;;
@@ -132,6 +134,7 @@ before = len(pool['bots'])
 pool['bots'] = [b for b in pool['bots'] if b.get('username') != un]
 after = len(pool['bots'])
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+os.chmod(os.environ['POOL'], 0o600)
 if before > after:
     print(f'✅ Removed @{un}')
 else:
@@ -156,6 +159,7 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 pool['sharedGroupId'] = os.environ['GID']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+os.chmod(os.environ['POOL'], 0o600)
 print(f'✅ Shared group set to: ' + os.environ['GID'])
 " 2>/dev/null
     ;;
@@ -192,6 +196,7 @@ if not found:
     print(f'⚠️  Not found: @{un}, run add first')
 else:
     json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+os.chmod(os.environ['POOL'], 0o600)
     print(f'✅ @{un} → {os.environ[\"PRJ\"]} ({os.environ[\"PP\"]})')
 " 2>/dev/null
     ;;
@@ -229,6 +234,7 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 pool['sharedGroupId'] = os.environ['GID']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+os.chmod(os.environ['POOL'], 0o600)
 " 2>/dev/null
       echo "✅ Group detected: $TITLE ($GID)"
     else
@@ -243,8 +249,8 @@ json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
     if [ "$MODE" != "allowAll" ] && [ "$MODE" != "approve" ]; then
       echo "Usage: $0 set-mode <allowAll|approve>"
       echo ""
-      echo "  allowAll — Pre-authorize all tools (default, faster)"
-      echo "  approve  — Write ops require approval (safer)"
+      echo "  allowAll — Pre-authorize all tools (faster, less safe)"
+      echo "  approve  — Write ops require approval (default, safer)"
       exit 1
     fi
     POOL="$POOL_FILE" MD="$MODE" python3 -c "
@@ -252,6 +258,7 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 pool['permissionMode'] = os.environ['MD']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+os.chmod(os.environ['POOL'], 0o600)
 print(f'✅ Permission mode set to: ' + os.environ['MD'])
 " 2>/dev/null
     echo "   Restart daemon to apply: daemon.sh restart"

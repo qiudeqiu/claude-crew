@@ -138,7 +138,7 @@ Reply to any message — text, photo, voice, file, or sticker — while @mention
 
 ### Configuration tips
 
-- **Start with `approve` mode** if you're unsure — you can always switch to `allowAll` later
+- **`approve` mode is the default** — switch to `allowAll` once you're comfortable with the system
 - **Set `readOnly` on sensitive projects** to let team members browse code without write risk
 - **Use `allowedUsers` per bot** rather than adding everyone to `admins` — admins can use all bots
 - **Lower `maxConcurrent`** if you're on a rate-limited Claude plan (default 3 may be too many)
@@ -361,9 +361,9 @@ Permissions are configured in two layers. Set globally or per-bot — via `@mast
 
 | Mode | Behavior | Best for |
 |------|----------|----------|
-| `allowAll` (default) | Bash, Edit, Write, Agent, Skill pre-authorized. No prompts. | Trusted single-user setup |
+| `approve` (default) | First run read-only. If writes needed, Telegram button asks for approval. Retry with approved tools. | New users, multi-user teams, sensitive projects |
 | `auto` | All actions auto-approved with Claude Code's background safety classifier. Blocks dangerous ops (production deploys, force push, data deletion).  | Balance of speed and safety |
-| `approve` | First run read-only. If writes needed, Telegram button asks for approval. Retry with approved tools. | Multi-user teams, sensitive projects |
+| `allowAll` | Bash, Edit, Write, Agent, Skill pre-authorized. No prompts. | Trusted single-user setup |
 
 **Permission Matrix** — what each combination allows:
 
@@ -411,7 +411,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
   ],
   "sharedGroupId": "-100123456789",
   "accessLevel": "readWrite",
-  "permissionMode": "allowAll",
+  "permissionMode": "approve",
   "masterExecute": false,
   "maxConcurrent": 3,
   "rateLimitSeconds": 5,
@@ -430,7 +430,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 |-------|---------|-------------|
 | `admins` | **(required)** | Admin user ID list. Admins can use **all** bots. |
 | `accessLevel` | `"readWrite"` | Global default. `"readWrite"` = full access. `"readOnly"` = read/search only, no writes. |
-| `permissionMode` | `"allowAll"` | Global default (only when readWrite). `"allowAll"` = pre-authorize. `"auto"` = background safety classifier . `"approve"` = button confirmation. |
+| `permissionMode` | `"approve"` | Global default (only when readWrite). `"approve"` = button confirmation. `"auto"` = background safety classifier. `"allowAll"` = pre-authorize all tools. |
 | `language` | `"en"` | Menu language. `"en"` or `"zh"`. Switchable via menu button. |
 | `memoryIntervalMinutes` | `120` | Auto-save conversation memory for active projects (minutes). `0` = disabled. |
 | `masterExecute` | `false` | Allow master bot to run Claude tasks (not just admin commands). |
