@@ -13,6 +13,12 @@ This project runs as a daemon. When modifying `daemon.ts` or related files via a
 3. Write restart note: `echo '{"project":"...","summary":"..."}' > ~/.claude/channels/telegram/restart-note.json`
 4. Run `daemon.sh restart` as the **very last command** — restarting kills your process
 
+## Output Persistence
+
+When executing tasks via Telegram, important outputs (plans, scripts, analysis, designs) should be saved as project files rather than only returned as chat messages. Chat messages are ephemeral and not shared across sessions. Files persist and are accessible to all future sessions.
+
+Examples: save video scripts to `docs/`, save analysis to `docs/`, save plans to project root.
+
 ## Architecture
 
 - Single daemon process, grammY long-polling for all bots
