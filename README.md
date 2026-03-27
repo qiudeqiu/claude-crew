@@ -109,6 +109,10 @@ Auto-refreshing pinned message showing all projects at a glance — git branch, 
 
 Schedule recurring tasks per project bot — daily at a fixed time or every N minutes.
 
+### Periodic memory
+
+Automatically saves conversation context for active projects at a configurable interval. Claude reads these memory files to recover context across sessions — so it remembers what was discussed and decided, even though each task runs independently.
+
 ### Bilingual UI
 
 Switch between English and Chinese with one tap. All menus, prompts, and dashboard follow the selected language.
