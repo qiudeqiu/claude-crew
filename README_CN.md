@@ -428,7 +428,8 @@ daemon.sh no-autostart   # 禁用开机自启
   "dashboardIntervalMinutes": 30,
   "memoryIntervalMinutes": 120,
   "whisperLanguage": "",
-  "language": "en"
+  "language": "en",
+  "model": "sonnet"
 }
 ```
 
@@ -447,6 +448,7 @@ daemon.sh no-autostart   # 禁用开机自启
 | `sessionTimeoutMinutes` | `10` | 单次调用超时（分钟） |
 | `dashboardIntervalMinutes` | `30` | 看板刷新间隔（分钟） |
 | `whisperLanguage` | （自动检测） | 语音识别语言，如 `"zh"`、`"en"`、`"ja"` |
+| `model` | （默认） | Claude 模型：`"sonnet"`（均衡）、`"opus"`（最强）、`"haiku"`（最快最便宜） |
 
 #### 单 Bot 配置
 
@@ -455,6 +457,7 @@ daemon.sh no-autostart   # 禁用开机自启
 | `accessLevel` | （继承全局） | 覆盖该 bot 的访问级别。`"readOnly"` 为仅查看 |
 | `permissionMode` | （继承全局） | 覆盖该 bot 的权限模式（仅 `readWrite` 时生效） |
 | `allowedUsers` | `[]` | 可使用该 bot 的成员 ID 列表。管理员始终有权限 |
+| `model` | （继承全局） | 覆盖该 bot 的模型。可按项目复杂度选择不同模型 |
 
 #### 访问控制
 

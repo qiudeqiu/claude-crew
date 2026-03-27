@@ -419,7 +419,8 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
   "dashboardIntervalMinutes": 30,
   "memoryIntervalMinutes": 120,
   "whisperLanguage": "",
-  "language": "en"
+  "language": "en",
+  "model": "sonnet"
 }
 ```
 
@@ -438,6 +439,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | `sessionTimeoutMinutes` | `10` | Claude invocation timeout. |
 | `dashboardIntervalMinutes` | `30` | Dashboard auto-refresh interval. |
 | `whisperLanguage` | (auto-detect) | Whisper language code for voice (e.g. `"zh"`, `"en"`, `"ja"`). |
+| `model` | (default) | Claude model: `"sonnet"` (balanced), `"opus"` (strongest), `"haiku"` (fastest/cheapest). |
 
 #### Per-Bot Settings
 
@@ -446,6 +448,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | `accessLevel` | (inherit global) | Override access level for this bot. `"readOnly"` for view-only access. |
 | `permissionMode` | (inherit global) | Override permission mode for this bot (only when `readWrite`). |
 | `allowedUsers` | `[]` | Member user IDs who can use this bot. Admins always have access. |
+| `model` | (inherit global) | Override model for this bot. Use a different model per project complexity. |
 
 #### Access Control
 
