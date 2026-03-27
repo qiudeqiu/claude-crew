@@ -349,10 +349,11 @@ export async function invokeClaudeAndReply(
           .text("\u2705 Allow & retry", `approve:yes:${approvalId}`)
           .text("\u274c Skip", `approve:no:${approvalId}`);
 
+        const timeoutMin = Math.round(APPROVAL_TIMEOUT_MS / 60000);
         await tgBot.api
           .sendMessage(
             chatId,
-            `\ud83d\udd12 Requires tool permissions:\n${toolList}\n\nWill retry after approval`,
+            `\ud83d\udd12 Requires tool permissions:\n${toolList}\n\nWill retry after approval\n\u23f0 ${timeoutMin} min to respond`,
             { reply_markup: keyboard },
           )
           .catch(() => {});
