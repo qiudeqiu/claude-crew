@@ -1,5 +1,8 @@
 import { loadPool } from "../config.js";
 
+const EXAMPLE_HOME =
+  process.platform === "darwin" ? "/Users/your-name" : "/home/your-name";
+
 export type Lang = "en" | "zh";
 
 export function getLang(): Lang {
@@ -175,8 +178,10 @@ export function botsMsg(lang: Lang) {
         foundBot: (u: string) =>
           `\u2705 找到 @${u}！\n\n请输入项目名称 (如 "my-api"):`,
         invalidProject: "\u26a0\ufe0f 1-50 个字符。请重试:",
-        askPath: (p: string) =>
-          `\ud83d\udcc2 项目: ${p}\n\n请输入项目目录的绝对路径:`,
+        askPath: (_p: string) =>
+          `请输入项目代码所在的绝对路径:\n\n` +
+          `示例: ${EXAMPLE_HOME}/projects/my-app\n` +
+          `💡 以 / 开头的完整磁盘路径，不存在会提示创建`,
         invalidPath: (p: string) => `\u26a0\ufe0f 目录未找到: ${p}`,
         createDir: (p: string) => `\ud83d\udcc1 要创建目录 ${p} 吗？`,
         created: (p: string) => `\u2705 已创建: ${p}`,
@@ -221,8 +226,10 @@ export function botsMsg(lang: Lang) {
         foundBot: (u: string) =>
           `\u2705 Found @${u}!\n\nWhat project name? (e.g. "my-api")`,
         invalidProject: "\u26a0\ufe0f 1-50 characters. Try again:",
-        askPath: (p: string) =>
-          `\ud83d\udcc2 Project: ${p}\n\nAbsolute path to project directory:`,
+        askPath: (_p: string) =>
+          `Enter the absolute path to the project code:\n\n` +
+          `Example: ${EXAMPLE_HOME}/projects/my-app\n` +
+          `💡 Full disk path starting with /; will offer to create if missing`,
         invalidPath: (p: string) => `\u26a0\ufe0f Directory not found: ${p}`,
         createDir: (p: string) => `\ud83d\udcc1 Create directory ${p}?`,
         created: (p: string) => `\u2705 Created: ${p}`,
@@ -511,9 +518,12 @@ export function onboardMsg(lang: Lang) {
         foundBot: (u: string) =>
           `\u2705 找到 @${u}！\n\n请输入项目名称 (如 "my-api"、"frontend"):`,
         invalidProject: "\u26a0\ufe0f 项目名称应为 1-50 个字符。\n请重试:",
-        askPath: (p: string) =>
-          `\ud83d\udcc2 项目: ${p}\n\n请输入项目目录的绝对路径:\n(如 /home/user/projects/my-api)`,
-        invalidPath: (p: string) => `\u26a0\ufe0f 目录未找到: ${p}`,
+        askPath: (_p: string) =>
+          `请输入项目代码所在的绝对路径:\n\n` +
+          `示例: ${EXAMPLE_HOME}/projects/my-app\n` +
+          `💡 以 / 开头的完整磁盘路径，不存在会提示创建`,
+        invalidPath: (p: string) =>
+          `\u26a0\ufe0f 目录未找到: ${p}\n请输入绝对路径，如 ${EXAMPLE_HOME}/projects/xxx`,
         createDir: (p: string) => `\ud83d\udcc1 要创建目录 ${p} 吗？`,
         created: (p: string) => `\u2705 已创建: ${p}`,
         summary: "\ud83d\udcdd 设置摘要",
@@ -569,9 +579,12 @@ export function onboardMsg(lang: Lang) {
           `\u2705 Found @${u}!\n\nWhat project name should I assign? (e.g. "my-api", "frontend")`,
         invalidProject:
           "\u26a0\ufe0f Project name should be 1-50 characters.\nTry again:",
-        askPath: (p: string) =>
-          `\ud83d\udcc2 Project: ${p}\n\nWhat's the absolute path to the project directory?\n(e.g. /home/user/projects/my-api)`,
-        invalidPath: (p: string) => `\u26a0\ufe0f Directory not found: ${p}`,
+        askPath: (_p: string) =>
+          `Enter the absolute path to the project code:\n\n` +
+          `Example: ${EXAMPLE_HOME}/projects/my-app\n` +
+          `💡 Full disk path starting with /; will offer to create if missing`,
+        invalidPath: (p: string) =>
+          `\u26a0\ufe0f Directory not found: ${p}\nPlease enter an absolute path, e.g. ${EXAMPLE_HOME}/projects/xxx`,
         createDir: (p: string) => `\ud83d\udcc1 Create directory ${p}?`,
         created: (p: string) => `\u2705 Created: ${p}`,
         summary: "\ud83d\udcdd Setup Summary",
