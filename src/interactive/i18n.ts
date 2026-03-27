@@ -610,9 +610,10 @@ export function setupMsg(lang: Lang) {
         transcribing: "\ud83c\udfa4 正在转写语音...",
         transcribeFailed: "\u26a0\ufe0f 语音转写失败",
         transcription: (text: string) => `\ud83c\udfa4 转写: ${text}`,
-        rateLimited: "\u23f3 请稍等几秒...",
+        rateLimited:
+          "\u23f3 请稍等几秒...\n\ud83d\udca1 冷却间隔可在 menu \u2192 配置 \u2192 rateLimitSeconds 中调整",
         queueFull: (active: number, max: number) =>
-          `\u23f3 ${active}/${max} 个任务运行中，请稍候`,
+          `\u23f3 ${active}/${max} 个任务运行中，请稍候\n\ud83d\udca1 并发上限可在 menu \u2192 配置 \u2192 maxConcurrent 中调整`,
         noOutput: "(无输出)",
         taskDone: "\u2705 任务已执行（Claude 使用了工具但未产生文字回复）",
       }
@@ -628,9 +629,10 @@ export function setupMsg(lang: Lang) {
         transcribing: "\ud83c\udfa4 Transcribing voice...",
         transcribeFailed: "\u26a0\ufe0f Voice transcription failed",
         transcription: (text: string) => `\ud83c\udfa4 Transcription: ${text}`,
-        rateLimited: "\u23f3 Please wait a few seconds...",
+        rateLimited:
+          "\u23f3 Please wait a few seconds...\n\ud83d\udca1 Adjust cooldown in menu \u2192 Config \u2192 rateLimitSeconds",
         queueFull: (active: number, max: number) =>
-          `\u23f3 ${active}/${max} tasks running, please wait`,
+          `\u23f3 ${active}/${max} tasks running, please wait\n\ud83d\udca1 Adjust limit in menu \u2192 Config \u2192 maxConcurrent`,
         noOutput: "(no output)",
         taskDone:
           "\u2705 Task executed (Claude used tools but produced no text response)",
