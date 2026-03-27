@@ -23,18 +23,28 @@ A remote Claude Code solution for cross-device, multi-project parallel developme
 
 ## 📊 Remote Solutions Comparison
 
-| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin |
-|-----------|:-:|:-:|:-:|
-| @mention project switching | ✅ @bot in group chat | ❌ Switch in app UI | ❌ Single bot only |
-| Add new project from phone | ✅ 30s, button wizard | ❌ Terminal required | ❌ Terminal required |
-| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only |
-| Background daemon | ✅ Watchdog + auto-start | ❌ Terminal must stay open | ❌ Terminal must stay open |
-| Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ |
-| Built-in cron scheduler | ✅ | Via system cron | Via system cron |
-| Multi-project support | ✅ One bot per project | ✅ Server mode / multi-process | ❌ Single bot |
-| Per-project context isolation | ✅ Each bot = isolated session | ✅ Each process isolated | ❌ Mixed in one session |
-| Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram |
-| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ |
+Each solution has its sweet spot. Pick the one that fits your workflow:
+
+| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
+|-----------|:-:|:-:|:-:|:-:|
+| @mention project switching | ✅ @bot in group chat | ❌ Switch in app UI | ❌ Single bot only | ❌ Switch in app UI |
+| Add new project from phone | ✅ 30s, button wizard | ❌ Terminal required | ❌ Terminal required | ❌ Terminal required |
+| Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial |
+| Background daemon | ✅ Watchdog + auto-start | ❌ Terminal must stay open | ❌ Terminal must stay open | ❌ Terminal must stay open |
+| Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ |
+| Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
+| Multi-project support | ✅ One bot per project | ✅ Server mode / multi-process | ❌ Single bot | ✅ Multi-session |
+| Per-project context isolation | ✅ Each bot = isolated session | ✅ Each process isolated | ❌ Mixed in one session | ✅ Each process isolated |
+| Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app |
+| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
+| Multi-model support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
+
+**Which one is right for you?**
+
+- **One project, solo, want official support** → [Claude Code Remote](https://docs.anthropic.com/en/docs/claude-code/remote) — first-party, zero setup beyond `claude`
+- **One project, solo, prefer Telegram** → [Claude Code Telegram Plugin](https://docs.anthropic.com/en/docs/claude-code/channels) — lightweight, official plugin
+- **Multiple projects, want multi-model** → [Happy Coder](https://happy.engineering/) — supports Claude, Codex, and Gemini
+- **Multiple projects, team, want cluster management from phone** → **claude-crew** — @mention routing, team permissions, daemon, dashboard, cron
 
 ## Table of Contents
 
