@@ -1,4 +1,4 @@
-import { execSync, spawn } from "child_process";
+import { execFileSync, spawn } from "child_process";
 import { join } from "path";
 import { loadPool, loadCron, saveCron, STATE_DIR } from "./config.js";
 import { log } from "./logger.js";
@@ -98,12 +98,27 @@ export function handleMasterCommand(
     for (const b of pool.bots) {
       if (!b.assignedPath) continue;
       try {
-        const out = execSync(
-          `grep -rFl --include="*.ts" --include="*.js" --include="*.py" --include="*.go" --include="*.json" --include="*.md" -- "${safeKeyword}" . 2>/dev/null | head -10`,
-          { cwd: b.assignedPath, timeout: 10000 },
+        const out = execFileSync(
+          "grep",
+          [
+            "-rFl",
+            "--include=*.ts",
+            "--include=*.js",
+            "--include=*.py",
+            "--include=*.go",
+            "--include=*.json",
+            "--include=*.md",
+            "--",
+            safeKeyword,
+            ".",
+          ],
+          { cwd: b.assignedPath, timeout: 10000, maxBuffer: 1024 * 64 },
         )
           .toString()
-          .trim();
+          .trim()
+          .split("\n")
+          .slice(0, 10)
+          .join("\n");
         if (out) {
           results.push(
             `\ud83d\udcc2 ${b.assignedProject}:\n${out
