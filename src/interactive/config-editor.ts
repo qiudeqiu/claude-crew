@@ -357,17 +357,10 @@ async function showFieldEditor(
   const isGlobal = scope === "global";
   const label = getFieldLabel(field.key);
 
-  let currentValue: string;
-  if (isGlobal) {
-    currentValue = String(
-      (pool as Record<string, unknown>)[field.key] ?? "(not set)",
-    );
-  } else {
-    const bot = pool.bots.find((b) => b.username === scope);
-    currentValue = String(
-      (bot as unknown as Record<string, unknown>)?.[field.key] ?? "(not set)",
-    );
-  }
+  const source = isGlobal ? pool : pool.bots.find((b) => b.username === scope);
+  const currentValue = String(
+    (source as unknown as Record<string, unknown>)?.[field.key] ?? "(not set)",
+  );
 
   const desc = (fd as Record<string, string>)[field.descKey] ?? "";
 

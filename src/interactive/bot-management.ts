@@ -139,7 +139,6 @@ export async function handleBotCallback(
   }
 
   if (data === "b:a") {
-    const c = common(lang);
     await api
       .editMessageText(chatId, messageId, m.addTitle + c.replyHint, {
         reply_markup: { inline_keyboard: cancelButton("b:l", lang) },

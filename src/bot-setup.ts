@@ -48,8 +48,10 @@ export function setupBot(managed: ManagedBot): void {
       if (pool.sharedGroupId) return; // already bound
 
       const lang = getLang();
-      const m = (await import("./interactive/i18n.js")).onboardMsg(lang);
-      const c = (await import("./interactive/i18n.js")).common(lang);
+      const { onboardMsg, common: commonMsg } =
+        await import("./interactive/i18n.js");
+      const m = onboardMsg(lang);
+      const c = commonMsg(lang);
       const chatId = String(chat.id);
 
       if (newStatus === "member") {
@@ -264,9 +266,10 @@ export function setupBot(managed: ManagedBot): void {
       if (!loadPool().sharedGroupId) {
         if (chatType === "private") {
           // DM: tell user to add bot to group
-          const lang = getLang();
-          const m = (await import("./interactive/i18n.js")).onboardMsg(lang);
-          await tgBot.api.sendMessage(chatId, m.dmOnly).catch(() => {});
+          const { onboardMsg: ob } = await import("./interactive/i18n.js");
+          await tgBot.api
+            .sendMessage(chatId, ob(getLang()).dmOnly)
+            .catch(() => {});
           return;
         }
         // In a group but not bound → auto-trigger setup

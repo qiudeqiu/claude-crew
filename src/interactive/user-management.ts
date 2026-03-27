@@ -52,13 +52,14 @@ export async function showUserManagement(
   ];
 
   if (admins.length > 0) {
-    const adminBtns = admins.map((a) => ({
-      text: `\u274c ${a}`,
-      callback_data: `u:ra:${a}`,
-    }));
-    for (let i = 0; i < adminBtns.length; i += 2) {
-      buttons.push(adminBtns.slice(i, i + 2));
-    }
+    buttons.push(
+      ...chunkRows(
+        admins.map((a) => ({
+          text: `\u274c ${a}`,
+          callback_data: `u:ra:${a}`,
+        })),
+      ),
+    );
   }
 
   for (const b of projectBots) {
@@ -106,13 +107,14 @@ async function showBotUsers(
   ];
 
   if (users.length > 0) {
-    const userBtns = users.map((u) => ({
-      text: `\u274c ${u}`,
-      callback_data: `u:ru:${username}:${u}`,
-    }));
-    for (let i = 0; i < userBtns.length; i += 2) {
-      buttons.push(userBtns.slice(i, i + 2));
-    }
+    buttons.push(
+      ...chunkRows(
+        users.map((u) => ({
+          text: `\u274c ${u}`,
+          callback_data: `u:ru:${username}:${u}`,
+        })),
+      ),
+    );
   }
   buttons.push([{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }]);
 

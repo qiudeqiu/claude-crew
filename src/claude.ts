@@ -210,9 +210,7 @@ export async function runClaude(
   let finalText = resultText.trim() || assistantText.trim();
 
   if (timedOut) {
-    const lang = (await import("./interactive/i18n.js")).getLang();
-    const sm = (await import("./interactive/i18n.js")).setupMsg(lang);
-    const timeoutNote = sm.sessionTimedOut(
+    const timeoutNote = setupMsg(getLang()).sessionTimedOut(
       Math.round(getConfig().sessionTimeoutMs / 60000),
     );
     finalText = finalText ? `${finalText}\n\n${timeoutNote}` : timeoutNote;
