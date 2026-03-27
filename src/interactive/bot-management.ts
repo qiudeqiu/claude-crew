@@ -139,8 +139,9 @@ export async function handleBotCallback(
   }
 
   if (data === "b:a") {
+    const c = common(lang);
     await api
-      .editMessageText(chatId, messageId, m.addTitle, {
+      .editMessageText(chatId, messageId, m.addTitle + c.replyHint, {
         reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
       })
       .catch(() => {});
@@ -197,6 +198,54 @@ export async function handleBotCallback(
 
   if (data === "b:confirm") {
     return await finalizeAddBot(managed, chatId, userId, messageId);
+  }
+
+  if (data === "b:mkdir") {
+    const state = getConversation(userId, chatId);
+    const dirPath = state?.data.pendingPath;
+    if (!dirPath) return false;
+    try {
+      require("fs").mkdirSync(dirPath, { recursive: true });
+      setConversation(userId, chatId, "idle", { path: dirPath });
+      const s = getConversation(userId, chatId)!;
+      await api
+        .editMessageText(
+          chatId,
+          messageId,
+          `${m.created(dirPath)}\n\n${m.summaryTitle}\n${SEPARATOR}\n\n` +
+            `${m.bot}: @${s.data.username}\n` +
+            `${m.project}: ${s.data.project}\n` +
+            `${m.path}: ${dirPath}\n\n${common(lang).save}?`,
+          {
+            reply_markup: {
+              inline_keyboard: confirmRow(
+                "b:confirm",
+                "b:l",
+                undefined,
+                undefined,
+                lang,
+              ),
+            },
+          },
+        )
+        .catch(() => {});
+      return true;
+    } catch {
+      await api
+        .editMessageText(chatId, messageId, m.invalidPath(dirPath))
+        .catch(() => {});
+      return true;
+    }
+  }
+
+  if (data === "b:reenter") {
+    const c = common(lang);
+    await api
+      .editMessageText(chatId, messageId, m.askPath("") + c.replyHint, {
+        reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
+      })
+      .catch(() => {});
+    return true;
   }
 
   return false;
@@ -257,7 +306,7 @@ export async function handleBotText(
         .editMessageText(
           chatId,
           statusMsg.message_id,
-          m.foundBot(result.username!),
+          m.foundBot(result.username!) + common(lang).replyHint,
           cancelKb,
         )
         .catch(() => {});
@@ -276,16 +325,46 @@ export async function handleBotText(
       return true;
     }
     setConversation(userId, chatId, "bot:awaitPath", { project });
-    await api.sendMessage(chatId, m.askPath(project), cancelKb).catch(() => {});
+    await api
+      .sendMessage(
+        chatId,
+        m.askPath(project) + common(lang).replyHint,
+        cancelKb,
+      )
+      .catch(() => {});
     return true;
   }
 
   if (state.step === "bot:awaitPath") {
     const path = text.trim();
     if (!validatePath(path)) {
-      await api
-        .sendMessage(chatId, m.invalidPath(path), cancelKb)
-        .catch(() => {});
+      const c = common(lang);
+      if (path.startsWith("/")) {
+        // Absolute path but doesn't exist — offer to create
+        setConversation(userId, chatId, "bot:awaitPath", { pendingPath: path });
+        await api
+          .sendMessage(
+            chatId,
+            `${m.invalidPath(path)}\n\n${m.createDir(path)}`,
+            {
+              reply_markup: {
+                inline_keyboard: confirmRow(
+                  "b:mkdir",
+                  "b:reenter",
+                  undefined,
+                  undefined,
+                  lang,
+                ),
+              },
+            },
+          )
+          .catch(() => {});
+      } else {
+        // Not absolute path
+        await api
+          .sendMessage(chatId, m.invalidPath(path) + c.replyHint, cancelKb)
+          .catch(() => {});
+      }
       return true;
     }
 

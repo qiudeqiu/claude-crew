@@ -23,6 +23,7 @@ export function common(lang: Lang) {
         restartNow: "立即重启",
         save: "保存",
         cancelled: "\u274c 已取消。",
+        replyHint: "\n\n\ud83d\udca1 请回复此消息或 @主控 发送",
       }
     : {
         confirm: "Confirm",
@@ -32,6 +33,8 @@ export function common(lang: Lang) {
         restartNow: "Restart Now",
         save: "Save",
         cancelled: "\u274c Cancelled.",
+        replyHint:
+          "\n\n\ud83d\udca1 Reply to this message or @mention master to respond",
       };
 }
 
@@ -174,7 +177,9 @@ export function botsMsg(lang: Lang) {
         invalidProject: "\u26a0\ufe0f 1-50 个字符。请重试:",
         askPath: (p: string) =>
           `\ud83d\udcc2 项目: ${p}\n\n请输入项目目录的绝对路径:`,
-        invalidPath: (p: string) => `\u26a0\ufe0f 目录未找到: ${p}\n请重试:`,
+        invalidPath: (p: string) => `\u26a0\ufe0f 目录未找到: ${p}`,
+        createDir: (p: string) => `\ud83d\udcc1 要创建目录 ${p} 吗？`,
+        created: (p: string) => `\u2705 已创建: ${p}`,
         summaryTitle: "\ud83d\udcdd 添加机器人摘要",
         bot: "机器人",
         added: (u: string, proj: string, path: string) =>
@@ -218,8 +223,9 @@ export function botsMsg(lang: Lang) {
         invalidProject: "\u26a0\ufe0f 1-50 characters. Try again:",
         askPath: (p: string) =>
           `\ud83d\udcc2 Project: ${p}\n\nAbsolute path to project directory:`,
-        invalidPath: (p: string) =>
-          `\u26a0\ufe0f Directory not found: ${p}\nTry again:`,
+        invalidPath: (p: string) => `\u26a0\ufe0f Directory not found: ${p}`,
+        createDir: (p: string) => `\ud83d\udcc1 Create directory ${p}?`,
+        created: (p: string) => `\u2705 Created: ${p}`,
         summaryTitle: "\ud83d\udcdd Add Bot Summary",
         bot: "Bot",
         added: (u: string, proj: string, path: string) =>
@@ -507,8 +513,9 @@ export function onboardMsg(lang: Lang) {
         invalidProject: "\u26a0\ufe0f 项目名称应为 1-50 个字符。\n请重试:",
         askPath: (p: string) =>
           `\ud83d\udcc2 项目: ${p}\n\n请输入项目目录的绝对路径:\n(如 /home/user/projects/my-api)`,
-        invalidPath: (p: string) =>
-          `\u26a0\ufe0f 目录未找到: ${p}\n请输入有效的绝对路径:`,
+        invalidPath: (p: string) => `\u26a0\ufe0f 目录未找到: ${p}`,
+        createDir: (p: string) => `\ud83d\udcc1 要创建目录 ${p} 吗？`,
+        created: (p: string) => `\u2705 已创建: ${p}`,
         summary: "\ud83d\udcdd 设置摘要",
         saveConfig: "保存此配置?",
         added: (u: string, proj: string, path: string) =>
@@ -564,8 +571,9 @@ export function onboardMsg(lang: Lang) {
           "\u26a0\ufe0f Project name should be 1-50 characters.\nTry again:",
         askPath: (p: string) =>
           `\ud83d\udcc2 Project: ${p}\n\nWhat's the absolute path to the project directory?\n(e.g. /home/user/projects/my-api)`,
-        invalidPath: (p: string) =>
-          `\u26a0\ufe0f Directory not found: ${p}\nSend a valid absolute path:`,
+        invalidPath: (p: string) => `\u26a0\ufe0f Directory not found: ${p}`,
+        createDir: (p: string) => `\ud83d\udcc1 Create directory ${p}?`,
+        created: (p: string) => `\u2705 Created: ${p}`,
         summary: "\ud83d\udcdd Setup Summary",
         saveConfig: "Save this configuration?",
         added: (u: string, proj: string, path: string) =>
