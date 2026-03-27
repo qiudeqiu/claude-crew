@@ -17,6 +17,7 @@ import {
 import { log } from "./logger.js";
 import { getSafeEnv, formatToolLabel, splitMessage } from "./helpers.js";
 import { daemon, sessionStats, pendingApprovals } from "./state.js";
+import { getLang, setupMsg } from "./interactive/i18n.js";
 
 // ══════════════════════════════════════
 // ── Core: run Claude and parse stream ──
@@ -235,17 +236,16 @@ export async function invokeClaudeAndReply(
   const mode = getBotPermissionMode(config);
   const cfg = getConfig();
 
+  const s = setupMsg(getLang());
   if (Date.now() - managed.lastInvoke < cfg.rateLimitMs) {
-    await tgBot.api
-      .sendMessage(chatId, "\u23f3 Please wait a few seconds")
-      .catch(() => {});
+    await tgBot.api.sendMessage(chatId, s.rateLimited).catch(() => {});
     return;
   }
   if (daemon.activeInvocations >= cfg.maxConcurrent) {
     await tgBot.api
       .sendMessage(
         chatId,
-        `\u23f3 ${daemon.activeInvocations}/${cfg.maxConcurrent} tasks running, please wait`,
+        s.queueFull(daemon.activeInvocations, cfg.maxConcurrent),
       )
       .catch(() => {});
     return;
@@ -389,7 +389,7 @@ export async function invokeClaudeAndReply(
           if (!result.text && result.numTurns > 0) {
             result = {
               ...result,
-              text: "\u2705 Task executed (Claude used tools but produced no text response)",
+              text: setupMsg(getLang()).taskDone,
             };
           }
         }
@@ -416,7 +416,9 @@ export async function invokeClaudeAndReply(
     }
 
     if (!result.text) {
-      await tgBot.api.sendMessage(chatId, "(no output)").catch(() => {});
+      await tgBot.api
+        .sendMessage(chatId, setupMsg(getLang()).noOutput)
+        .catch(() => {});
       return;
     }
 
