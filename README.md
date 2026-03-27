@@ -168,7 +168,7 @@ Reply to any message — text, photo, voice, file, or sticker — while @mention
 
 ### Cost awareness
 
-Each task runs as an independent `claude -p` session — context does not carry over between messages. This is by design to support multi-project parallel execution, but it means:
+Each task runs as an independent session. Claude recovers context by reading your code, git history, and memory files — but there are a few cost implications to be aware of:
 
 - **`approve` mode costs more** — each task that needs write access runs Claude twice (read-only first, then retry with approved tools). Use `allowAll` or `auto` if you trust the environment.
 - **Quoting images is expensive** — a single screenshot can use 50K+ tokens. Prefer text descriptions when possible.
