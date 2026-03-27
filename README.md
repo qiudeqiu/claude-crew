@@ -25,6 +25,8 @@ A remote Claude Code solution for cross-device, multi-project parallel developme
 
 Other solutions require you to switch between sessions, tabs, or apps when working on multiple projects. claude-crew puts everything in **one Telegram group** — all project bots, all requests, all responses, all progress updates in a single timeline. @mention a bot, it works. @mention another, it works in parallel. You see every project's activity without switching anything. Your team sees it too. One group is your entire development cockpit.
 
+![Why a group chat](docs/scene-group-chat.png)
+
 ## 📊 Remote Solutions Comparison
 
 Each solution has its sweet spot. Pick the one that fits your workflow:
