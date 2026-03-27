@@ -38,10 +38,19 @@ export const CONTEXT_BAR_LENGTH = 10;
 export const WRITE_TOOLS = "Bash,Edit,Write,NotebookEdit,Agent,Skill";
 export const READONLY_DISALLOWED = "Bash,Edit,Write,NotebookEdit";
 
-// ── Pool I/O ──
+// ── Pool I/O (cached, invalidated on save or file change) ──
+let poolCache: { data: BotPool; mtimeMs: number } | null = null;
+
 export function loadPool(): BotPool {
   try {
-    return JSON.parse(readFileSync(POOL_FILE, "utf8")) as BotPool;
+    const { statSync } = require("fs") as typeof import("fs");
+    const stat = statSync(POOL_FILE);
+    if (poolCache && poolCache.mtimeMs === stat.mtimeMs) {
+      return poolCache.data;
+    }
+    const data = JSON.parse(readFileSync(POOL_FILE, "utf8")) as BotPool;
+    poolCache = { data, mtimeMs: stat.mtimeMs };
+    return data;
   } catch {
     return { bots: [] };
   }
@@ -51,6 +60,8 @@ export function savePool(pool: BotPool): void {
   writeFileSync(POOL_FILE, JSON.stringify(pool, null, 2) + "\n", {
     mode: 0o600,
   });
+  // Invalidate cache so next loadPool() picks up the new data
+  poolCache = null;
 }
 
 export function loadCron(): CronJob[] {

@@ -7,7 +7,7 @@ import {
   setConversation,
   clearConversation,
 } from "./state.js";
-import { validateBotToken, validatePath } from "./validate.js";
+import { validatePath, handleTokenValidation } from "./validate.js";
 import {
   confirmRow,
   restartRow,
@@ -170,54 +170,22 @@ async function handleTokenInput(
   const cancelKb = {
     reply_markup: { inline_keyboard: cancelButton("m:menu", lang) },
   };
-  const token = text.trim();
 
-  if (!/^\d+:[A-Za-z0-9_-]+$/.test(token)) {
-    await api.sendMessage(chatId, m.invalidToken, cancelKb).catch(() => {});
-    return true;
-  }
-
-  const pool = loadPool();
-  if (pool.bots.some((b) => b.token === token)) {
-    await api.sendMessage(chatId, m.duplicateToken, cancelKb).catch(() => {});
-    return true;
-  }
-
-  const statusMsg = await api
-    .sendMessage(chatId, m.validating)
-    .catch(() => null);
-  const result = await validateBotToken(token);
-
-  if (!result.ok) {
-    if (statusMsg) {
-      await api
-        .editMessageText(
-          chatId,
-          statusMsg.message_id,
-          m.invalidTokenApi,
-          cancelKb,
-        )
-        .catch(() => {});
-    }
-    return true;
-  }
-
-  if (statusMsg) {
-    await api
-      .editMessageText(
-        chatId,
-        statusMsg.message_id,
-        m.foundBot(result.username!),
-        cancelKb,
-      )
-      .catch(() => {});
-  }
-
-  setConversation(userId, chatId, "onboard:awaitProject", {
-    token,
-    username: result.username!,
-  });
-  return true;
+  return handleTokenValidation(
+    api,
+    chatId,
+    userId,
+    text,
+    "onboard:awaitProject",
+    cancelKb,
+    {
+      invalidToken: m.invalidToken,
+      duplicateToken: m.duplicateToken,
+      validating: m.validating,
+      invalidTokenApi: m.invalidTokenApi,
+      foundBot: m.foundBot,
+    },
+  );
 }
 
 async function handleProjectInput(

@@ -7,7 +7,7 @@ import {
   unlinkSync,
 } from "fs";
 import { join } from "path";
-import { execSync } from "child_process";
+import { execSync, execFileSync } from "child_process";
 import { INBOX_DIR, loadPool } from "./config.js";
 import { log } from "./logger.js";
 
@@ -142,9 +142,10 @@ export async function transcribeVoice(
 
     const wavPath = oggPath.replace(".ogg", ".wav");
     try {
-      execSync(
-        `ffmpeg -y -i "${oggPath}" -ar 16000 -ac 1 "${wavPath}" 2>/dev/null`,
-        { timeout: 15000 },
+      execFileSync(
+        "ffmpeg",
+        ["-y", "-i", oggPath, "-ar", "16000", "-ac", "1", wavPath],
+        { timeout: 15000, stdio: ["pipe", "pipe", "pipe"] },
       );
     } catch {
       return { path: oggPath, text: "" };
@@ -164,7 +165,7 @@ export async function transcribeVoice(
       if (pool.whisperLanguage && /^[a-z]{2,10}$/i.test(pool.whisperLanguage)) {
         whisperArgs.push("--language", pool.whisperLanguage);
       }
-      require("child_process").execFileSync("whisper", whisperArgs, {
+      execFileSync("whisper", whisperArgs, {
         timeout: 60000,
         stdio: ["pipe", "pipe", "pipe"],
       });
@@ -188,26 +189,8 @@ export async function transcribeVoice(
 }
 
 // ── Safe environment for Claude subprocesses ──
-const SENSITIVE_ENV_PATTERNS = [
-  "TELEGRAM_",
-  "BOT_",
-  "ANTHROPIC_API",
-  "OPENAI_API",
-  "AWS_SECRET",
-  "AWS_SESSION",
-  "GITHUB_TOKEN",
-  "NPM_TOKEN",
-  "DOCKER_PASSWORD",
-  "DATABASE_URL",
-  "POSTGRES_PASSWORD",
-  "REDIS_URL",
-  "STRIPE_",
-  "_SECRET",
-  "_TOKEN",
-  "_PASSWORD",
-  "_KEY",
-];
-
+// Allowlist-first: only pass through variables that are explicitly safe or
+// match safe prefixes. Then block anything matching sensitive patterns.
 const SAFE_EXACT = new Set([
   "PATH",
   "HOME",
@@ -216,21 +199,69 @@ const SAFE_EXACT = new Set([
   "USER",
   "TERM",
   "TMPDIR",
+  "EDITOR",
+  "VISUAL",
+  "PAGER",
+  "LESS",
+  "LC_ALL",
+  "LC_CTYPE",
+  "TZ",
+  "HOSTNAME",
+  "LOGNAME",
+  "PWD",
+  "OLDPWD",
+  "SHLVL",
+  "COLORTERM",
+  "TERM_PROGRAM",
+  "TERM_PROGRAM_VERSION",
+  "ANTHROPIC_API_KEY",
 ]);
-const SAFE_PREFIXES = ["XDG_"];
+
+const SAFE_PREFIXES = [
+  "XDG_",
+  "LANG",
+  "LC_",
+  "SSH_AUTH_SOCK", // for git
+  "GIT_",
+  "NODE_",
+  "BUN_",
+  "NPM_CONFIG_",
+  "HOMEBREW_",
+  "NVM_",
+  "PYENV_",
+  "GOPATH",
+  "GOROOT",
+  "CARGO_",
+  "RUSTUP_",
+];
+
+const SENSITIVE_PATTERNS = [
+  "_SECRET",
+  "_TOKEN",
+  "_PASSWORD",
+  "_KEY",
+  "_CREDENTIAL",
+  "TELEGRAM_",
+  "BOT_",
+  "OPENAI_",
+  "AWS_SECRET",
+  "AWS_SESSION",
+  "DATABASE_URL",
+  "REDIS_URL",
+  "STRIPE_",
+  "DOCKER_PASSWORD",
+];
 
 export function getSafeEnv(): Record<string, string> {
   return Object.fromEntries(
     Object.entries(process.env).filter(([k]) => {
       const upper = k.toUpperCase();
-      return !SENSITIVE_ENV_PATTERNS.some(
-        (pat) =>
-          upper.includes(pat) &&
-          !(
-            SAFE_EXACT.has(upper) ||
-            SAFE_PREFIXES.some((p) => upper.startsWith(p))
-          ),
-      );
+      // Always allow exact matches
+      if (SAFE_EXACT.has(upper)) return true;
+      // Always allow safe prefixes
+      if (SAFE_PREFIXES.some((p) => upper.startsWith(p))) return true;
+      // Block anything matching sensitive patterns
+      return !SENSITIVE_PATTERNS.some((pat) => upper.includes(pat));
     }),
   ) as Record<string, string>;
 }

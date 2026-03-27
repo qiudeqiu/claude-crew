@@ -8,7 +8,14 @@
  */
 
 import { Bot, GrammyError } from "grammy";
-import { mkdirSync, existsSync, readFileSync, unlinkSync } from "fs";
+import {
+  mkdirSync,
+  existsSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "fs";
+import { execSync } from "child_process";
 import type { ManagedBot } from "./types.js";
 import {
   loadPool,
@@ -17,6 +24,7 @@ import {
   validateConfig,
   migrateConfig,
   INBOX_DIR,
+  PID_FILE,
   RESTART_NOTE_FILE,
   LOG_FILE,
   BOT_START_STAGGER_MS,
@@ -35,13 +43,13 @@ import { checkCron } from "./cron.js";
 import { checkMemory } from "./memory.js";
 import { cleanupExpired } from "./interactive/index.js";
 
-// ── Singleton: kill any other daemon.ts processes ──
+// ── Singleton: kill any other daemon.ts processes + write PID file ──
 {
   const myPid = process.pid;
   try {
-    const ps = require("child_process")
-      .execSync(`pgrep -f "bun run.*daemon.ts"`, { encoding: "utf8" })
-      .trim();
+    const ps = execSync(`pgrep -f "bun run.*daemon.ts"`, {
+      encoding: "utf8",
+    }).trim();
     const pids = ps
       .split("\n")
       .map((p: string) => parseInt(p, 10))
@@ -50,13 +58,18 @@ import { cleanupExpired } from "./interactive/index.js";
       for (const pid of pids) {
         try {
           process.kill(pid, "SIGTERM");
-        } catch {}
+        } catch (e) {
+          process.stderr.write(`[singleton] failed to kill ${pid}: ${e}\n`);
+        }
       }
       process.stderr.write(
         `[singleton] killed ${pids.length} stale daemon(s): ${pids.join(", ")}\n`,
       );
     }
-  } catch {}
+  } catch {
+    // pgrep returns non-zero when no matches — expected
+  }
+  writeFileSync(PID_FILE, String(myPid), { mode: 0o600 });
 }
 
 // ── Startup validation & migration ──
@@ -165,7 +178,9 @@ async function main(): Promise<void> {
     if (existsSync(RESTART_NOTE_FILE)) {
       try {
         unlinkSync(RESTART_NOTE_FILE);
-      } catch {}
+      } catch (e) {
+        log(`WARN: failed to clean restart note: ${e}`);
+      }
     }
 
     // Send startup message + menu
@@ -179,7 +194,9 @@ async function main(): Promise<void> {
         m.started,
       );
       await showMainMenu(daemon.masterBot!, pool.sharedGroupId);
-    } catch {}
+    } catch (e) {
+      log(`WARN: startup notification failed: ${e}`);
+    }
   }, RESTART_NOTIFY_DELAY_MS);
 
   // Periodic tasks

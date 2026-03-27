@@ -199,11 +199,11 @@ export async function runClaude(
     }
   } finally {
     reader.releaseLock();
+    clearTimeout(killTimeout);
   }
 
   const stderr = await new Response(proc.stderr).text();
   const exitCode = await proc.exited;
-  clearTimeout(killTimeout);
 
   if (stderr) log(`STDERR: ${dir} — ${stderr.slice(0, 200)}`);
   if (exitCode !== 0) log(`EXIT: ${dir} — code ${exitCode}`);
@@ -233,6 +233,140 @@ export async function runClaude(
     contextWindow,
     model,
   };
+}
+
+// ══════════════════════════════════════
+// ── Progress tracker ──
+// ══════════════════════════════════════
+type ProgressTracker = {
+  onProgress: (step: string) => void;
+  cleanup: () => void;
+  deleteStatusMsg: () => Promise<void>;
+  resetSteps: () => void;
+};
+
+function createProgressTracker(
+  tgBot: ManagedBot["bot"],
+  chatId: string,
+): ProgressTracker {
+  let statusMsgId: number | null = null;
+  const steps: string[] = [];
+  const startTime = Date.now();
+  let lastProgressUpdate = 0;
+  let pendingFlush: ReturnType<typeof setTimeout> | null = null;
+
+  function flush(): void {
+    const elapsed = Math.round((Date.now() - startTime) / 1000);
+    const recent = steps.slice(-5);
+    const text =
+      `\u2699\ufe0f working... (${elapsed}s)\n` +
+      recent.map((s) => `  \u2192 \ud83d\udd27 ${s}`).join("\n");
+    if (statusMsgId) {
+      void tgBot.api.editMessageText(chatId, statusMsgId, text).catch(() => {});
+    } else {
+      tgBot.api
+        .sendMessage(chatId, text)
+        .then((sent) => {
+          statusMsgId = sent.message_id;
+        })
+        .catch(() => {});
+    }
+    lastProgressUpdate = Date.now();
+  }
+
+  return {
+    onProgress(step: string): void {
+      steps.push(step);
+      const now = Date.now();
+      if (now - lastProgressUpdate >= PROGRESS_THROTTLE_MS) {
+        if (pendingFlush) clearTimeout(pendingFlush);
+        flush();
+      } else if (!pendingFlush) {
+        pendingFlush = setTimeout(
+          () => {
+            pendingFlush = null;
+            flush();
+          },
+          PROGRESS_THROTTLE_MS - (now - lastProgressUpdate),
+        );
+      }
+    },
+    cleanup(): void {
+      if (pendingFlush) clearTimeout(pendingFlush);
+    },
+    async deleteStatusMsg(): Promise<void> {
+      if (statusMsgId) {
+        await tgBot.api.deleteMessage(chatId, statusMsgId).catch(() => {});
+      }
+    },
+    resetSteps(): void {
+      steps.length = 0;
+    },
+  };
+}
+
+// ══════════════════════════════════════
+// ── Approval flow ──
+// ══════════════════════════════════════
+async function requestApproval(
+  tgBot: ManagedBot["bot"],
+  chatId: string,
+  denied: string[],
+): Promise<string | null> {
+  const approvalId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const toolList = denied.map((t) => `  \u2022 ${t}`).join("\n");
+  const keyboard = new InlineKeyboard()
+    .text("\u2705 Allow & retry", `approve:yes:${approvalId}`)
+    .text("\u274c Skip", `approve:no:${approvalId}`);
+
+  const timeoutMin = Math.round(APPROVAL_TIMEOUT_MS / 60000);
+  await tgBot.api
+    .sendMessage(
+      chatId,
+      setupMsg(getLang()).approvalPrompt(toolList, timeoutMin),
+      { reply_markup: keyboard },
+    )
+    .catch(() => {});
+
+  return new Promise<string | null>((resolve) => {
+    pendingApprovals.set(approvalId, { resolve });
+    setTimeout(() => {
+      if (pendingApprovals.has(approvalId)) {
+        pendingApprovals.delete(approvalId);
+        resolve(null);
+      }
+    }, APPROVAL_TIMEOUT_MS);
+  });
+}
+
+// ══════════════════════════════════════
+// ── Stats accumulation ──
+// ══════════════════════════════════════
+function accumulateStats(managed: ManagedBot, result: ClaudeResult): void {
+  sessionStats.totalCostUSD += result.costUSD;
+  sessionStats.totalDurationMs += result.durationMs;
+  sessionStats.totalInvocations++;
+  for (const [m, tokens] of Object.entries(result.tokensByModel)) {
+    sessionStats.tokensByModel[m] =
+      (sessionStats.tokensByModel[m] ?? 0) + tokens;
+  }
+
+  managed.lastActivity = Date.now();
+  managed.contextUsed = result.contextUsed;
+  managed.contextWindow = result.contextWindow;
+  managed.lastModel = result.model;
+  managed.lastCostUSD += result.costUSD;
+}
+
+// ══════════════════════════════════════
+// ── Build system prompt ──
+// ══════════════════════════════════════
+function buildSystemPrompt(project: string, dir: string): string | undefined {
+  const isDaemonProject = existsSync(join(dir, "src", "daemon.ts"));
+  if (!isDaemonProject) return undefined;
+
+  const safeProject = project.replace(/['"\\`$]/g, "_");
+  return `WARNING: You are running inside the telegram-pool daemon. If you modify daemon.ts or related files, you MUST: 1) finish ALL edits first, 2) send your reply/summary to the user, 3) write a restart note: echo '{"project":"${safeProject}","summary":"<what you did>"}' > ${RESTART_NOTE_FILE}, 4) ONLY THEN run daemon.sh restart as the very last command. Restarting kills your process — anything after it will not execute.`;
 }
 
 // ══════════════════════════════════════
@@ -277,48 +411,7 @@ export async function invokeClaudeAndReply(
 
   log(`INVOKE: ${project} [${mode}] — "${userMessage.slice(0, 80)}"`);
 
-  // Progress display — throttled, created on first tool use
-  let statusMsgId: number | null = null;
-  const steps: string[] = [];
-  const startTime = Date.now();
-  let lastProgressUpdate = 0;
-  let pendingProgressFlush: ReturnType<typeof setTimeout> | null = null;
-
-  function flushProgress(): void {
-    const elapsed = Math.round((Date.now() - startTime) / 1000);
-    const recent = steps.slice(-5);
-    const text =
-      `\u2699\ufe0f working... (${elapsed}s)\n` +
-      recent.map((s) => `  \u2192 \ud83d\udd27 ${s}`).join("\n");
-    if (statusMsgId) {
-      void tgBot.api.editMessageText(chatId, statusMsgId, text).catch(() => {});
-    } else {
-      tgBot.api
-        .sendMessage(chatId, text)
-        .then((sent) => {
-          statusMsgId = sent.message_id;
-        })
-        .catch(() => {});
-    }
-    lastProgressUpdate = Date.now();
-  }
-
-  function onProgress(step: string): void {
-    steps.push(step);
-    const now = Date.now();
-    if (now - lastProgressUpdate >= PROGRESS_THROTTLE_MS) {
-      if (pendingProgressFlush) clearTimeout(pendingProgressFlush);
-      flushProgress();
-    } else if (!pendingProgressFlush) {
-      pendingProgressFlush = setTimeout(
-        () => {
-          pendingProgressFlush = null;
-          flushProgress();
-        },
-        PROGRESS_THROTTLE_MS - (now - lastProgressUpdate),
-      );
-    }
-  }
+  const progress = createProgressTracker(tgBot, chatId);
 
   try {
     const cleanMsg = userMessage.replace(/@\w+/g, "").trim();
@@ -326,68 +419,35 @@ export async function invokeClaudeAndReply(
       ? `The user sent an image at path: ${imagePath}. Please use the Read tool to view the image first, then respond: ${cleanMsg || "Analyze this image"}`
       : cleanMsg;
 
-    const isDaemonProject = existsSync(join(dir, "src", "daemon.ts"));
-    const safeProject = project.replace(/['"\\]/g, "_");
-    const restartNotePath = RESTART_NOTE_FILE;
-    const systemPrompt = isDaemonProject
-      ? `WARNING: You are running inside the telegram-pool daemon. If you modify daemon.ts or related files, you MUST: 1) finish ALL edits first, 2) send your reply/summary to the user, 3) write a restart note: echo '{"project":"${safeProject}","summary":"<what you did>"}' > ${restartNotePath}, 4) ONLY THEN run daemon.sh restart as the very last command. Restarting kills your process — anything after it will not execute.`
-      : undefined;
-
+    const systemPrompt = buildSystemPrompt(project, dir);
     const accessLevel = getBotAccessLevel(config);
     let result: ClaudeResult;
 
     if (accessLevel === "readOnly") {
-      // ReadOnly: hard-restrict to read-only tools via --disallowedTools
       result = await runClaude(dir, prompt, {
         disallowedTools: READONLY_DISALLOWED,
         model: botModel,
         appendSystemPrompt:
           (systemPrompt ? systemPrompt + "\n\n" : "") +
           "You are in read-only mode. You cannot edit, write, or create files. Only read, search, and analyze.",
-        onProgress,
+        onProgress: progress.onProgress,
       });
     } else if (mode === "approve") {
-      // ReadWrite + Approve: first run without write tools, then ask
       result = await runClaude(dir, prompt, {
         model: botModel,
         appendSystemPrompt: systemPrompt,
-        onProgress,
+        onProgress: progress.onProgress,
       });
 
-      // If tools were denied, ask user for approval
       if (result.permissionDenials.length > 0) {
         const denied = [...new Set(result.permissionDenials)];
         log(`APPROVE: denied tools: ${denied.join(", ")}`);
         const firstResultText = result.text;
 
-        const approvalId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const toolList = denied.map((t) => `  \u2022 ${t}`).join("\n");
-        const keyboard = new InlineKeyboard()
-          .text("\u2705 Allow & retry", `approve:yes:${approvalId}`)
-          .text("\u274c Skip", `approve:no:${approvalId}`);
-
-        const timeoutMin = Math.round(APPROVAL_TIMEOUT_MS / 60000);
-        await tgBot.api
-          .sendMessage(
-            chatId,
-            setupMsg(getLang()).approvalPrompt(toolList, timeoutMin),
-            { reply_markup: keyboard },
-          )
-          .catch(() => {});
-
-        const approved = await new Promise<string | null>((resolve) => {
-          pendingApprovals.set(approvalId, { resolve });
-          setTimeout(() => {
-            if (pendingApprovals.has(approvalId)) {
-              pendingApprovals.delete(approvalId);
-              resolve(null);
-            }
-          }, APPROVAL_TIMEOUT_MS);
-        });
-
+        const approved = await requestApproval(tgBot, chatId, denied);
         if (approved) {
           log(`APPROVE: retrying with tools: ${approved}`);
-          steps.length = 0;
+          progress.resetSteps();
           result = await runClaude(
             dir,
             prompt +
@@ -396,44 +456,35 @@ export async function invokeClaudeAndReply(
               allowedTools: approved,
               model: botModel,
               appendSystemPrompt: systemPrompt,
-              onProgress,
+              onProgress: progress.onProgress,
               resume: false,
             },
           );
-          // Fall back chain: retry text → first run text → completion notice
           if (!result.text && firstResultText) {
             result = { ...result, text: firstResultText };
           }
           if (!result.text && result.numTurns > 0) {
-            result = {
-              ...result,
-              text: setupMsg(getLang()).taskDone,
-            };
+            result = { ...result, text: setupMsg(getLang()).taskDone };
           }
         }
       }
     } else if (mode === "auto") {
-      // ReadWrite + Auto: use Claude Code's auto mode with background classifier
       result = await runClaude(dir, prompt, {
         permissionMode: "auto",
         model: botModel,
         appendSystemPrompt: systemPrompt,
-        onProgress,
+        onProgress: progress.onProgress,
       });
     } else {
-      // ReadWrite + AllowAll: pre-authorize everything
       result = await runClaude(dir, prompt, {
         allowedTools: WRITE_TOOLS,
         model: botModel,
         appendSystemPrompt: systemPrompt,
-        onProgress,
+        onProgress: progress.onProgress,
       });
     }
 
-    // Delete progress message
-    if (statusMsgId) {
-      await tgBot.api.deleteMessage(chatId, statusMsgId).catch(() => {});
-    }
+    await progress.deleteStatusMsg();
 
     if (!result.text) {
       await tgBot.api
@@ -446,20 +497,7 @@ export async function invokeClaudeAndReply(
       await tgBot.api.sendMessage(chatId, chunk);
     }
 
-    // Accumulate session stats
-    sessionStats.totalCostUSD += result.costUSD;
-    sessionStats.totalDurationMs += result.durationMs;
-    sessionStats.totalInvocations++;
-    for (const [m, tokens] of Object.entries(result.tokensByModel)) {
-      sessionStats.tokensByModel[m] =
-        (sessionStats.tokensByModel[m] ?? 0) + tokens;
-    }
-
-    managed.lastActivity = Date.now();
-    managed.contextUsed = result.contextUsed;
-    managed.contextWindow = result.contextWindow;
-    managed.lastModel = result.model;
-    managed.lastCostUSD += result.costUSD;
+    accumulateStats(managed, result);
     log(
       `DONE: ${project} — ${result.text.length} chars, $${result.costUSD.toFixed(4)}, context ${result.contextWindow ? Math.round((result.contextUsed / result.contextWindow) * 100) : "?"}%`,
     );
@@ -470,7 +508,7 @@ export async function invokeClaudeAndReply(
       .sendMessage(chatId, `\u26a0\ufe0f Failed: ${msg.slice(0, 200)}`)
       .catch(() => {});
   } finally {
-    if (pendingProgressFlush) clearTimeout(pendingProgressFlush);
+    progress.cleanup();
     clearInterval(typingInterval);
     managed.busy = false;
     daemon.activeInvocations = Math.max(0, daemon.activeInvocations - 1);

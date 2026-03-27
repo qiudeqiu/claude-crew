@@ -467,15 +467,9 @@ async function setGlobalValue(
   const cm = configMsg(lang);
   const label = getFieldLabel(field.key);
   const pool = loadPool();
-  const poolRec = pool as Record<string, unknown>;
 
-  if (field.key === "masterExecute") {
-    poolRec[field.key] = value === "true";
-  } else {
-    poolRec[field.key] = value;
-  }
-
-  savePool(pool);
+  const parsedValue = field.key === "masterExecute" ? value === "true" : value;
+  savePool({ ...pool, [field.key]: parsedValue });
   log(`CONFIG: global.${field.key} = ${value} by ${userId}`);
 
   const projectBots = pool.bots.filter((b) => b.role !== "master");
@@ -527,14 +521,18 @@ async function setBotValue(
   const bot = pool.bots.find((b) => b.username === username);
   if (!bot) return false;
 
-  const botRec = bot as unknown as Record<string, unknown>;
-  if (value === "inherit") {
-    delete botRec[field.key];
-  } else {
-    botRec[field.key] = value;
-  }
-
-  savePool(pool);
+  const updatedBots = pool.bots.map((b) => {
+    if (b.username !== username) return b;
+    if (value === "inherit") {
+      const { [field.key]: _, ...rest } = b as unknown as Record<
+        string,
+        unknown
+      >;
+      return rest;
+    }
+    return { ...b, [field.key]: value };
+  });
+  savePool({ ...pool, bots: updatedBots as typeof pool.bots });
   log(`CONFIG: @${username}.${field.key} = ${value} by ${userId}`);
 
   await api
@@ -602,12 +600,13 @@ export async function handleConfigText(
 
     const pool = loadPool();
     if (isGlobal) {
-      (pool as Record<string, unknown>)[field.key] = num;
+      savePool({ ...pool, [field.key]: num });
     } else {
-      const bot = pool.bots.find((b) => b.username === editScope);
-      if (bot) (bot as unknown as Record<string, unknown>)[field.key] = num;
+      const updatedBots = pool.bots.map((b) =>
+        b.username === editScope ? { ...b, [field.key]: num } : b,
+      );
+      savePool({ ...pool, bots: updatedBots });
     }
-    savePool(pool);
     log(
       `CONFIG: ${isGlobal ? "global" : `@${editScope}`}.${field.key} = ${num} by ${userId}`,
     );
@@ -655,12 +654,13 @@ export async function handleConfigText(
 
   const pool = loadPool();
   if (isGlobal) {
-    (pool as Record<string, unknown>)[field.key] = value;
+    savePool({ ...pool, [field.key]: value });
   } else {
-    const bot = pool.bots.find((b) => b.username === editScope);
-    if (bot) (bot as unknown as Record<string, unknown>)[field.key] = value;
+    const updatedBots = pool.bots.map((b) =>
+      b.username === editScope ? { ...b, [field.key]: value } : b,
+    );
+    savePool({ ...pool, bots: updatedBots });
   }
-  savePool(pool);
   log(
     `CONFIG: ${isGlobal ? "global" : `@${editScope}`}.${field.key} = "${value}" by ${userId}`,
   );

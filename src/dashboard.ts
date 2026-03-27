@@ -119,6 +119,7 @@ export async function updateDashboard(): Promise<void> {
         messageId: sent.message_id,
         chatId: pool.sharedGroupId,
       }),
+      { mode: 0o600 },
     );
     await daemon.masterBot.bot.api
       .pinChatMessage(pool.sharedGroupId, sent.message_id, {

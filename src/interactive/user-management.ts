@@ -218,10 +218,17 @@ export async function handleUserCallback(
     const bot = pool.bots.find((b) => b.username === username);
     if (!bot) return false;
 
-    bot.allowedUsers = (bot.allowedUsers ?? []).filter(
-      (u) => u !== targetUserId,
+    const updatedBots = pool.bots.map((b) =>
+      b.username === username
+        ? {
+            ...b,
+            allowedUsers: (b.allowedUsers ?? []).filter(
+              (u) => u !== targetUserId,
+            ),
+          }
+        : b,
     );
-    savePool(pool);
+    savePool({ ...pool, bots: updatedBots });
     log(`USERS: removed ${targetUserId} from @${username} by ${userId}`);
 
     await showBotUsers(api, chatId, username, messageId);
@@ -310,8 +317,12 @@ export async function handleUserText(
       return true;
     }
 
-    bot.allowedUsers = [...users, input];
-    savePool(pool);
+    const updatedBots = pool.bots.map((b) =>
+      b.username === username
+        ? { ...b, allowedUsers: [...(b.allowedUsers ?? []), input] }
+        : b,
+    );
+    savePool({ ...pool, bots: updatedBots });
     log(`USERS: added ${input} to @${username} by ${userId}`);
     clearConversation(userId, chatId);
 

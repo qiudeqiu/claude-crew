@@ -1,5 +1,6 @@
 import type { Api } from "grammy";
 import type { ManagedBot } from "../types.js";
+import { mkdirSync } from "fs";
 import { loadPool, savePool, createProjectBot } from "../config.js";
 import { log } from "../logger.js";
 import { botByUsername } from "../state.js";
@@ -8,7 +9,7 @@ import {
   setConversation,
   clearConversation,
 } from "./state.js";
-import { validateBotToken, validatePath } from "./validate.js";
+import { validatePath, handleTokenValidation } from "./validate.js";
 import {
   confirmRow,
   restartRow,
@@ -204,7 +205,7 @@ export async function handleBotCallback(
     const dirPath = state?.data.pendingPath;
     if (!dirPath) return false;
     try {
-      require("fs").mkdirSync(dirPath, { recursive: true });
+      mkdirSync(dirPath, { recursive: true });
       setConversation(userId, chatId, "idle", { path: dirPath });
       const s = getConversation(userId, chatId)!;
       await api
@@ -269,52 +270,21 @@ export async function handleBotText(
   };
 
   if (state.step === "bot:awaitToken") {
-    const token = text.trim();
-    if (!/^\d+:[A-Za-z0-9_-]+$/.test(token)) {
-      await api.sendMessage(chatId, m.invalidToken, cancelKb).catch(() => {});
-      return true;
-    }
-
-    const pool = loadPool();
-    if (pool.bots.some((b) => b.token === token)) {
-      await api.sendMessage(chatId, m.duplicateToken, cancelKb).catch(() => {});
-      return true;
-    }
-
-    const statusMsg = await api
-      .sendMessage(chatId, m.validating)
-      .catch(() => null);
-    const result = await validateBotToken(token);
-
-    if (!result.ok) {
-      if (statusMsg) {
-        await api
-          .editMessageText(
-            chatId,
-            statusMsg.message_id,
-            m.invalidTokenApi,
-            cancelKb,
-          )
-          .catch(() => {});
-      }
-      return true;
-    }
-
-    if (statusMsg) {
-      await api
-        .editMessageText(
-          chatId,
-          statusMsg.message_id,
-          m.foundBot(result.username!) + common(lang).replyHint,
-          cancelKb,
-        )
-        .catch(() => {});
-    }
-    setConversation(userId, chatId, "bot:awaitProject", {
-      token,
-      username: result.username!,
-    });
-    return true;
+    return handleTokenValidation(
+      api,
+      chatId,
+      userId,
+      text,
+      "bot:awaitProject",
+      cancelKb,
+      {
+        invalidToken: m.invalidToken,
+        duplicateToken: m.duplicateToken,
+        validating: m.validating,
+        invalidTokenApi: m.invalidTokenApi,
+        foundBot: m.foundBot,
+      },
+    );
   }
 
   if (state.step === "bot:awaitProject") {

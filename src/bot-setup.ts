@@ -18,6 +18,59 @@ import { showGlobalConfig } from "./interactive/config-editor.js";
 import { showUserManagement } from "./interactive/user-management.js";
 import { setupMsg } from "./interactive/i18n.js";
 
+// ── Build context from a quoted/replied message ──
+async function buildQuotedContext(
+  replyMsg: Record<string, unknown>,
+  tgBot: ManagedBot["bot"],
+  config: ManagedBot["config"],
+): Promise<{ text: string; imagePath?: string }> {
+  const quotedText =
+    (replyMsg.text as string) ?? (replyMsg.caption as string) ?? "";
+  const parts: string[] = [];
+  let imagePath: string | undefined;
+
+  if (quotedText) parts.push(`Text: ${quotedText}`);
+
+  // Quoted photo
+  const replyPhotos = replyMsg.photo as Array<{ file_id: string }> | undefined;
+  if (replyPhotos?.length) {
+    const best = replyPhotos[replyPhotos.length - 1];
+    imagePath = await downloadPhoto(tgBot.api, config.token, best.file_id);
+    if (imagePath) parts.push(`Image: ${imagePath}`);
+  }
+
+  // Quoted document/file
+  const replyDoc = replyMsg.document as
+    | { file_name?: string; mime_type?: string }
+    | undefined;
+  if (replyDoc) {
+    parts.push(
+      `File: ${replyDoc.file_name ?? "unknown"} (${replyDoc.mime_type ?? ""})`,
+    );
+  }
+
+  // Quoted voice
+  const replyVoice = replyMsg.voice as { file_id: string } | undefined;
+  if (replyVoice) {
+    const voiceResult = await transcribeVoice(
+      tgBot.api,
+      config.token,
+      replyVoice.file_id,
+    );
+    if (voiceResult?.text) parts.push(`Voice: ${voiceResult.text}`);
+  }
+
+  // Quoted video note / sticker
+  if (replyMsg.video_note) parts.push(`[Video message]`);
+  const replySticker = replyMsg.sticker as { emoji?: string } | undefined;
+  if (replySticker) parts.push(`[Sticker: ${replySticker.emoji ?? ""}]`);
+
+  return {
+    text: parts.length > 0 ? `[Quoted message]\n${parts.join("\n")}` : "",
+    imagePath,
+  };
+}
+
 export function setupBot(managed: ManagedBot): void {
   const { bot: tgBot, config } = managed;
   const botName = config.username ?? "";
@@ -371,57 +424,10 @@ export function setupBot(managed: ManagedBot): void {
       | Record<string, unknown>
       | undefined;
     if (replyMsg) {
-      const quotedText =
-        (replyMsg.text as string) ?? (replyMsg.caption as string) ?? "";
-      const parts: string[] = [];
-
-      if (quotedText) parts.push(`Text: ${quotedText}`);
-
-      // Quoted photo
-      const replyPhotos = replyMsg.photo as
-        | Array<{ file_id: string }>
-        | undefined;
-      if (replyPhotos?.length) {
-        const best = replyPhotos[replyPhotos.length - 1];
-        quotedImagePath = await downloadPhoto(
-          tgBot.api,
-          config.token,
-          best.file_id,
-        );
-        if (quotedImagePath) parts.push(`Image: ${quotedImagePath}`);
-      }
-
-      // Quoted document/file
-      const replyDoc = replyMsg.document as
-        | {
-            file_name?: string;
-            mime_type?: string;
-          }
-        | undefined;
-      if (replyDoc) {
-        parts.push(
-          `File: ${replyDoc.file_name ?? "unknown"} (${replyDoc.mime_type ?? ""})`,
-        );
-      }
-
-      // Quoted voice
-      const replyVoice = replyMsg.voice as { file_id: string } | undefined;
-      if (replyVoice) {
-        const voiceResult = await transcribeVoice(
-          tgBot.api,
-          config.token,
-          replyVoice.file_id,
-        );
-        if (voiceResult?.text) parts.push(`Voice: ${voiceResult.text}`);
-      }
-
-      // Quoted video note / sticker
-      if (replyMsg.video_note) parts.push(`[Video message]`);
-      const replySticker = replyMsg.sticker as { emoji?: string } | undefined;
-      if (replySticker) parts.push(`[Sticker: ${replySticker.emoji ?? ""}]`);
-
-      if (parts.length > 0) {
-        fullText = `[Quoted message]\n${parts.join("\n")}\n\n${text}`;
+      const quoted = await buildQuotedContext(replyMsg, tgBot, config);
+      quotedImagePath = quoted.imagePath;
+      if (quoted.text) {
+        fullText = `${quoted.text}\n\n${text}`;
       }
     }
 

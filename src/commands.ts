@@ -127,7 +127,9 @@ export function handleMasterCommand(
               .join("\n")}`,
           );
         }
-      } catch {}
+      } catch {
+        // grep returns non-zero when no matches — expected
+      }
     }
     if (results.length === 0)
       return `\ud83d\udd0d "${keyword}" \u2014 No matches found`;
