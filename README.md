@@ -156,20 +156,19 @@ Each task runs as an independent session. Claude recovers context by reading you
 ### What this project does NOT do
 
 - **No Docker isolation** — all bots run in the same process with access to the local filesystem. The built-in permission system (accessLevel + permissionMode + allowedUsers) provides sufficient control for personal and small-team use, but is not a security boundary for untrusted users.
-- **No API key mode** — requires a local Claude Code CLI with an active subscription (Max or Pro). Does not support Anthropic API keys.
+- **Requires Claude Code CLI** — this project is a management layer, not a standalone bot. You need a working `claude` CLI on the machine, authenticated via subscription (Pro/Max), API key (`ANTHROPIC_API_KEY`), or cloud provider (Bedrock/Vertex).
 - **No cloud deployment** — designed to run on a local machine or personal server where your code lives.
 
 ## 📦 Prerequisites
 
-> **This project is NOT a standalone AI bot.** It is a remote control layer on top of Claude Code CLI. You need a computer (Mac/Linux/server) running 24/7 with Claude Code CLI installed, logged in, and subscribed. Your Telegram messages are routed to this machine, which runs `claude -p` locally and sends results back. The setup script will verify dependencies automatically.
+> **This project is NOT a standalone AI bot.** It is a management layer on top of Claude Code CLI. You need a computer (Mac/Linux/server) running 24/7 with Claude Code CLI installed and authenticated. Your Telegram messages are routed to this machine, which runs `claude -p` locally and sends results back. The setup script will verify dependencies automatically.
 
 ### Required
 
 | Dependency | Why | Install |
 |-----------|-----|---------|
 | **[Claude Code CLI](https://claude.ai/claude-code)** | Core runtime — all AI tasks run through `claude -p` | `npm install -g @anthropic-ai/claude-code` |
-| **Active subscription** | Claude Code requires Max or Pro plan | [claude.ai/pricing](https://claude.ai/pricing) |
-| **Logged-in session** | CLI must be authenticated | Run `claude` and complete login |
+| **Authenticated CLI** | Subscription (Pro/Max), API key, or cloud provider | Run `claude` to login, or set `ANTHROPIC_API_KEY` |
 | **[Bun](https://bun.sh)** >= 1.0 | Daemon runtime | `curl -fsSL https://bun.sh/install \| bash` |
 
 ### Optional
@@ -516,7 +515,7 @@ All data is stored locally on your machine — **nothing is sent to third-party 
 
 The only external communication is:
 - **Telegram Bot API** — sending/receiving messages (your bots, your group)
-- **Claude API** — running Claude Code tasks (your subscription)
+- **Claude API** — running Claude Code tasks (via your subscription, API key, or cloud provider)
 
 No analytics, no telemetry, no cloud sync, no remote database.
 
