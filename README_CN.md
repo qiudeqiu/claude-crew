@@ -29,21 +29,22 @@
 |-----|:-:|:-:|:-:|:-:|
 | 多项目（上下文隔离） | ✅ 每个项目一个 bot | ✅ 每个项目一个进程 | ❌ 单 session | ✅ 每个项目一个 session |
 | 项目切换 | ✅ 群内 @mention | 在 app 里切 session | 不适用（单 bot） | 在 app 里切 session |
-| 手机上加新项目 | ✅ 30 秒，按钮向导 | ❌ 需回终端 | ❌ 需回终端 | ❌ 需回终端 |
+| 手机上加新项目 | ✅ 按钮向导 | ❌ 需回终端 | ❌ 需回终端 | ✅ app 内填路径 |
 | 团队协作 | ✅ 2-10 人，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 | 部分 |
-| 进程管理 | ✅ 内置 daemon + watchdog + 开机自启 | 手动（tmux / systemd） | 手动（tmux / systemd） | 手动（tmux / systemd） |
+| 进程管理 | ✅ 内置 daemon + watchdog + 开机自启 | 手动（tmux / systemd） | 手动（tmux / systemd） | ✅ 内置 daemon |
 | 统一仪表盘 | ✅ 全部项目状态置顶一条消息 | ❌ | ❌ | ❌ |
 | 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本 |
 | 手机端管理 | ✅ 按钮菜单 | ✅ claude.ai / 移动端 | ✅ Telegram | ✅ 原生 app |
 | 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
 | 多模型支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini |
+| 客户端 | Telegram（无需额外 app） | Web / 移动端 app | Telegram | 原生 app（iOS/Android） |
 
 **哪个适合你？**
 
 - **单项目、个人、要官方支持** → [Claude Code Remote](https://docs.anthropic.com/en/docs/claude-code/remote) — 官方一手方案，开箱即用
 - **单项目、个人、偏好 Telegram** → [Claude Code Telegram 插件](https://docs.anthropic.com/en/docs/claude-code/channels) — 轻量官方插件
-- **多项目、想用多种模型** → [Happy Coder](https://happy.engineering/) — 支持 Claude、Codex、Gemini
-- **多项目、团队、要集群管理** → **claude-crew** — @mention 路由、团队权限、daemon 常驻、仪表盘、定时任务
+- **多项目、想用多种模型或原生 app** → [Happy Coder](https://happy.engineering/) — 支持 Claude、Codex、Gemini，精致的移动端体验
+- **多项目、团队、要 @mention 集群管理** → **claude-crew** — 群聊路由、团队权限、仪表盘、定时任务，全在 Telegram 内完成
 
 ## 目录
 

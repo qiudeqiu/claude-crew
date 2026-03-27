@@ -29,21 +29,22 @@ Each solution has its sweet spot. Pick the one that fits your workflow:
 |-----------|:-:|:-:|:-:|:-:|
 | Multi-project (isolated context) | ✅ One bot per project | ✅ One process per project | ❌ Single session | ✅ One session per project |
 | Project switching | ✅ @mention in group chat | Switch in app UI | N/A (single bot) | Switch in app UI |
-| Add project from phone | ✅ 30s, button wizard | ❌ Terminal required | ❌ Terminal required | ❌ Terminal required |
+| Add project from phone | ✅ Button wizard | ❌ Terminal required | ❌ Terminal required | ✅ Enter path in app |
 | Team collaboration | ✅ 2-10 people, per-bot permissions | ❌ Solo only | ❌ Solo only | Partial |
-| Process management | ✅ Built-in daemon + watchdog + auto-start | Manual (tmux / systemd) | Manual (tmux / systemd) | Manual (tmux / systemd) |
+| Process management | ✅ Built-in daemon + watchdog + auto-start | Manual (tmux / systemd) | Manual (tmux / systemd) | ✅ Built-in daemon |
 | Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ |
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
 | Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
 | Multi-model support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
+| Client | Telegram (no extra app) | Web / Mobile app | Telegram | Native app (iOS/Android) |
 
 **Which one is right for you?**
 
 - **One project, solo, want official support** → [Claude Code Remote](https://docs.anthropic.com/en/docs/claude-code/remote) — first-party, zero setup beyond `claude`
 - **One project, solo, prefer Telegram** → [Claude Code Telegram Plugin](https://docs.anthropic.com/en/docs/claude-code/channels) — lightweight, official plugin
-- **Multiple projects, want multi-model** → [Happy Coder](https://happy.engineering/) — supports Claude, Codex, and Gemini
-- **Multiple projects, team, want cluster management from phone** → **claude-crew** — @mention routing, team permissions, daemon, dashboard, cron
+- **Multiple projects, want multi-model or a native app** → [Happy Coder](https://happy.engineering/) — supports Claude, Codex, Gemini with a polished mobile experience
+- **Multiple projects, team, want @mention cluster management** → **claude-crew** — group chat routing, team permissions, dashboard, cron, all via Telegram
 
 ## Table of Contents
 
