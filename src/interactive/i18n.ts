@@ -600,7 +600,8 @@ export function setupMsg(lang: Lang) {
   return lang === "zh"
     ? {
         busy: "\u23f3 正在处理上一条消息...",
-        noProject: (u: string) => `\u26a0\ufe0f @${u} 未分配项目`,
+        noProject: (u: string) =>
+          `\u26a0\ufe0f @${u} 未分配项目\n\ud83d\udca1 在 menu \u2192 机器人 中添加和分配项目`,
         masterOnly: (master: string) =>
           `\u2139\ufe0f 此命令需要发给主控机器人 @${master}\n\n在群里 @${master} 后跟命令即可。`,
         adminOnly: "\u26d4 仅管理员",
@@ -608,7 +609,8 @@ export function setupMsg(lang: Lang) {
         authorized: "\u2705 已授权，正在重试...",
         skipped: "\u274c 已跳过",
         transcribing: "\ud83c\udfa4 正在转写语音...",
-        transcribeFailed: "\u26a0\ufe0f 语音转写失败",
+        transcribeFailed:
+          "\u26a0\ufe0f 语音转写失败\n\ud83d\udca1 可在 menu \u2192 配置 \u2192 whisperLanguage 中指定语言提高准确率",
         transcription: (text: string) => `\ud83c\udfa4 转写: ${text}`,
         rateLimited:
           "\u23f3 请稍等几秒...\n\ud83d\udca1 冷却间隔可在 menu \u2192 配置 \u2192 rateLimitSeconds 中调整",
@@ -616,10 +618,15 @@ export function setupMsg(lang: Lang) {
           `\u23f3 ${active}/${max} 个任务运行中，请稍候\n\ud83d\udca1 并发上限可在 menu \u2192 配置 \u2192 maxConcurrent 中调整`,
         noOutput: "(无输出)",
         taskDone: "\u2705 任务已执行（Claude 使用了工具但未产生文字回复）",
+        approvalPrompt: (tools: string, min: number) =>
+          `\ud83d\udd12 需要工具权限:\n${tools}\n\n批准后将重试\n\u23f0 ${min} 分钟内响应\n\ud83d\udca1 在 menu \u2192 配置 \u2192 permissionMode 中可切换为 allowAll 或 auto 免审批`,
+        sessionTimedOut: (min: number) =>
+          `\u23f0 任务超时（${min} 分钟限制）\n\ud83d\udca1 可在 menu \u2192 配置 \u2192 sessionTimeout 中调整时长`,
       }
     : {
         busy: "\u23f3 Processing previous message...",
-        noProject: (u: string) => `\u26a0\ufe0f @${u} No project assigned`,
+        noProject: (u: string) =>
+          `\u26a0\ufe0f @${u} No project assigned\n\ud83d\udca1 Add and assign in menu \u2192 Bots`,
         masterOnly: (master: string) =>
           `\u2139\ufe0f This command must be sent to the master bot @${master}\n\n@mention @${master} followed by the command.`,
         adminOnly: "\u26d4 Admin only",
@@ -627,7 +634,8 @@ export function setupMsg(lang: Lang) {
         authorized: "\u2705 Authorized, retrying...",
         skipped: "\u274c Skipped",
         transcribing: "\ud83c\udfa4 Transcribing voice...",
-        transcribeFailed: "\u26a0\ufe0f Voice transcription failed",
+        transcribeFailed:
+          "\u26a0\ufe0f Voice transcription failed\n\ud83d\udca1 Set language in menu \u2192 Config \u2192 whisperLanguage for better accuracy",
         transcription: (text: string) => `\ud83c\udfa4 Transcription: ${text}`,
         rateLimited:
           "\u23f3 Please wait a few seconds...\n\ud83d\udca1 Adjust cooldown in menu \u2192 Config \u2192 rateLimitSeconds",
@@ -636,6 +644,10 @@ export function setupMsg(lang: Lang) {
         noOutput: "(no output)",
         taskDone:
           "\u2705 Task executed (Claude used tools but produced no text response)",
+        approvalPrompt: (tools: string, min: number) =>
+          `\ud83d\udd12 Requires tool permissions:\n${tools}\n\nWill retry after approval\n\u23f0 ${min} min to respond\n\ud83d\udca1 Switch to allowAll or auto in menu \u2192 Config \u2192 permissionMode to skip approval`,
+        sessionTimedOut: (min: number) =>
+          `\u23f0 Task timed out (${min} min limit)\n\ud83d\udca1 Adjust in menu \u2192 Config \u2192 sessionTimeout`,
       };
 }
 

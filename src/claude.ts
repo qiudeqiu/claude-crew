@@ -61,9 +61,10 @@ export async function runClaude(
     stderr: "pipe",
   });
 
+  let timedOut = false;
   const killTimeout = setTimeout(() => {
+    timedOut = true;
     proc.kill("SIGTERM");
-    // Force SIGKILL if SIGTERM doesn't work after 5s
     setTimeout(() => proc.kill("SIGKILL"), 5000);
   }, getConfig().sessionTimeoutMs);
 
@@ -206,7 +207,19 @@ export async function runClaude(
   if (!gotResultEvent) log(`WARN: ${dir} — no result event in stream`);
 
   // Fallback: if result event had empty text, use accumulated assistant text
-  const finalText = resultText.trim() || assistantText.trim();
+  let finalText = resultText.trim() || assistantText.trim();
+
+  if (timedOut) {
+    const lang = (await import("./interactive/i18n.js")).getLang();
+    const sm = (await import("./interactive/i18n.js")).setupMsg(lang);
+    const timeoutNote = sm.sessionTimedOut(
+      Math.round(getConfig().sessionTimeoutMs / 60000),
+    );
+    finalText = finalText ? `${finalText}\n\n${timeoutNote}` : timeoutNote;
+    log(
+      `TIMEOUT: ${dir} — killed after ${Math.round(getConfig().sessionTimeoutMs / 60000)}min`,
+    );
+  }
 
   return {
     text: finalText,
@@ -353,7 +366,7 @@ export async function invokeClaudeAndReply(
         await tgBot.api
           .sendMessage(
             chatId,
-            `\ud83d\udd12 Requires tool permissions:\n${toolList}\n\nWill retry after approval\n\u23f0 ${timeoutMin} min to respond`,
+            setupMsg(getLang()).approvalPrompt(toolList, timeoutMin),
             { reply_markup: keyboard },
           )
           .catch(() => {});
