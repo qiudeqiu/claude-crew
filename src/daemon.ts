@@ -183,7 +183,6 @@ async function main(): Promise<void> {
   }, RESTART_NOTIFY_DELAY_MS);
 
   // Periodic tasks
-  setTimeout(() => updateDashboard(), DASHBOARD_INITIAL_DELAY_MS);
   setInterval(() => updateDashboard(), getConfig().dashboardIntervalMs);
   setInterval(() => checkCron(), CRON_CHECK_INTERVAL_MS);
   setInterval(() => checkMemory(), MEMORY_CHECK_MS);
