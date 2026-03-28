@@ -598,11 +598,13 @@ const MenuBubble: React.FC<{ msg: MenuMsg; opacity: number }> = ({
   opacity,
 }) => {
   const isUser = msg.role === "user";
+  const hasButtons = !!msg.buttons;
   return (
     <div
       style={{
         alignSelf: isUser ? "flex-end" : "flex-start",
-        maxWidth: "85%",
+        maxWidth: isUser ? "75%" : hasButtons ? "100%" : "85%",
+        width: hasButtons ? "100%" : undefined,
         opacity,
       }}
     >
