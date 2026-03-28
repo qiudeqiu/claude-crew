@@ -144,7 +144,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           {bubble.quote && (
             <div
               style={{
-                borderLeft: `${cfg.replyBorderWidth}px solid ${cfg.replyBorderColor}`,
+                borderLeft: `${cfg.replyBorderWidth}px solid ${isRight ? "rgba(255,255,255,0.4)" : cfg.replyBorderColor}`,
                 paddingLeft: 8,
                 marginBottom: 6,
               }}
@@ -153,7 +153,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                 style={{
                   fontFamily: fontFamilyInter,
                   fontSize: cfg.replyTextSize,
-                  color: cfg.replyTextColor,
+                  color: isRight ? "rgba(255,255,255,0.7)" : cfg.replyTextColor,
                   lineHeight: 1.3,
                 }}
               >
