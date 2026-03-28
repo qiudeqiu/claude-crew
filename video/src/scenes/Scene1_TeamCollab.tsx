@@ -7,10 +7,10 @@ import { MessageList } from "../components/MessageList";
 import { Camera } from "../components/Camera";
 import { AppleTextCard } from "../components/AppleTextCard";
 
-// Filter Phase 1-7, compress to 1.5x native speed
+// Filter Phase 1-7, chat at 1.5x speed
 const FIRST_BUBBLE_TIME = 0.5;
-const TARGET_START = 1.5; // first bubble appears at 1.5s
-const PACE = 0.53; // ~1.5x speed (0.80 / 1.5)
+const TARGET_START = 2.3; // first bubble after opening text
+const PACE = 0.53; // 1.5x speed for chat content only
 
 const SCENE1_BUBBLES = BUBBLES.filter((b) => {
   const p = b.phase;
@@ -30,33 +30,28 @@ const SCENE1_BUBBLES = BUBBLES.filter((b) => {
 
 const SCENE1_POSITIONS = computePositions(SCENE1_BUBBLES);
 
-// Last bubble: 1.5 + (34.5 - 0.5) * 0.53 ≈ 19.5s
-export const SCENE1_DURATION = 26;
+// Opening 1x: 0-2.2s | Chat 1.5x: 2.3-20.5s | Closing 1x: 21-27s
+export const SCENE1_DURATION = 27;
 
 export const Scene1_TeamCollab: React.FC = () => {
   const frame = useCurrentFrame();
   const { canvas, chat } = CONFIG;
   const chatLeft = (canvas.width - chat.width) / 2;
 
-  // Opening text: 0.2 - 1.3s
-  // Chat: 1.3 - 21s
-  // Closing: 21 - 26s
-
-  const chatOpacity = interpolate(frame, [sec(1.3), sec(1.45)], [0, 1], {
+  // Chat fade in/out — sharp 0.15s
+  const chatOpacity = interpolate(frame, [sec(2.15), sec(2.3)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-
-  const chatFadeOut = interpolate(frame, [sec(20.5), sec(20.65)], [1, 0], {
+  const chatFadeOut = interpolate(frame, [sec(20.8), sec(20.95)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-
-  const showChat = frame >= sec(1.2) && frame < sec(21);
+  const showChat = frame >= sec(2.1) && frame < sec(21.5);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
-      {/* Opening text card */}
+      {/* Opening text card — 1x speed */}
       <AppleTextCard
         lines={[
           {
@@ -73,12 +68,11 @@ export const Scene1_TeamCollab: React.FC = () => {
             fontSize: 96,
           },
         ]}
-        startTime={0.2}
-        fadeOutTime={1.2}
-        lineDelay={16}
+        startTime={0.3}
+        fadeOutTime={2.0}
       />
 
-      {/* Chat scene */}
+      {/* Chat scene — 1.5x speed */}
       {showChat && (
         <div style={{ opacity: chatOpacity * chatFadeOut }}>
           <Camera positions={SCENE1_POSITIONS}>
@@ -110,7 +104,7 @@ export const Scene1_TeamCollab: React.FC = () => {
         </div>
       )}
 
-      {/* Closing text card */}
+      {/* Closing text card — 1x speed */}
       <AppleTextCard
         lines={[
           {
@@ -130,8 +124,7 @@ export const Scene1_TeamCollab: React.FC = () => {
             fontSize: 96,
           },
         ]}
-        startTime={21}
-        lineDelay={20}
+        startTime={21.2}
       />
     </AbsoluteFill>
   );
