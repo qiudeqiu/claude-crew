@@ -9,27 +9,74 @@ import { Avatar } from "./Avatar";
 // Avatar config per sender
 const AVATARS: Record<
   string,
-  { initial: string; color: string; isBot?: boolean }
+  { initial: string; color: string; nameColor: string; isBot?: boolean }
 > = {
-  you: { initial: "我", color: "#5B7B8E" },
-  leo: { initial: "李", color: "#5B8DBF" },
-  momo: { initial: "墨", color: "#8B7EB8" },
-  nova: { initial: "诺", color: "#C4697A" },
-  kira: { initial: "琪", color: "#C49A5A" },
-  sage: { initial: "森", color: "#5BA89A" },
-  商城_bot: { initial: "🛒", color: "#5BA89A", isBot: true },
-  官网_bot: { initial: "🌐", color: "#5B8DBF", isBot: true },
-  小程序_bot: { initial: "📱", color: "#C49A5A", isBot: true },
-  活动_bot: { initial: "🎉", color: "#C4697A", isBot: true },
+  you: { initial: "我", color: "#5B7B8E", nameColor: "" },
+  leo: { initial: "李", color: "#4A7FBD", nameColor: "#4A7FBD" },
+  momo: { initial: "墨", color: "#8B72B8", nameColor: "#8B72B8" },
+  nova: { initial: "诺", color: "#C4697A", nameColor: "#C4697A" },
+  kira: { initial: "琪", color: "#BF8A3A", nameColor: "#BF8A3A" },
+  sage: { initial: "森", color: "#4A9E8E", nameColor: "#4A9E8E" },
+  商城_bot: {
+    initial: "🛒",
+    color: "#4A9E8E",
+    nameColor: "#7A7A80",
+    isBot: true,
+  },
+  官网_bot: {
+    initial: "🌐",
+    color: "#4A7FBD",
+    nameColor: "#7A7A80",
+    isBot: true,
+  },
+  小程序_bot: {
+    initial: "📱",
+    color: "#BF8A3A",
+    nameColor: "#7A7A80",
+    isBot: true,
+  },
+  活动_bot: {
+    initial: "🎉",
+    color: "#C4697A",
+    nameColor: "#7A7A80",
+    isBot: true,
+  },
 };
 
-/** Render content with @mention highlights */
+/** Render content with @mention highlights and subtle tool emphasis */
 function renderRichContent(
   content: string,
-  _type: string,
+  type: string,
   isRight: boolean,
 ): React.ReactNode {
-  // Highlight @mentions in all messages
+  if (type === "progress") {
+    // Subtle emphasis on tool names — just slightly darker, not colored
+    return content.split("\n").map((line, i) => {
+      const toolMatch = line.match(/🔧\s*(Read|Edit|Write|Bash|Grep):/);
+      if (toolMatch) {
+        const toolName = toolMatch[1];
+        const idx = line.indexOf(toolName);
+        return (
+          <React.Fragment key={i}>
+            {i > 0 && "\n"}
+            {line.slice(0, idx)}
+            <span style={{ color: "#3C3C40", fontWeight: 600 }}>
+              {toolName}
+            </span>
+            {line.slice(idx + toolName.length)}
+          </React.Fragment>
+        );
+      }
+      return (
+        <React.Fragment key={i}>
+          {i > 0 && "\n"}
+          {line}
+        </React.Fragment>
+      );
+    });
+  }
+
+  // Highlight @mentions
   const parts = content.split(/(@\S+)/g);
   if (parts.length === 1) return content;
 
@@ -160,7 +207,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
               fontFamily: fontFamilyInter,
               fontSize: cfg.nameSize,
               fontWeight: 600,
-              color: bubble.nameColor,
+              color: avatar?.nameColor || bubble.nameColor,
               marginBottom: 3,
               paddingLeft: 4,
             }}
@@ -172,7 +219,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         {/* Bubble body */}
         <div
           style={{
-            backgroundColor: bubble.bubbleColor,
+            backgroundColor:
+              bubble.type === "result" ? "#E8F5E9" : bubble.bubbleColor,
             borderTopLeftRadius: tlr + 4,
             borderTopRightRadius: trr + 4,
             borderBottomRightRadius: brr + 4,
