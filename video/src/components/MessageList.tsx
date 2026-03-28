@@ -4,12 +4,37 @@ import type { Bubble } from "../data/bubbles";
 import { CONFIG } from "../data/bubbles";
 import { ChatBubble } from "./ChatBubble";
 import { frameToSec, sec } from "../helpers";
+import { fontFamilyInter } from "../fonts";
 
 interface VisibleBubble {
   bubble: Bubble;
   flashFrame: number;
   /** True if previous bubble was from the same sender (hide name/avatar, tighter gap) */
   isContinuation: boolean;
+  /** Show a time separator before this bubble */
+  timeSeparator?: string;
+}
+
+// Time labels keyed by phase prefix → display string
+const PHASE_TIMES: Record<string, string> = {
+  "1-": "9:01",
+  "2-": "9:02",
+  "3-": "9:02",
+  "4-": "9:04",
+  "5-": "9:06",
+  "6-": "9:08",
+  "7-": "9:10",
+  "9a": "9:15",
+  "9c": "9:16",
+  "9d": "9:16",
+  "9e": "9:17",
+};
+
+function getTimeForPhase(phase: string): string | undefined {
+  for (const [prefix, time] of Object.entries(PHASE_TIMES)) {
+    if (phase.startsWith(prefix)) return time;
+  }
+  return undefined;
 }
 
 interface MessageListProps {
@@ -43,11 +68,22 @@ export const MessageList: React.FC<MessageListProps> = ({ bubbles }) => {
       }
     }
 
-    // Mark continuations (same sender in sequence)
+    // Mark continuations and add time separators
     const list = Array.from(map.values());
-    for (let i = 1; i < list.length; i++) {
-      if (list[i].bubble.sender === list[i - 1].bubble.sender) {
+    let lastPhase = "";
+    for (let i = 0; i < list.length; i++) {
+      // Same sender continuation
+      if (i > 0 && list[i].bubble.sender === list[i - 1].bubble.sender) {
         list[i] = { ...list[i], isContinuation: true };
+      }
+      // Time separator on phase change
+      const phase = list[i].bubble.phase;
+      if (phase !== lastPhase) {
+        const time = getTimeForPhase(phase);
+        if (time && time !== getTimeForPhase(lastPhase)) {
+          list[i] = { ...list[i], timeSeparator: time };
+        }
+        lastPhase = phase;
       }
     }
 
@@ -63,20 +99,51 @@ export const MessageList: React.FC<MessageListProps> = ({ bubbles }) => {
         flexDirection: "column",
       }}
     >
-      {visibleBubbles.map(({ bubble, flashFrame, isContinuation }, i) => (
-        <div
-          key={bubble.id}
-          style={{
-            marginTop: i === 0 ? 0 : isContinuation ? 4 : CONFIG.chat.messageGap,
-          }}
-        >
-          <ChatBubble
-            bubble={bubble}
-            flashFrame={flashFrame}
-            hideSenderInfo={isContinuation}
-          />
-        </div>
-      ))}
+      {visibleBubbles.map(
+        ({ bubble, flashFrame, isContinuation, timeSeparator }, i) => (
+          <React.Fragment key={bubble.id}>
+            {/* Time separator */}
+            {timeSeparator && (
+              <div
+                style={{
+                  textAlign: "center",
+                  marginTop: i === 0 ? 0 : 20,
+                  marginBottom: 12,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: fontFamilyInter,
+                    fontSize: 22,
+                    color: "#AEAEB2",
+                    fontWeight: 500,
+                  }}
+                >
+                  {timeSeparator}
+                </span>
+              </div>
+            )}
+            <div
+              style={{
+                marginTop:
+                  timeSeparator
+                    ? 0
+                    : i === 0
+                      ? 0
+                      : isContinuation
+                        ? 4
+                        : CONFIG.chat.messageGap,
+              }}
+            >
+              <ChatBubble
+                bubble={bubble}
+                flashFrame={flashFrame}
+                hideSenderInfo={isContinuation}
+              />
+            </div>
+          </React.Fragment>
+        ),
+      )}
     </div>
   );
 };

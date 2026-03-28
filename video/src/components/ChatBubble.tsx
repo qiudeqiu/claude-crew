@@ -20,6 +20,69 @@ const AVATARS: Record<string, { initial: string; color: string }> = {
   活动_bot: { initial: "🎉", color: "#EC4899" },
 };
 
+// Tool colors for progress bubbles
+const TOOL_COLORS: Record<string, string> = {
+  Read: "#3B82F6",
+  Edit: "#F59E0B",
+  Write: "#F59E0B",
+  Bash: "#8B5CF6",
+  Grep: "#EC4899",
+};
+
+/** Render content with @mention highlights and tool name coloring */
+function renderRichContent(
+  content: string,
+  type: string,
+  isRight: boolean,
+): React.ReactNode {
+  if (type === "progress") {
+    // Color tool names: "Read:", "Edit:", etc.
+    return content.split("\n").map((line, i) => {
+      const toolMatch = line.match(/🔧\s*(Read|Edit|Write|Bash|Grep):/);
+      if (toolMatch) {
+        const toolName = toolMatch[1];
+        const color = TOOL_COLORS[toolName] || "#6B7280";
+        const idx = line.indexOf(toolName);
+        return (
+          <React.Fragment key={i}>
+            {i > 0 && "\n"}
+            {line.slice(0, idx)}
+            <span style={{ color, fontWeight: 600 }}>{toolName}</span>
+            {line.slice(idx + toolName.length)}
+          </React.Fragment>
+        );
+      }
+      return (
+        <React.Fragment key={i}>
+          {i > 0 && "\n"}
+          {line}
+        </React.Fragment>
+      );
+    });
+  }
+
+  // Highlight @mentions in regular messages
+  const parts = content.split(/(@\S+)/g);
+  if (parts.length === 1) return content;
+
+  return parts.map((part, i) => {
+    if (part.startsWith("@")) {
+      return (
+        <span
+          key={i}
+          style={{
+            color: isRight ? "rgba(255,255,255,0.85)" : "#007AFF",
+            fontWeight: 600,
+          }}
+        >
+          {part}
+        </span>
+      );
+    }
+    return <React.Fragment key={i}>{part}</React.Fragment>;
+  });
+}
+
 interface ChatBubbleProps {
   bubble: Bubble;
   /** Frame at which content was last updated (for progress flash) */
@@ -166,7 +229,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
             </div>
           )}
 
-          {/* Content */}
+          {/* Content with rich highlights */}
           <span
             style={{
               fontFamily,
@@ -177,7 +240,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
               wordBreak: "break-word",
             }}
           >
-            {bubble.content}
+            {renderRichContent(bubble.content, bubble.type, isRight)}
           </span>
         </div>
       </div>
