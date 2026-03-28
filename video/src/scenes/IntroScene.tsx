@@ -25,12 +25,10 @@ export const IntroScene: React.FC = () => {
   const fps = CONFIG.fps;
 
   // Overall scene opacity (allow chat to show through at end)
-  const sceneOpacity = interpolate(
-    frame,
-    [sec(2.0), sec(2.8)],
-    [1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  const sceneOpacity = interpolate(frame, [sec(2.0), sec(2.8)], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   if (sceneOpacity <= 0) return null;
 
@@ -110,7 +108,7 @@ export const IntroScene: React.FC = () => {
           letterSpacing: "-0.02em",
         }}
       >
-        所有产品，所有人
+        所有项目，所有人
       </span>
       <span
         style={{

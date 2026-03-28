@@ -7,20 +7,17 @@ import { sec } from "../helpers";
 import { Avatar } from "./Avatar";
 
 // Avatar config per sender
-const AVATARS: Record<
-  string,
-  { initial: string; color: string; isBot?: boolean }
-> = {
+const AVATARS: Record<string, { initial: string; color: string }> = {
   you: { initial: "我", color: "#1A4D3E" },
-  leo: { initial: "L", color: "#3B82F6" },
-  momo: { initial: "M", color: "#A78BFA" },
-  nova: { initial: "N", color: "#EC4899" },
-  kira: { initial: "K", color: "#F59E0B" },
-  sage: { initial: "S", color: "#14B8A6" },
-  产品A_bot: { initial: "A", color: "#10B981", isBot: true },
-  产品B_bot: { initial: "B", color: "#3B82F6", isBot: true },
-  产品C_bot: { initial: "C", color: "#F59E0B", isBot: true },
-  产品D_bot: { initial: "D", color: "#EC4899", isBot: true },
+  leo: { initial: "李", color: "#3B82F6" },
+  momo: { initial: "墨", color: "#A78BFA" },
+  nova: { initial: "诺", color: "#EC4899" },
+  kira: { initial: "琪", color: "#F59E0B" },
+  sage: { initial: "森", color: "#14B8A6" },
+  商城_bot: { initial: "🛒", color: "#10B981" },
+  官网_bot: { initial: "🌐", color: "#3B82F6" },
+  小程序_bot: { initial: "📱", color: "#F59E0B" },
+  活动_bot: { initial: "🎉", color: "#EC4899" },
 };
 
 interface ChatBubbleProps {
