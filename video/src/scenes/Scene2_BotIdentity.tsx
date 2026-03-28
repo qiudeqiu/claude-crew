@@ -1,178 +1,116 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import {
+  AbsoluteFill,
+  useCurrentFrame,
+  spring,
+  interpolate,
+  Easing,
+} from "remotion";
 import { CONFIG } from "../data/bubbles";
-import type { Bubble } from "../data/bubbles";
-import { sec, computePositions } from "../helpers";
-import { ChatHeader } from "../components/ChatHeader";
-import { MessageList } from "../components/MessageList";
-import { Camera } from "../components/Camera";
+import { fontFamilyInter, fontFamilyMono } from "../fonts";
+import { sec } from "../helpers";
 import { AppleTextCard } from "../components/AppleTextCard";
 
-/**
- * Scene 2 chat data — one bot, many roles.
- * Same bot "@项目_bot" handles code review, writing, debugging, teaching.
- * Shows versatility + continuous memory.
- */
-const SCENE2_BUBBLES: Bubble[] = [
-  // User asks for code review
+const FPS = CONFIG.fps;
+const W = CONFIG.canvas.width;
+const H = CONFIG.canvas.height;
+
+/** 4 bots, 4 domains, 4 colors */
+const BOTS = [
   {
-    id: "s2-1",
-    time: 0.3,
-    sender: "you",
-    side: "right",
-    type: "message",
-    nameColor: "",
-    bubbleColor: "#007AFF",
-    textColor: "#FFFFFF",
-    content: "@项目_bot review 一下刚提交的 PR",
-    font: "Inter",
-    phase: "s2",
+    name: "前端_bot",
+    path: "~/projects/web-app",
+    color: "#3390EC",
+    emoji: "💻",
+    ask: "首页加载太慢，优化一下",
+    reply: "✅ 图片懒加载 + API 并发请求，LCP 从 3.2s 降到 1.1s",
   },
   {
-    id: "s2-2",
-    time: 1.2,
-    sender: "项目_bot",
-    side: "left",
-    type: "result",
-    nameLabel: "项目_bot",
-    nameColor: "#7A7A80",
-    bubbleColor: "#F0F0F2",
-    textColor: "#1C1C1E",
-    content: "✅ 已审查 3 个文件，发现 1 个潜在问题：auth.ts:42 缺少 token 过期校验，建议添加 refresh 逻辑",
-    font: "Inter",
-    phase: "s2",
-  },
-  // User asks for writing
-  {
-    id: "s2-3",
-    time: 2.8,
-    sender: "you",
-    side: "right",
-    type: "message",
-    nameColor: "",
-    bubbleColor: "#007AFF",
-    textColor: "#FFFFFF",
-    content: "@项目_bot 给这个功能写一份用户文档",
-    font: "Inter",
-    phase: "s2",
+    name: "数据_bot",
+    path: "~/analytics/growth",
+    color: "#A45EFF",
+    emoji: "📊",
+    ask: "上周的用户留存数据整理一下",
+    reply: "✅ 7日留存 42%→48%，主要增长来自推送策略优化",
   },
   {
-    id: "s2-4",
-    time: 3.8,
-    sender: "项目_bot",
-    side: "left",
-    type: "result",
-    nameLabel: "项目_bot",
-    nameColor: "#7A7A80",
-    bubbleColor: "#F0F0F2",
-    textColor: "#1C1C1E",
-    content: "✅ 文档已生成到 docs/auth-flow.md，包含流程图、配置说明和常见问题",
-    font: "Inter",
-    phase: "s2",
-  },
-  // User asks about architecture — bot remembers context
-  {
-    id: "s2-5",
-    time: 5.2,
-    sender: "you",
-    side: "right",
-    type: "message",
-    nameColor: "",
-    bubbleColor: "#007AFF",
-    textColor: "#FFFFFF",
-    content: "@项目_bot 新人入职，帮我整理一份架构说明",
-    font: "Inter",
-    phase: "s2",
+    name: "文档_bot",
+    path: "~/docs/api-guide",
+    color: "#00D1A0",
+    emoji: "✍️",
+    ask: "支付接口的文档补全一下",
+    reply: "✅ 已生成完整文档，含请求示例、错误码和流程图",
   },
   {
-    id: "s2-6",
-    time: 6.3,
-    sender: "项目_bot",
-    side: "left",
-    type: "result",
-    nameLabel: "项目_bot",
-    nameColor: "#7A7A80",
-    bubbleColor: "#F0F0F2",
-    textColor: "#1C1C1E",
-    content: "✅ 已生成架构说明：前端 React + 后端 Express + 数据库 PostgreSQL，含模块依赖图和 API 清单",
-    font: "Inter",
-    phase: "s2",
-  },
-  // User asks to fix bug — bot remembers the auth issue it found
-  {
-    id: "s2-7",
-    time: 7.6,
-    sender: "you",
-    side: "right",
-    type: "message",
-    nameColor: "",
-    bubbleColor: "#007AFF",
-    textColor: "#FFFFFF",
-    content: "@项目_bot 刚才 review 发现的那个 token 问题，直接修掉",
-    font: "Inter",
-    phase: "s2",
-  },
-  {
-    id: "s2-8",
-    time: 8.8,
-    sender: "项目_bot",
-    side: "left",
-    type: "result",
-    nameLabel: "项目_bot",
-    nameColor: "#7A7A80",
-    bubbleColor: "#F0F0F2",
-    textColor: "#1C1C1E",
-    content: "✅ 已修复 auth.ts:42，添加了 token refresh 逻辑 + 过期重试，5 个测试全部通过",
-    font: "Inter",
-    phase: "s2",
+    name: "Agent_bot",
+    path: "~/agents/support",
+    color: "#FF4081",
+    emoji: "🤖",
+    ask: "训练一个退款自动回复",
+    reply: "✅ 退款 Agent 已配置，覆盖 5 种场景，准确率 94%",
   },
 ];
 
-// Offset for chat timeline (appears after opening text)
-const CHAT_START = 3.0;
-const PACE = 0.65;
+// 2x2 grid positions
+const GAP = 16;
+const PX = 24;
+const PANEL_W = (W - PX * 2 - GAP) / 2;
+const PANEL_H = 720;
+const GRID_TOP = (H - PANEL_H * 2 - GAP) / 2;
 
-const OFFSET_BUBBLES = SCENE2_BUBBLES.map((b) => ({
-  ...b,
-  time: CHAT_START + b.time * PACE,
-}));
+function gridPos(i: number) {
+  const col = i % 2;
+  const row = Math.floor(i / 2);
+  return {
+    x: PX + col * (PANEL_W + GAP),
+    y: GRID_TOP + row * (PANEL_H + GAP),
+  };
+}
 
-const POSITIONS = computePositions(OFFSET_BUBBLES);
-
-// Custom header for this scene — single bot, not a group
-const SCENE2_HEADER = {
-  ...CONFIG.header,
-  title: "项目_bot",
-  subtitle: "绑定目录: /projects/my-app",
-};
+// Full-screen position for first bot (centered, larger)
+const FULL_W = W - 60;
+const FULL_H = 1200;
+const FULL_X = 30;
+const FULL_Y = (H - FULL_H) / 2 - 40;
 
 /**
  * Scene 2: One Bot = Many Identities
  *
- * 0-2.8s:    Opening text (Apple style, 2 lines max)
- * 2.8-11s:   Chat — same bot handles review, docs, architecture, bugfix
- * 11-15s:    Closing text
+ * 0-2.5s:    Opening text
+ * 2.5-5.5s:  First bot appears FULL SCREEN with ask+reply
+ * 5.5-6.5s:  First bot shrinks to top-left, other 3 pop in
+ * 6.5-11s:   All 4 visible, messages animate in other 3
+ * 11-16s:    Closing text
  */
-export const SCENE2_DURATION = 15;
+export const SCENE2_DURATION = 16;
 
 export const Scene2_BotIdentity: React.FC = () => {
   const frame = useCurrentFrame();
-  const { canvas, chat } = CONFIG;
-  const chatLeft = (canvas.width - chat.width) / 2;
 
-  const chatOpacity = interpolate(frame, [sec(2.7), sec(2.85)], [0, 1], {
+  // Phase timing
+  const fullStart = sec(2.8); // first bot appears full-screen
+  const shrinkStart = sec(5.5); // starts shrinking
+  const shrinkEnd = sec(6.2); // finished shrinking, others appear
+
+  // Shrink progress: 0 = full screen, 1 = grid position
+  const shrinkProgress = interpolate(
+    frame,
+    [shrinkStart, shrinkEnd],
+    [0, 1],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) },
+  );
+
+  // Fade out everything before closing
+  const fadeOut = interpolate(frame, [sec(11), sec(11.15)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const chatFadeOut = interpolate(frame, [sec(10.5), sec(10.65)], [1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const showChat = frame >= sec(2.6) && frame < sec(11);
+
+  const showPanels = frame >= fullStart - 5 && frame < sec(11.5);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
-      {/* Opening text — Apple minimal: 2 big lines */}
+      {/* Opening text */}
       <AppleTextCard
         lines={[
           {
@@ -196,38 +134,214 @@ export const Scene2_BotIdentity: React.FC = () => {
         fadeOutTime={2.5}
       />
 
-      {/* Chat — same bot, different tasks */}
-      {showChat && (
-        <div style={{ opacity: chatOpacity * chatFadeOut }}>
-          <Camera positions={POSITIONS}>
-            <AbsoluteFill
-              style={{
-                background:
-                  "linear-gradient(180deg, #F5F5F7 0%, #ECECEE 100%)",
-              }}
-            >
+      {showPanels && (
+        <AbsoluteFill style={{ opacity: fadeOut }}>
+          {BOTS.map((bot, i) => {
+            const isFirst = i === 0;
+            const grid = gridPos(i);
+
+            // First bot: interpolate from full-screen to grid position
+            // Others: appear at shrinkEnd with spring
+            let panelX: number;
+            let panelY: number;
+            let panelW: number;
+            let panelH: number;
+            let panelOpacity: number;
+            let panelScale: number;
+
+            if (isFirst) {
+              panelX = interpolate(shrinkProgress, [0, 1], [FULL_X, grid.x]);
+              panelY = interpolate(shrinkProgress, [0, 1], [FULL_Y, grid.y]);
+              panelW = interpolate(shrinkProgress, [0, 1], [FULL_W, PANEL_W]);
+              panelH = interpolate(shrinkProgress, [0, 1], [FULL_H, PANEL_H]);
+
+              const enterRel = frame - fullStart;
+              panelOpacity = interpolate(enterRel, [0, 6], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              });
+              panelScale = 1;
+            } else {
+              panelX = grid.x;
+              panelY = grid.y;
+              panelW = PANEL_W;
+              panelH = PANEL_H;
+
+              const enterFrame = shrinkEnd + (i - 1) * 4;
+              const rel = frame - enterFrame;
+              const sp =
+                rel >= 0
+                  ? spring({
+                      fps: FPS,
+                      frame: rel,
+                      config: { damping: 22, stiffness: 200, overshootClamping: true },
+                    })
+                  : 0;
+              panelScale = interpolate(sp, [0, 1], [0.7, 1]);
+              panelOpacity = interpolate(rel, [0, 6], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              });
+            }
+
+            // Message timing
+            const askDelay = isFirst ? fullStart + 15 : shrinkEnd + (i - 1) * 4 + 18;
+            const replyDelay = askDelay + 25;
+            const askOp = interpolate(frame - askDelay, [0, 5], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            });
+            const replyOp = interpolate(frame - replyDelay, [0, 5], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            });
+
+            // Font sizes scale with panel
+            const headerNameSize = isFirst
+              ? interpolate(shrinkProgress, [0, 1], [32, 20])
+              : 20;
+            const headerPathSize = isFirst
+              ? interpolate(shrinkProgress, [0, 1], [18, 13])
+              : 13;
+            const avatarSize = isFirst
+              ? interpolate(shrinkProgress, [0, 1], [56, 42])
+              : 42;
+            const msgFontSize = isFirst
+              ? interpolate(shrinkProgress, [0, 1], [28, 17])
+              : 17;
+
+            return (
               <div
+                key={i}
                 style={{
                   position: "absolute",
-                  left: chatLeft,
-                  top: 20,
-                  width: chat.width,
+                  left: panelX,
+                  top: panelY,
+                  width: panelW,
+                  height: panelH,
+                  borderRadius: 20,
                   backgroundColor: "#FFFFFF",
-                  borderRadius: 24,
-                  boxShadow:
-                    "0 2px 20px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1)",
+                  boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
                   overflow: "hidden",
+                  opacity: panelOpacity,
+                  transform: `scale(${panelScale})`,
+                  transformOrigin: "center center",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                {/* Custom header showing single bot + path */}
-                <Scene2Header />
-                <div style={{ padding: "0" }}>
-                  <MessageList bubbles={OFFSET_BUBBLES} />
+                {/* Color accent bar */}
+                <div style={{ height: 4, backgroundColor: bot.color }} />
+
+                {/* Header */}
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    borderBottom: "1px solid rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: avatarSize,
+                      height: avatarSize,
+                      borderRadius: "50%",
+                      backgroundColor: bot.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: avatarSize * 0.52,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {bot.emoji}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span
+                      style={{
+                        fontFamily: fontFamilyInter,
+                        fontSize: headerNameSize,
+                        fontWeight: 700,
+                        color: "#1C1C1E",
+                      }}
+                    >
+                      {bot.name}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: fontFamilyMono,
+                        fontSize: headerPathSize,
+                        color: bot.color,
+                      }}
+                    >
+                      {bot.path}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div
+                  style={{
+                    flex: 1,
+                    padding: "14px 14px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                  }}
+                >
+                  {/* User ask */}
+                  <div
+                    style={{
+                      alignSelf: "flex-end",
+                      maxWidth: "85%",
+                      backgroundColor: "#007AFF",
+                      borderRadius: "16px 16px 0 16px",
+                      padding: "10px 14px",
+                      opacity: askOp,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: fontFamilyInter,
+                        fontSize: msgFontSize,
+                        color: "#FFFFFF",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {bot.ask}
+                    </span>
+                  </div>
+
+                  {/* Bot reply */}
+                  <div
+                    style={{
+                      alignSelf: "flex-start",
+                      maxWidth: "85%",
+                      backgroundColor: "#E8F5E9",
+                      borderLeft: "3px solid #34C759",
+                      borderRadius: "0 16px 16px 16px",
+                      padding: "10px 14px",
+                      opacity: replyOp,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: fontFamilyInter,
+                        fontSize: msgFontSize,
+                        color: "#1C1C1E",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {bot.reply}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </AbsoluteFill>
-          </Camera>
-        </div>
+            );
+          })}
+        </AbsoluteFill>
       )}
 
       {/* Closing text */}
@@ -243,92 +357,8 @@ export const Scene2_BotIdentity: React.FC = () => {
           },
           { text: "它一定坚守岗位。🤖", fontSize: 80 },
         ]}
-        startTime={11}
+        startTime={11.5}
       />
     </AbsoluteFill>
-  );
-};
-
-/** Custom header for Scene 2 — shows bot name + bound directory */
-import { fontFamilyInter } from "../fonts";
-import { fontFamilyMono } from "../fonts";
-
-const Scene2Header: React.FC = () => {
-  const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, sec(0.3)], [0, 1], {
-    extrapolateRight: "clamp",
-  });
-
-  return (
-    <div
-      style={{
-        width: CONFIG.chat.width,
-        height: CONFIG.chat.headerHeight,
-        display: "flex",
-        alignItems: "center",
-        padding: "0 24px",
-        gap: 16,
-        opacity,
-        background: "rgba(245, 245, 247, 0.85)",
-        backdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(0,0,0,0.06)",
-        borderRadius: "24px 24px 0 0",
-      }}
-    >
-      {/* Bot avatar */}
-      <div
-        style={{
-          width: 76,
-          height: 76,
-          borderRadius: "50%",
-          background: "#007AFF",
-          boxShadow: "0 4px 12px rgba(0,122,255,0.3)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 36,
-          flexShrink: 0,
-          position: "relative",
-        }}
-      >
-        <span>🤖</span>
-        <div
-          style={{
-            position: "absolute",
-            bottom: -2,
-            right: -2,
-            width: 24,
-            height: 24,
-            borderRadius: "50%",
-            backgroundColor: "#34C759",
-            border: "3px solid #FFFFFF",
-          }}
-        />
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span
-          style={{
-            fontFamily: fontFamilyInter,
-            fontSize: 36,
-            fontWeight: 700,
-            color: "#1C1C1E",
-            lineHeight: 1.2,
-          }}
-        >
-          项目_bot
-        </span>
-        <span
-          style={{
-            fontFamily: fontFamilyMono,
-            fontSize: 20,
-            color: "#007AFF",
-            lineHeight: 1.3,
-          }}
-        >
-          ~/projects/my-app
-        </span>
-      </div>
-    </div>
   );
 };
