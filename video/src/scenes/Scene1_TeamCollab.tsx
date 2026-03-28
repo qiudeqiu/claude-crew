@@ -10,7 +10,7 @@ import { AppleTextCard } from "../components/AppleTextCard";
 // Filter Phase 1-7, compress timeline 6%, and offset to sync with chat fade-in
 const FIRST_BUBBLE_TIME = 0.5; // original time of first bubble
 const TARGET_START = 2.25; // when first bubble should appear
-const PACE = 0.94; // 6% faster overall
+const PACE = 0.8; // 20% faster overall
 
 const SCENE1_BUBBLES = BUBBLES.filter((b) => {
   const p = b.phase;
@@ -37,7 +37,7 @@ const SCENE1_POSITIONS = computePositions(SCENE1_BUBBLES);
  * 2.2-36s:  Chat scene (Phase 1-7)
  * 36-42s:   Closing text card
  */
-export const SCENE1_DURATION = 42;
+export const SCENE1_DURATION = 37;
 
 export const Scene1_TeamCollab: React.FC = () => {
   const frame = useCurrentFrame();
@@ -51,12 +51,12 @@ export const Scene1_TeamCollab: React.FC = () => {
   });
 
   // Chat fades out — same: 0.15s snap
-  const chatFadeOut = interpolate(frame, [sec(35.5), sec(35.65)], [1, 0], {
+  const chatFadeOut = interpolate(frame, [sec(30.5), sec(30.65)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  const showChat = frame >= sec(2.1) && frame < sec(36);
+  const showChat = frame >= sec(2.1) && frame < sec(31);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
@@ -134,7 +134,7 @@ export const Scene1_TeamCollab: React.FC = () => {
             fontSize: 96,
           },
         ]}
-        startTime={36}
+        startTime={31}
         lineDelay={28}
       />
     </AbsoluteFill>
