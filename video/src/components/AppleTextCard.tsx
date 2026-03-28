@@ -8,18 +8,23 @@ import { sec } from "../helpers";
  * Apple-style text card — large, left-aligned, two-tone,
  * per-line staggered fade-in with barely-perceptible upward drift.
  *
- * Matches Apple's timing:
- * - ~500ms between lines (15 frames at 30fps)
- * - ~100ms fade-in per line (3 frames)
- * - ~4px upward drift (subtle)
- * - text holds after appearing before next line
+ * Supports mixed-color segments within a single line
+ * for keyword accent coloring (social media thumbnail appeal).
  */
 
-export interface TextLine {
+export interface TextSegment {
   text: string;
+  color?: string;
+}
+
+export interface TextLine {
+  /** Plain text (used when no segments) */
+  text?: string;
+  /** Mixed-color segments within this line */
+  segments?: TextSegment[];
   /** Font size in px (default 96) */
   fontSize?: number;
-  /** Text color (default #1C1C1E) */
+  /** Text color for plain text (default #1C1C1E) */
   color?: string;
   /** Font weight (default 700) */
   fontWeight?: number;
@@ -33,7 +38,7 @@ interface AppleTextCardProps {
   fadeOutTime?: number;
   /** Background color (default transparent) */
   background?: string;
-  /** Delay between each line in frames (default 12 ≈ 400ms) */
+  /** Delay between each line in frames (default 24 @ 60fps ≈ 400ms) */
   lineDelay?: number;
   /** Left padding in px (default 80) */
   paddingLeft?: number;
@@ -82,7 +87,6 @@ export const AppleTextCard: React.FC<AppleTextCardProps> = ({
         const lineFrame = startFrame + i * lineDelay;
         const rel = frame - lineFrame;
 
-        // Per-line: ~100ms fade + ~130ms drift — Apple-matched, fps-aware
         const fadeFrames = Math.round(CONFIG.fps * 0.1);
         const driftFrames = Math.round(CONFIG.fps * 0.13);
         const opacity = interpolate(rel, [0, fadeFrames], [0, 1], {
@@ -96,20 +100,31 @@ export const AppleTextCard: React.FC<AppleTextCardProps> = ({
           easing: Easing.out(Easing.cubic),
         });
 
+        const baseStyle: React.CSSProperties = {
+          fontFamily: fontFamilyInter,
+          fontSize: line.fontSize ?? 96,
+          fontWeight: line.fontWeight ?? 700,
+          opacity,
+          transform: `translateY(${translateY}px)`,
+          letterSpacing: "-0.03em",
+          lineHeight: 1.15,
+        };
+
+        // Render segments if provided, otherwise plain text
+        if (line.segments) {
+          return (
+            <span key={i} style={{ ...baseStyle, color: line.color ?? "#1C1C1E" }}>
+              {line.segments.map((seg, j) => (
+                <span key={j} style={seg.color ? { color: seg.color } : undefined}>
+                  {seg.text}
+                </span>
+              ))}
+            </span>
+          );
+        }
+
         return (
-          <span
-            key={i}
-            style={{
-              fontFamily: fontFamilyInter,
-              fontSize: line.fontSize ?? 96,
-              fontWeight: line.fontWeight ?? 700,
-              color: line.color ?? "#1C1C1E",
-              opacity,
-              transform: `translateY(${translateY}px)`,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.15,
-            }}
-          >
+          <span key={i} style={{ ...baseStyle, color: line.color ?? "#1C1C1E" }}>
             {line.text}
           </span>
         );

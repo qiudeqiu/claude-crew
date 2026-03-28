@@ -56,10 +56,19 @@ export const Scene1_TeamCollab: React.FC = () => {
       {/* Opening text card */}
       <AppleTextCard
         lines={[
-          { text: "所有项目，", fontSize: 96, color: "#1C1C1E" },
-          { text: "所有人。", fontSize: 96, color: "#1C1C1E" },
+          {
+            segments: [{ text: "所有", color: "#007AFF" }, { text: "项目，" }],
+            fontSize: 96,
+          },
+          {
+            segments: [{ text: "所有", color: "#007AFF" }, { text: "人。" }],
+            fontSize: 96,
+          },
           { text: "一个 Telegram 群", fontSize: 56, color: "#8E8E93" },
-          { text: "搞定全部。", fontSize: 96, color: "#1C1C1E" },
+          {
+            segments: [{ text: "搞定", color: "#007AFF" }, { text: "全部。" }],
+            fontSize: 96,
+          },
         ]}
         startTime={0.3}
         fadeOutTime={2.1}
@@ -107,11 +116,21 @@ export const Scene1_TeamCollab: React.FC = () => {
             color: "#8E8E93",
           },
           {
-            text: "任务 · 进度 · 结果 · 讨论",
+            segments: [
+              { text: "任务", color: "#007AFF" },
+              { text: " · 进度 · 结果 · " },
+              { text: "讨论", color: "#34C759" },
+            ],
             fontSize: 72,
-            color: "#1C1C1E",
           },
-          { text: "直接开干 💪", fontSize: 96, color: "#1C1C1E" },
+          {
+            segments: [
+              { text: "直接" },
+              { text: "开干", color: "#007AFF" },
+              { text: " 💪" },
+            ],
+            fontSize: 96,
+          },
         ]}
         startTime={36.2}
         lineDelay={28}
