@@ -10,6 +10,7 @@ import { CONFIG } from "../data/bubbles";
 import { fontFamilyInter, fontFamilyMono } from "../fonts";
 import { sec } from "../helpers";
 import { AppleTextCard } from "../components/AppleTextCard";
+import { GitHubCard, ProjectBadge } from "../components/GitHubCard";
 
 const FPS = CONFIG.fps;
 const W = CONFIG.canvas.width;
@@ -176,7 +177,7 @@ const FULL_Y = (H - FULL_H) / 2 - 40;
 // ══════════════════════════════════════════
 
 // Opening: 0-2.5s | Menu: 2.5-9s | 电商 full: 9-12.5s | Grid: 12.5-17s | Closing: 17-22s
-export const SCENE2_DURATION = 22;
+export const SCENE2_DURATION = 26;
 
 export const Scene2_BotIdentity: React.FC = () => {
   const frame = useCurrentFrame();
@@ -244,6 +245,17 @@ export const Scene2_BotIdentity: React.FC = () => {
         startTime={0.3}
         fadeOutTime={2.3}
       />
+      <ProjectBadge
+        opacity={interpolate(
+          frame,
+          [sec(0.8), sec(1.2), sec(2.0), sec(2.3)],
+          [0, 0.7, 0.7, 0],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          },
+        )}
+      />
 
       {/* ── Master bot menu flow ── */}
       {showMenu && (
@@ -259,10 +271,13 @@ export const Scene2_BotIdentity: React.FC = () => {
                 left: chatLeft,
                 top: 20,
                 width: chat.width,
-                backgroundColor: "#FFFFFF",
+                background: "rgba(255,255,255,0.72)",
+                backdropFilter: "blur(40px) saturate(1.8)",
+                WebkitBackdropFilter: "blur(40px) saturate(1.8)",
                 borderRadius: 24,
                 boxShadow:
-                  "0 2px 20px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1)",
+                  "0 2px 24px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.08)",
+                border: "1px solid rgba(255,255,255,0.6)",
                 overflow: "hidden",
               }}
             >
@@ -510,8 +525,12 @@ export const Scene2_BotIdentity: React.FC = () => {
           { text: "管理系统。🤖", fontSize: 72 },
         ]}
         startTime={17.2}
+        fadeOutTime={21.5}
         lineDelay={18}
       />
+
+      {/* GitHub card at the end */}
+      <GitHubCard startTime={22} />
     </AbsoluteFill>
   );
 };

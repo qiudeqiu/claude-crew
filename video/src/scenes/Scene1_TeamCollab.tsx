@@ -3,6 +3,7 @@ import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import { CONFIG, BUBBLES } from "../data/bubbles";
 import { sec, computePositions } from "../helpers";
 import { ChatHeader } from "../components/ChatHeader";
+import { GitHubCard, ProjectBadge } from "../components/GitHubCard";
 import { MessageList } from "../components/MessageList";
 import { Camera } from "../components/Camera";
 import { AppleTextCard } from "../components/AppleTextCard";
@@ -31,7 +32,7 @@ const SCENE1_BUBBLES = BUBBLES.filter((b) => {
 const SCENE1_POSITIONS = computePositions(SCENE1_BUBBLES);
 
 // Opening 1x: 0-2.2s | Chat 1.5x: 2.3-20.5s | Closing 1x: 21-27s
-export const SCENE1_DURATION = 27;
+export const SCENE1_DURATION = 30;
 
 export const Scene1_TeamCollab: React.FC = () => {
   const frame = useCurrentFrame();
@@ -71,6 +72,18 @@ export const Scene1_TeamCollab: React.FC = () => {
         startTime={0.3}
         fadeOutTime={2.0}
       />
+      {/* Project badge below opening text */}
+      <ProjectBadge
+        opacity={interpolate(
+          frame,
+          [sec(0.8), sec(1.2), sec(1.8), sec(2.0)],
+          [0, 0.7, 0.7, 0],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          },
+        )}
+      />
 
       {/* Chat scene — 1.5x speed */}
       {showChat && (
@@ -87,10 +100,13 @@ export const Scene1_TeamCollab: React.FC = () => {
                   left: chatLeft,
                   top: 20,
                   width: chat.width,
-                  backgroundColor: "#FFFFFF",
+                  background: "rgba(255,255,255,0.72)",
+                  backdropFilter: "blur(40px) saturate(1.8)",
+                  WebkitBackdropFilter: "blur(40px) saturate(1.8)",
                   borderRadius: 24,
                   boxShadow:
-                    "0 2px 20px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1)",
+                    "0 2px 24px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.08)",
+                  border: "1px solid rgba(255,255,255,0.6)",
                   overflow: "hidden",
                 }}
               >
@@ -125,7 +141,11 @@ export const Scene1_TeamCollab: React.FC = () => {
           },
         ]}
         startTime={21.2}
+        fadeOutTime={25.5}
       />
+
+      {/* GitHub card at the end */}
+      <GitHubCard startTime={26} />
     </AbsoluteFill>
   );
 };
