@@ -7,7 +7,9 @@ import { MessageList } from "../components/MessageList";
 import { Camera } from "../components/Camera";
 import { AppleTextCard } from "../components/AppleTextCard";
 
-// Filter out Phase 9 (new bot creation) — keep Phase 1-7 only
+// Filter Phase 1-7 and offset times so first bubble syncs with chat fade-in
+const BUBBLE_OFFSET = 1.8; // shift so first bubble (0.5s) lands at ~2.3s
+
 const SCENE1_BUBBLES = BUBBLES.filter((b) => {
   const p = b.phase;
   return (
@@ -19,7 +21,7 @@ const SCENE1_BUBBLES = BUBBLES.filter((b) => {
     p.startsWith("6-") ||
     p.startsWith("7-")
   );
-});
+}).map((b) => ({ ...b, time: b.time + BUBBLE_OFFSET }));
 
 const SCENE1_POSITIONS = computePositions(SCENE1_BUBBLES);
 
@@ -30,7 +32,7 @@ const SCENE1_POSITIONS = computePositions(SCENE1_BUBBLES);
  * 2.2-36s:  Chat scene (Phase 1-7)
  * 36-42s:   Closing text card
  */
-export const SCENE1_DURATION = 42;
+export const SCENE1_DURATION = 44;
 
 export const Scene1_TeamCollab: React.FC = () => {
   const frame = useCurrentFrame();
@@ -44,12 +46,12 @@ export const Scene1_TeamCollab: React.FC = () => {
   });
 
   // Chat fades out — same: 0.15s snap
-  const chatFadeOut = interpolate(frame, [sec(35.8), sec(35.95)], [1, 0], {
+  const chatFadeOut = interpolate(frame, [sec(37.5), sec(37.65)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  const showChat = frame >= sec(2.1) && frame < sec(36.5);
+  const showChat = frame >= sec(2.1) && frame < sec(38);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
@@ -132,7 +134,7 @@ export const Scene1_TeamCollab: React.FC = () => {
             fontSize: 96,
           },
         ]}
-        startTime={36.2}
+        startTime={38}
         lineDelay={28}
       />
     </AbsoluteFill>
