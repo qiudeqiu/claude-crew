@@ -189,7 +189,7 @@ export function setupBot(managed: ManagedBot): void {
 
   // Photo handler
   tgBot.on("message:photo", async (ctx) => {
-    if (!ctx.from || !canUseBot(String(ctx.from.id), config)) return;
+    if (!ctx.from) return;
     const text = ctx.message.caption ?? "";
     const chatType = ctx.chat?.type;
     const chatId = String(ctx.chat!.id);
@@ -205,6 +205,11 @@ export function setupBot(managed: ManagedBot): void {
         ctx.message.reply_to_message?.from?.username?.toLowerCase() ===
         botName.toLowerCase();
       if (!isMentioned && !isReplyToMe) return;
+    }
+
+    if (!canUseBot(String(ctx.from.id), config)) {
+      await ctx.reply(setupMsg(getLang()).noPermission).catch(() => {});
+      return;
     }
 
     if (managed.busy) {
@@ -231,7 +236,7 @@ export function setupBot(managed: ManagedBot): void {
 
   // Voice handler
   tgBot.on("message:voice", async (ctx) => {
-    if (!ctx.from || !canUseBot(String(ctx.from.id), config)) return;
+    if (!ctx.from) return;
     const chatType = ctx.chat?.type;
     const chatId = String(ctx.chat!.id);
 
@@ -242,6 +247,11 @@ export function setupBot(managed: ManagedBot): void {
         replyTo.from?.username?.toLowerCase() !== botName.toLowerCase()
       )
         return;
+    }
+
+    if (!canUseBot(String(ctx.from.id), config)) {
+      await ctx.reply(setupMsg(getLang()).noPermission).catch(() => {});
+      return;
     }
 
     if (managed.busy) {
@@ -289,7 +299,7 @@ export function setupBot(managed: ManagedBot): void {
 
   // Text handler
   tgBot.on("message:text", async (ctx) => {
-    if (!ctx.from || !canUseBot(String(ctx.from.id), config)) return;
+    if (!ctx.from) return;
 
     const text = ctx.message.text;
     const chatType = ctx.chat?.type;
@@ -309,6 +319,11 @@ export function setupBot(managed: ManagedBot): void {
         botName.toLowerCase();
 
       if (!isMentioned && !isReplyToMe) return;
+    }
+
+    if (!canUseBot(String(ctx.from.id), config)) {
+      await ctx.reply(setupMsg(getLang()).noPermission).catch(() => {});
+      return;
     }
 
     // Master bot: interactive conversations + commands

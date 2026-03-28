@@ -611,6 +611,8 @@ export function onboardMsg(lang: Lang) {
 export function setupMsg(lang: Lang) {
   return lang === "zh"
     ? {
+        noPermission:
+          "\u26d4 你没有使用此 bot 的权限\n\ud83d\udca1 请联系管理员添加使用权限",
         busy: "\u23f3 正在处理上一条消息...",
         noProject: (u: string) =>
           `\u26a0\ufe0f @${u} 未分配项目\n\ud83d\udca1 在 menu \u2192 机器人 中添加和分配项目`,
@@ -636,6 +638,8 @@ export function setupMsg(lang: Lang) {
           `\u23f0 任务超时（${min} 分钟限制）\n\ud83d\udca1 可在 menu \u2192 配置 \u2192 sessionTimeout 中调整时长`,
       }
     : {
+        noPermission:
+          "\u26d4 You don't have permission to use this bot\n\ud83d\udca1 Please contact an admin to get access",
         busy: "\u23f3 Processing previous message...",
         noProject: (u: string) =>
           `\u26a0\ufe0f @${u} No project assigned\n\ud83d\udca1 Add and assign in menu \u2192 Bots`,
