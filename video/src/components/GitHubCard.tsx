@@ -122,11 +122,11 @@ export const ProjectBadge: React.FC<{
 }> = ({ opacity, textBlockHeight = 440 }) => {
   if (opacity <= 0) return null;
 
-  // AppleTextCard is vertically centered in 1920px canvas with paddingLeft:80
+  // AppleTextCard centers vertically in 1920px canvas
   // Text block top ≈ (1920 - textBlockHeight) / 2
-  // Badge sits 20px above that
+  // Badge sits 80px above that (visible gap)
   const textTop = (1920 - textBlockHeight) / 2;
-  const badgeTop = textTop - 56; // 56 = badge height(~36) + 20px gap
+  const badgeTop = textTop - 80;
 
   return (
     <div
