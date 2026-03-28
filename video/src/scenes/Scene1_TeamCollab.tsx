@@ -7,10 +7,10 @@ import { MessageList } from "../components/MessageList";
 import { Camera } from "../components/Camera";
 import { AppleTextCard } from "../components/AppleTextCard";
 
-// Filter Phase 1-7, compress timeline 6%, and offset to sync with chat fade-in
-const FIRST_BUBBLE_TIME = 0.5; // original time of first bubble
-const TARGET_START = 2.25; // when first bubble should appear
-const PACE = 0.8; // 20% faster overall
+// Filter Phase 1-7, compress to 1.5x native speed
+const FIRST_BUBBLE_TIME = 0.5;
+const TARGET_START = 1.5; // first bubble appears at 1.5s
+const PACE = 0.53; // ~1.5x speed (0.80 / 1.5)
 
 const SCENE1_BUBBLES = BUBBLES.filter((b) => {
   const p = b.phase;
@@ -30,33 +30,29 @@ const SCENE1_BUBBLES = BUBBLES.filter((b) => {
 
 const SCENE1_POSITIONS = computePositions(SCENE1_BUBBLES);
 
-/**
- * Scene 1: Team Collaboration
- *
- * 0-2.2s:   Opening text card (Apple style)
- * 2.2-36s:  Chat scene (Phase 1-7)
- * 36-42s:   Closing text card
- */
-export const SCENE1_DURATION = 37;
+// Last bubble: 1.5 + (34.5 - 0.5) * 0.53 ≈ 19.5s
+export const SCENE1_DURATION = 26;
 
 export const Scene1_TeamCollab: React.FC = () => {
   const frame = useCurrentFrame();
   const { canvas, chat } = CONFIG;
   const chatLeft = (canvas.width - chat.width) / 2;
 
-  // Chat fades in — Apple-sharp: 0.15s transition
-  const chatOpacity = interpolate(frame, [sec(2.2), sec(2.35)], [0, 1], {
+  // Opening text: 0.2 - 1.3s
+  // Chat: 1.3 - 21s
+  // Closing: 21 - 26s
+
+  const chatOpacity = interpolate(frame, [sec(1.3), sec(1.45)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  // Chat fades out — same: 0.15s snap
-  const chatFadeOut = interpolate(frame, [sec(30.5), sec(30.65)], [1, 0], {
+  const chatFadeOut = interpolate(frame, [sec(20.5), sec(20.65)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  const showChat = frame >= sec(2.1) && frame < sec(31);
+  const showChat = frame >= sec(1.2) && frame < sec(21);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
@@ -77,8 +73,9 @@ export const Scene1_TeamCollab: React.FC = () => {
             fontSize: 96,
           },
         ]}
-        startTime={0.3}
-        fadeOutTime={2.1}
+        startTime={0.2}
+        fadeOutTime={1.2}
+        lineDelay={16}
       />
 
       {/* Chat scene */}
@@ -90,7 +87,6 @@ export const Scene1_TeamCollab: React.FC = () => {
                 background: "linear-gradient(180deg, #F5F5F7 0%, #ECECEE 100%)",
               }}
             >
-              {/* Chat container card */}
               <div
                 style={{
                   position: "absolute",
@@ -134,8 +130,8 @@ export const Scene1_TeamCollab: React.FC = () => {
             fontSize: 96,
           },
         ]}
-        startTime={31}
-        lineDelay={28}
+        startTime={21}
+        lineDelay={20}
       />
     </AbsoluteFill>
   );
