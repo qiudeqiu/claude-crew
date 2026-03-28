@@ -38,13 +38,12 @@ const BOTS: BotDef[] = [
       { role: "user", text: "双十一活动页上线了吗" },
       {
         role: "bot",
-        text: "✅ 已部署到 staging，倒计时组件和满减逻辑都 OK，要我直接推 production 吗？",
+        text: "✅ 已部署到 staging，倒计时和满减逻辑都 OK，要直接推 production 吗？",
       },
-      { role: "user", text: "推吧，顺便把 SKU 库存同步检查一下" },
-      {
-        role: "bot",
-        text: "✅ 已推生产环境 + 库存校验通过，3 个低库存 SKU 已标记预警",
-      },
+      { role: "user", text: "推吧，SKU 库存也检查一下" },
+      { role: "bot", text: "✅ 已推生产环境，3 个低库存 SKU 已标记预警" },
+      { role: "user", text: "把预警的三个 SKU 自动下架" },
+      { role: "bot", text: "✅ 已下架 3 个 SKU 并发送补货通知给供应商" },
     ],
   },
   {
@@ -58,6 +57,11 @@ const BOTS: BotDef[] = [
         role: "bot",
         text: "✅ 大纲已生成：天劫降临→三道雷劫→金丹成型→师门震动，伏笔接第 35 章的丹方线索",
       },
+      { role: "user", text: "天劫那段写得太平淡了，加点紧张感" },
+      {
+        role: "bot",
+        text: "✅ 已重写天劫段落：雷劫劈碎护体法宝，主角以肉身硬扛第三道天雷，丹田濒临崩溃时触发隐脉",
+      },
     ],
   },
   {
@@ -70,8 +74,10 @@ const BOTS: BotDef[] = [
       { role: "bot", text: "⚙️ 抓取中... 已获取 Top 50 笔记" },
       {
         role: "bot",
-        text: "✅ 数据已存入 camping_notes.csv，含标题、点赞数、评论数、发布时间",
+        text: "✅ 已存入 camping.csv，含标题、点赞、评论、发布时间",
       },
+      { role: "user", text: "点赞过万的单独整理一份" },
+      { role: "bot", text: "✅ 筛选出 8 篇万赞笔记，已导出到 hot_picks.csv" },
     ],
   },
   {
@@ -80,10 +86,15 @@ const BOTS: BotDef[] = [
     color: "#FF4081",
     emoji: "📈",
     messages: [
-      { role: "user", text: "比亚迪近一个月的走势分析一下" },
+      { role: "user", text: "比亚迪近一个月走势分析一下" },
       {
         role: "bot",
-        text: "✅ 月涨幅 +12.3%，突破 60 日均线，MACD 金叉，成交量放大 40%，短期看多",
+        text: "✅ 月涨 +12.3%，突破 60 日线，MACD 金叉，成交量放大 40%，短期看多",
+      },
+      { role: "user", text: "和特斯拉同期做个对比" },
+      {
+        role: "bot",
+        text: "✅ 特斯拉同期 -3.8%，比亚迪相对强势。港股联动走势已生成图表",
       },
     ],
   },
@@ -93,7 +104,7 @@ const BOTS: BotDef[] = [
 const GAP = 16;
 const PX = 24;
 const PANEL_W = (W - PX * 2 - GAP) / 2;
-const PANEL_H = 720;
+const PANEL_H = 780;
 const GRID_TOP = (H - PANEL_H * 2 - GAP) / 2;
 
 function gridPos(i: number) {
@@ -120,15 +131,15 @@ const FULL_Y = (H - FULL_H) / 2 - 40;
  * 6.5-11s:   All 4 visible, messages animate in other 3
  * 11-16s:    Closing text
  */
-export const SCENE2_DURATION = 17;
+export const SCENE2_DURATION = 18;
 
 export const Scene2_BotIdentity: React.FC = () => {
   const frame = useCurrentFrame();
 
   // Phase timing
   const fullStart = sec(2.8); // first bot appears full-screen
-  const shrinkStart = sec(6.0); // starts shrinking (after 4 msgs)
-  const shrinkEnd = sec(6.7); // finished shrinking, others appear
+  const shrinkStart = sec(6.5); // starts shrinking (after 6 msgs)
+  const shrinkEnd = sec(7.2); // finished shrinking, others appear
 
   // Shrink progress: 0 = full screen, 1 = grid position
   const shrinkProgress = interpolate(frame, [shrinkStart, shrinkEnd], [0, 1], {
@@ -138,12 +149,12 @@ export const Scene2_BotIdentity: React.FC = () => {
   });
 
   // Fade out everything before closing
-  const fadeOut = interpolate(frame, [sec(12), sec(12.15)], [1, 0], {
+  const fadeOut = interpolate(frame, [sec(13), sec(13.15)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  const showPanels = frame >= fullStart - 5 && frame < sec(12.5);
+  const showPanels = frame >= fullStart - 5 && frame < sec(13.5);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
@@ -273,7 +284,7 @@ export const Scene2_BotIdentity: React.FC = () => {
                     padding: "14px 16px",
                     display: "flex",
                     alignItems: "center",
-                    gap: 10,
+                    gap: 14,
                     borderBottom: "1px solid rgba(0,0,0,0.05)",
                   }}
                 >
@@ -322,12 +333,12 @@ export const Scene2_BotIdentity: React.FC = () => {
                     padding: "14px 14px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: 10,
+                    gap: 14,
                     overflow: "hidden",
                   }}
                 >
                   {bot.messages.map((msg, mi) => {
-                    const msgFrame = msgBaseFrame + mi * 20;
+                    const msgFrame = msgBaseFrame + mi * 16;
                     const msgOp = interpolate(
                       frame - msgFrame,
                       [0, 5],
@@ -399,7 +410,7 @@ export const Scene2_BotIdentity: React.FC = () => {
           },
           { text: "它一定坚守岗位。🤖", fontSize: 80 },
         ]}
-        startTime={12.5}
+        startTime={13.5}
       />
     </AbsoluteFill>
   );
