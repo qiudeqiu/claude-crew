@@ -11,60 +11,25 @@ const AVATARS: Record<
   string,
   { initial: string; color: string; isBot?: boolean }
 > = {
-  you: { initial: "我", color: "#1A4D3E" },
-  leo: { initial: "李", color: "#3B82F6" },
-  momo: { initial: "墨", color: "#A78BFA" },
-  nova: { initial: "诺", color: "#EC4899" },
-  kira: { initial: "琪", color: "#F59E0B" },
-  sage: { initial: "森", color: "#14B8A6" },
-  商城_bot: { initial: "🛒", color: "#10B981", isBot: true },
-  官网_bot: { initial: "🌐", color: "#3B82F6", isBot: true },
-  小程序_bot: { initial: "📱", color: "#F59E0B", isBot: true },
-  活动_bot: { initial: "🎉", color: "#EC4899", isBot: true },
+  you: { initial: "我", color: "#5B7B8E" },
+  leo: { initial: "李", color: "#5B8DBF" },
+  momo: { initial: "墨", color: "#8B7EB8" },
+  nova: { initial: "诺", color: "#C4697A" },
+  kira: { initial: "琪", color: "#C49A5A" },
+  sage: { initial: "森", color: "#5BA89A" },
+  商城_bot: { initial: "🛒", color: "#5BA89A", isBot: true },
+  官网_bot: { initial: "🌐", color: "#5B8DBF", isBot: true },
+  小程序_bot: { initial: "📱", color: "#C49A5A", isBot: true },
+  活动_bot: { initial: "🎉", color: "#C4697A", isBot: true },
 };
 
-// Tool colors for progress bubbles
-const TOOL_COLORS: Record<string, string> = {
-  Read: "#3B82F6",
-  Edit: "#F59E0B",
-  Write: "#F59E0B",
-  Bash: "#8B5CF6",
-  Grep: "#EC4899",
-};
-
-/** Render content with @mention highlights and tool name coloring */
+/** Render content with @mention highlights */
 function renderRichContent(
   content: string,
-  type: string,
+  _type: string,
   isRight: boolean,
 ): React.ReactNode {
-  if (type === "progress") {
-    // Color tool names: "Read:", "Edit:", etc.
-    return content.split("\n").map((line, i) => {
-      const toolMatch = line.match(/🔧\s*(Read|Edit|Write|Bash|Grep):/);
-      if (toolMatch) {
-        const toolName = toolMatch[1];
-        const color = TOOL_COLORS[toolName] || "#6B7280";
-        const idx = line.indexOf(toolName);
-        return (
-          <React.Fragment key={i}>
-            {i > 0 && "\n"}
-            {line.slice(0, idx)}
-            <span style={{ color, fontWeight: 600 }}>{toolName}</span>
-            {line.slice(idx + toolName.length)}
-          </React.Fragment>
-        );
-      }
-      return (
-        <React.Fragment key={i}>
-          {i > 0 && "\n"}
-          {line}
-        </React.Fragment>
-      );
-    });
-  }
-
-  // Highlight @mentions in regular messages
+  // Highlight @mentions in all messages
   const parts = content.split(/(@\S+)/g);
   if (parts.length === 1) return content;
 
@@ -213,11 +178,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
             borderBottomRightRadius: brr + 4,
             borderBottomLeftRadius: blr + 4,
             padding: `${cfg.padding.y + 4}px ${cfg.padding.x + 4}px`,
-            boxShadow: isRight
-              ? "0 1px 4px rgba(0,122,255,0.15), 0 1px 2px rgba(0,0,0,0.04)"
-              : "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03)",
+            boxShadow: "0 0.5px 1px rgba(0,0,0,0.04)",
             borderLeft: bubble.type === "result" ? "4px solid #34C759" : "none",
-            borderTop: isRight ? "none" : "1px solid rgba(255,255,255,0.8)",
           }}
         >
           {/* Quote */}
