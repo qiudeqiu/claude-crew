@@ -21,17 +21,22 @@ export const Avatar: React.FC<AvatarProps> = ({
   const isEmoji = /\p{Emoji}/u.test(initial) && initial.length > 1;
 
   return (
-    <div style={{ position: "relative", width: size, height: size, minWidth: size }}>
+    <div
+      style={{
+        position: "relative",
+        width: size,
+        height: size,
+        minWidth: size,
+      }}
+    >
       {/* Main circle */}
       <div
         style={{
           width: size,
           height: size,
           borderRadius: "50%",
-          background: isEmoji
-            ? color
-            : `linear-gradient(135deg, ${color}, ${adjustBrightness(color, -25)})`,
-          boxShadow: `0 2px 8px ${color}40`,
+          background: color,
+          boxShadow: `0 2px 10px ${color}50`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
