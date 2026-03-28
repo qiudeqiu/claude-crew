@@ -2,10 +2,11 @@ import React from "react";
 import { Composition } from "remotion";
 import { CONFIG } from "./data/bubbles";
 import { MainVideo } from "./MainVideo";
+import { Scene1_TeamCollab, SCENE1_DURATION } from "./scenes/Scene1_TeamCollab";
 import {
-  Scene1_TeamCollab,
-  SCENE1_DURATION,
-} from "./scenes/Scene1_TeamCollab";
+  Scene2_BotIdentity,
+  SCENE2_DURATION,
+} from "./scenes/Scene2_BotIdentity";
 
 const FPS = CONFIG.fps;
 const W = CONFIG.canvas.width;
@@ -29,6 +30,15 @@ export const RemotionRoot: React.FC = () => {
         id="Scene1-TeamCollab"
         component={Scene1_TeamCollab}
         durationInFrames={FPS * SCENE1_DURATION}
+        fps={FPS}
+        width={W}
+        height={H}
+      />
+      {/* Scene 2: One Bot = Many Identities */}
+      <Composition
+        id="Scene2-BotIdentity"
+        component={Scene2_BotIdentity}
+        durationInFrames={FPS * SCENE2_DURATION}
         fps={FPS}
         width={W}
         height={H}
