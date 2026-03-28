@@ -232,7 +232,7 @@ export const Scene2_BotIdentity: React.FC = () => {
             extrapolateRight: "clamp",
           },
         )}
-        textBlockHeight={270}
+        textBlockHeight={370}
       />
 
       {/* ── Opening text ── */}
@@ -245,16 +245,16 @@ export const Scene2_BotIdentity: React.FC = () => {
             ],
             fontSize: 80,
           },
-          { text: "帮你添加 bot，", fontSize: 80 },
+          { text: "创建一个新项目，", fontSize: 72 },
           {
             segments: [
-              { text: "它可以成为你的" },
-              { text: "项目管家", color: "#007AFF" },
-              { text: "。" },
+              { text: "绑定一个 " },
+              { text: "bot", color: "#007AFF" },
+              { text: "，" },
             ],
-            fontSize: 64,
-            color: "#8E8E93",
+            fontSize: 72,
           },
+          { text: "让它成为项目管家。", fontSize: 72, color: "#8E8E93" },
         ]}
         startTime={0.3}
         fadeOutTime={2.3}
@@ -507,25 +507,25 @@ export const Scene2_BotIdentity: React.FC = () => {
         lines={[
           {
             segments: [
-              { text: "提供" },
-              { text: "绝对路径", color: "#007AFF" },
-              { text: "，" },
+              { text: "这一切只需要" },
+              { text: "一台手机", color: "#007AFF" },
+              { text: "。" },
             ],
             fontSize: 72,
           },
           {
             text: "30s 便可创建一个项目 bot，",
-            fontSize: 56,
+            fontSize: 52,
             color: "#8E8E93",
           },
+          { text: "随时构建你的", fontSize: 72 },
           {
             segments: [
-              { text: "构建你的" },
               { text: "多项目集群", color: "#007AFF" },
+              { text: "管理系统。🤖" },
             ],
             fontSize: 72,
           },
-          { text: "管理系统。🤖", fontSize: 72 },
         ]}
         startTime={17.2}
         fadeOutTime={21.5}
