@@ -15,39 +15,77 @@ const FPS = CONFIG.fps;
 const W = CONFIG.canvas.width;
 const H = CONFIG.canvas.height;
 
-/** 4 bots, 4 domains, 4 colors */
-const BOTS = [
+/** 4 bots, 4 wildly different domains */
+interface BotMsg {
+  role: "user" | "bot";
+  text: string;
+}
+interface BotDef {
+  name: string;
+  path: string;
+  color: string;
+  emoji: string;
+  messages: BotMsg[];
+}
+
+const BOTS: BotDef[] = [
   {
-    name: "前端_bot",
-    path: "~/projects/web-app",
+    name: "电商_bot",
+    path: "~/projects/shopify-store",
     color: "#3390EC",
-    emoji: "💻",
-    ask: "首页加载太慢，优化一下",
-    reply: "✅ 图片懒加载 + API 并发请求，LCP 从 3.2s 降到 1.1s",
+    emoji: "🛍️",
+    messages: [
+      { role: "user", text: "双十一活动页上线了吗" },
+      {
+        role: "bot",
+        text: "✅ 已部署到 staging，倒计时组件和满减逻辑都 OK，要我直接推 production 吗？",
+      },
+      { role: "user", text: "推吧，顺便把 SKU 库存同步检查一下" },
+      {
+        role: "bot",
+        text: "✅ 已推生产环境 + 库存校验通过，3 个低库存 SKU 已标记预警",
+      },
+    ],
   },
   {
-    name: "数据_bot",
-    path: "~/analytics/growth",
+    name: "修仙小说_bot",
+    path: "~/writing/xianxia-novel",
     color: "#A45EFF",
-    emoji: "📊",
-    ask: "上周的用户留存数据整理一下",
-    reply: "✅ 7日留存 42%→48%，主要增长来自推送策略优化",
+    emoji: "📖",
+    messages: [
+      { role: "user", text: "第 37 章大纲写一下，主角要突破金丹期" },
+      {
+        role: "bot",
+        text: "✅ 大纲已生成：天劫降临→三道雷劫→金丹成型→师门震动，伏笔接第 35 章的丹方线索",
+      },
+    ],
   },
   {
-    name: "文档_bot",
-    path: "~/docs/api-guide",
+    name: "爬虫搭档_bot",
+    path: "~/tools/data-scraper",
     color: "#00D1A0",
-    emoji: "✍️",
-    ask: "支付接口的文档补全一下",
-    reply: "✅ 已生成完整文档，含请求示例、错误码和流程图",
+    emoji: "🕷️",
+    messages: [
+      { role: "user", text: "小红书上「露营装备」的热门笔记抓一下" },
+      { role: "bot", text: "⚙️ 抓取中... 已获取 Top 50 笔记" },
+      {
+        role: "bot",
+        text: "✅ 数据已存入 camping_notes.csv，含标题、点赞数、评论数、发布时间",
+      },
+    ],
   },
   {
-    name: "Agent_bot",
-    path: "~/agents/support",
+    name: "股市分析_bot",
+    path: "~/finance/stock-analysis",
     color: "#FF4081",
-    emoji: "🤖",
-    ask: "训练一个退款自动回复",
-    reply: "✅ 退款 Agent 已配置，覆盖 5 种场景，准确率 94%",
+    emoji: "📈",
+    messages: [
+      { role: "user", text: "比亚迪近一个月的走势分析一下" },
+      {
+        role: "bot",
+        text: "✅ 月涨幅 +12.3%，突破 60 日均线，MACD 金叉，成交量放大 40%，短期看多",
+      },
+    ],
   },
 ];
 
@@ -82,31 +120,30 @@ const FULL_Y = (H - FULL_H) / 2 - 40;
  * 6.5-11s:   All 4 visible, messages animate in other 3
  * 11-16s:    Closing text
  */
-export const SCENE2_DURATION = 16;
+export const SCENE2_DURATION = 17;
 
 export const Scene2_BotIdentity: React.FC = () => {
   const frame = useCurrentFrame();
 
   // Phase timing
   const fullStart = sec(2.8); // first bot appears full-screen
-  const shrinkStart = sec(5.5); // starts shrinking
-  const shrinkEnd = sec(6.2); // finished shrinking, others appear
+  const shrinkStart = sec(6.0); // starts shrinking (after 4 msgs)
+  const shrinkEnd = sec(6.7); // finished shrinking, others appear
 
   // Shrink progress: 0 = full screen, 1 = grid position
-  const shrinkProgress = interpolate(
-    frame,
-    [shrinkStart, shrinkEnd],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) },
-  );
+  const shrinkProgress = interpolate(frame, [shrinkStart, shrinkEnd], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.cubic),
+  });
 
   // Fade out everything before closing
-  const fadeOut = interpolate(frame, [sec(11), sec(11.15)], [1, 0], {
+  const fadeOut = interpolate(frame, [sec(12), sec(12.15)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  const showPanels = frame >= fullStart - 5 && frame < sec(11.5);
+  const showPanels = frame >= fullStart - 5 && frame < sec(12.5);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
@@ -174,7 +211,11 @@ export const Scene2_BotIdentity: React.FC = () => {
                   ? spring({
                       fps: FPS,
                       frame: rel,
-                      config: { damping: 22, stiffness: 200, overshootClamping: true },
+                      config: {
+                        damping: 22,
+                        stiffness: 200,
+                        overshootClamping: true,
+                      },
                     })
                   : 0;
               panelScale = interpolate(sp, [0, 1], [0.7, 1]);
@@ -184,17 +225,10 @@ export const Scene2_BotIdentity: React.FC = () => {
               });
             }
 
-            // Message timing
-            const askDelay = isFirst ? fullStart + 15 : shrinkEnd + (i - 1) * 4 + 18;
-            const replyDelay = askDelay + 25;
-            const askOp = interpolate(frame - askDelay, [0, 5], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
-            const replyOp = interpolate(frame - replyDelay, [0, 5], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
+            // Message timing — stagger each message 20 frames apart
+            const msgBaseFrame = isFirst
+              ? fullStart + 15
+              : shrinkEnd + (i - 1) * 4 + 18;
 
             // Font sizes scale with panel
             const headerNameSize = isFirst
@@ -288,55 +322,63 @@ export const Scene2_BotIdentity: React.FC = () => {
                     padding: "14px 14px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: 12,
+                    gap: 10,
+                    overflow: "hidden",
                   }}
                 >
-                  {/* User ask */}
-                  <div
-                    style={{
-                      alignSelf: "flex-end",
-                      maxWidth: "85%",
-                      backgroundColor: "#007AFF",
-                      borderRadius: "16px 16px 0 16px",
-                      padding: "10px 14px",
-                      opacity: askOp,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: fontFamilyInter,
-                        fontSize: msgFontSize,
-                        color: "#FFFFFF",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {bot.ask}
-                    </span>
-                  </div>
+                  {bot.messages.map((msg, mi) => {
+                    const msgFrame = msgBaseFrame + mi * 20;
+                    const msgOp = interpolate(
+                      frame - msgFrame,
+                      [0, 5],
+                      [0, 1],
+                      {
+                        extrapolateLeft: "clamp",
+                        extrapolateRight: "clamp",
+                      },
+                    );
+                    const isUser = msg.role === "user";
+                    const isProgress = msg.text.startsWith("⚙️");
 
-                  {/* Bot reply */}
-                  <div
-                    style={{
-                      alignSelf: "flex-start",
-                      maxWidth: "85%",
-                      backgroundColor: "#E8F5E9",
-                      borderLeft: "3px solid #34C759",
-                      borderRadius: "0 16px 16px 16px",
-                      padding: "10px 14px",
-                      opacity: replyOp,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: fontFamilyInter,
-                        fontSize: msgFontSize,
-                        color: "#1C1C1E",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {bot.reply}
-                    </span>
-                  </div>
+                    return (
+                      <div
+                        key={mi}
+                        style={{
+                          alignSelf: isUser ? "flex-end" : "flex-start",
+                          maxWidth: "88%",
+                          backgroundColor: isUser
+                            ? "#007AFF"
+                            : isProgress
+                              ? "#F0F0F2"
+                              : "#E8F5E9",
+                          borderLeft:
+                            !isUser && !isProgress
+                              ? "3px solid #34C759"
+                              : "none",
+                          borderRadius: isUser
+                            ? "16px 16px 0 16px"
+                            : "0 16px 16px 16px",
+                          padding: "9px 13px",
+                          opacity: msgOp,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: fontFamilyInter,
+                            fontSize: msgFontSize,
+                            color: isUser
+                              ? "#FFFFFF"
+                              : isProgress
+                                ? "#6B6B70"
+                                : "#1C1C1E",
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {msg.text}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -357,7 +399,7 @@ export const Scene2_BotIdentity: React.FC = () => {
           },
           { text: "它一定坚守岗位。🤖", fontSize: 80 },
         ]}
-        startTime={11.5}
+        startTime={12.5}
       />
     </AbsoluteFill>
   );
