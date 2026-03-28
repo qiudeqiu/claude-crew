@@ -66,9 +66,16 @@ const MENU_MSGS: MenuMsg[] = [
 // Phase 2: 4 demo bots (first one = 电商_bot)
 // ══════════════════════════════════════════
 
-interface BotMsg { role: "user" | "bot"; text: string }
+interface BotMsg {
+  role: "user" | "bot";
+  text: string;
+}
 interface BotDef {
-  name: string; path: string; color: string; emoji: string; messages: BotMsg[];
+  name: string;
+  path: string;
+  color: string;
+  emoji: string;
+  messages: BotMsg[];
 }
 
 const BOTS: BotDef[] = [
@@ -79,7 +86,10 @@ const BOTS: BotDef[] = [
     emoji: "🛍️",
     messages: [
       { role: "user", text: "双十一活动页上线了吗" },
-      { role: "bot", text: "✅ 已部署到 staging，倒计时和满减逻辑都 OK，要直接推 production 吗？" },
+      {
+        role: "bot",
+        text: "✅ 已部署到 staging，倒计时和满减逻辑都 OK，要直接推 production 吗？",
+      },
       { role: "user", text: "推吧，SKU 库存也检查一下" },
       { role: "bot", text: "✅ 已推生产环境，3 个低库存 SKU 已标记预警" },
       { role: "user", text: "把预警的三个 SKU 自动下架" },
@@ -93,9 +103,15 @@ const BOTS: BotDef[] = [
     emoji: "📖",
     messages: [
       { role: "user", text: "第 37 章大纲写一下，主角要突破金丹期" },
-      { role: "bot", text: "✅ 大纲已生成：天劫降临→三道雷劫→金丹成型→师门震动，伏笔接第 35 章" },
+      {
+        role: "bot",
+        text: "✅ 大纲已生成：天劫降临→三道雷劫→金丹成型→师门震动，伏笔接第 35 章",
+      },
       { role: "user", text: "天劫那段太平淡了，加点紧张感" },
-      { role: "bot", text: "✅ 已重写：雷劫劈碎法宝，主角肉身硬扛第三道天雷，丹田濒临崩溃时触发隐脉" },
+      {
+        role: "bot",
+        text: "✅ 已重写：雷劫劈碎法宝，主角肉身硬扛第三道天雷，丹田濒临崩溃时触发隐脉",
+      },
     ],
   },
   {
@@ -106,7 +122,10 @@ const BOTS: BotDef[] = [
     messages: [
       { role: "user", text: "小红书「露营装备」热门笔记抓一下" },
       { role: "bot", text: "⚙️ 抓取中... 已获取 Top 50 笔记" },
-      { role: "bot", text: "✅ 已存入 camping.csv，含标题、点赞、评论、发布时间" },
+      {
+        role: "bot",
+        text: "✅ 已存入 camping.csv，含标题、点赞、评论、发布时间",
+      },
       { role: "user", text: "点赞过万的单独整理一份" },
       { role: "bot", text: "✅ 筛选出 8 篇万赞笔记，已导出 hot_picks.csv" },
     ],
@@ -118,9 +137,15 @@ const BOTS: BotDef[] = [
     emoji: "📈",
     messages: [
       { role: "user", text: "比亚迪近一个月走势分析一下" },
-      { role: "bot", text: "✅ 月涨 +12.3%，突破 60 日线，MACD 金叉，成交量放大 40%" },
+      {
+        role: "bot",
+        text: "✅ 月涨 +12.3%，突破 60 日线，MACD 金叉，成交量放大 40%",
+      },
       { role: "user", text: "和特斯拉同期做个对比" },
-      { role: "bot", text: "✅ 特斯拉同期 -3.8%，比亚迪相对强势。港股联动图表已生成" },
+      {
+        role: "bot",
+        text: "✅ 特斯拉同期 -3.8%，比亚迪相对强势。港股联动图表已生成",
+      },
     ],
   },
 ];
@@ -168,23 +193,28 @@ export const Scene2_BotIdentity: React.FC = () => {
 
   // Menu chat fade
   const menuOp = interpolate(frame, [sec(2.4), sec(2.55)], [0, 1], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
   });
   const menuFadeOut = interpolate(frame, [sec(8.3), sec(8.45)], [1, 0], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
   });
   const showMenu = frame >= menuStart - 5 && frame < sec(8.8);
 
   // Demo panels
   const shrinkProgress = interpolate(frame, [shrinkStart, shrinkEnd], [0, 1], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
     easing: Easing.inOut(Easing.cubic),
   });
   const demoOp = interpolate(frame, [sec(8.8), sec(9)], [0, 1], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
   });
   const demoFadeOut = interpolate(frame, [sec(16.8), sec(16.95)], [1, 0], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
   });
   const showDemo = frame >= sec(8.8) && frame < sec(17.2);
 
@@ -218,21 +248,40 @@ export const Scene2_BotIdentity: React.FC = () => {
       {/* ── Master bot menu flow ── */}
       {showMenu && (
         <div style={{ opacity: menuOp * menuFadeOut }}>
-          <AbsoluteFill style={{ background: "linear-gradient(180deg, #F5F5F7 0%, #ECECEE 100%)" }}>
-            <div style={{
-              position: "absolute", left: chatLeft, top: 20, width: chat.width,
-              backgroundColor: "#FFFFFF", borderRadius: 24,
-              boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1)",
-              overflow: "hidden",
-            }}>
+          <AbsoluteFill
+            style={{
+              background: "linear-gradient(180deg, #F5F5F7 0%, #ECECEE 100%)",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: chatLeft,
+                top: 20,
+                width: chat.width,
+                backgroundColor: "#FFFFFF",
+                borderRadius: 24,
+                boxShadow:
+                  "0 2px 20px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1)",
+                overflow: "hidden",
+              }}
+            >
               {/* Master bot header */}
               <MasterHeader />
               {/* Menu messages */}
-              <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+              <div
+                style={{
+                  padding: "16px 20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 20,
+                }}
+              >
                 {MENU_MSGS.map((msg, mi) => {
                   const msgFrame = menuStart + mi * 22;
                   const msgOp = interpolate(frame - msgFrame, [0, 5], [0, 1], {
-                    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
                   });
                   if (msgOp <= 0) return null;
                   return <MenuBubble key={mi} msg={msg} opacity={msgOp} />;
@@ -258,53 +307,173 @@ export const Scene2_BotIdentity: React.FC = () => {
               pY = interpolate(shrinkProgress, [0, 1], [FULL_Y, grid.y]);
               pW = interpolate(shrinkProgress, [0, 1], [FULL_W, PANEL_W]);
               pH = interpolate(shrinkProgress, [0, 1], [FULL_H, PANEL_H]);
-              pOp = 1; pScale = 1;
+              pOp = 1;
+              pScale = 1;
             } else {
-              pX = grid.x; pY = grid.y; pW = PANEL_W; pH = PANEL_H;
+              pX = grid.x;
+              pY = grid.y;
+              pW = PANEL_W;
+              pH = PANEL_H;
               const enterFrame = shrinkEnd + (i - 1) * 4;
               const rel = frame - enterFrame;
-              const sp = rel >= 0 ? spring({ fps: FPS, frame: rel, config: { damping: 22, stiffness: 200, overshootClamping: true } }) : 0;
+              const sp =
+                rel >= 0
+                  ? spring({
+                      fps: FPS,
+                      frame: rel,
+                      config: {
+                        damping: 22,
+                        stiffness: 200,
+                        overshootClamping: true,
+                      },
+                    })
+                  : 0;
               pScale = interpolate(sp, [0, 1], [0.7, 1]);
-              pOp = interpolate(rel, [0, 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+              pOp = interpolate(rel, [0, 6], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              });
             }
 
-            const msgBase = isFirst ? demoFullStart + 15 : shrinkEnd + (i - 1) * 4 + 18;
-            const nameSize = isFirst ? interpolate(shrinkProgress, [0, 1], [32, 20]) : 20;
-            const pathSize = isFirst ? interpolate(shrinkProgress, [0, 1], [18, 13]) : 13;
-            const avatarSz = isFirst ? interpolate(shrinkProgress, [0, 1], [56, 42]) : 42;
-            const msgFont = isFirst ? interpolate(shrinkProgress, [0, 1], [28, 17]) : 17;
+            const msgBase = isFirst
+              ? demoFullStart + 15
+              : shrinkEnd + (i - 1) * 4 + 18;
+            const nameSize = isFirst
+              ? interpolate(shrinkProgress, [0, 1], [32, 20])
+              : 20;
+            const pathSize = isFirst
+              ? interpolate(shrinkProgress, [0, 1], [18, 13])
+              : 13;
+            const avatarSz = isFirst
+              ? interpolate(shrinkProgress, [0, 1], [56, 42])
+              : 42;
+            const msgFont = isFirst
+              ? interpolate(shrinkProgress, [0, 1], [28, 17])
+              : 17;
 
             return (
-              <div key={i} style={{
-                position: "absolute", left: pX, top: pY, width: pW, height: pH,
-                borderRadius: 20, backgroundColor: "#FFFFFF",
-                boxShadow: "0 2px 16px rgba(0,0,0,0.06)", overflow: "hidden",
-                opacity: pOp, transform: `scale(${pScale})`, transformOrigin: "center center",
-                display: "flex", flexDirection: "column",
-              }}>
+              <div
+                key={i}
+                style={{
+                  position: "absolute",
+                  left: pX,
+                  top: pY,
+                  width: pW,
+                  height: pH,
+                  borderRadius: 20,
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+                  overflow: "hidden",
+                  opacity: pOp,
+                  transform: `scale(${pScale})`,
+                  transformOrigin: "center center",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
                 <div style={{ height: 4, backgroundColor: bot.color }} />
-                <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
-                  <div style={{ width: avatarSz, height: avatarSz, borderRadius: "50%", backgroundColor: bot.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: avatarSz * 0.52, flexShrink: 0 }}>{bot.emoji}</div>
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    borderBottom: "1px solid rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: avatarSz,
+                      height: avatarSz,
+                      borderRadius: "50%",
+                      backgroundColor: bot.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: avatarSz * 0.52,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {bot.emoji}
+                  </div>
                   <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ fontFamily: fontFamilyInter, fontSize: nameSize, fontWeight: 700, color: "#1C1C1E" }}>{bot.name}</span>
-                    <span style={{ fontFamily: fontFamilyMono, fontSize: pathSize, color: bot.color }}>{bot.path}</span>
+                    <span
+                      style={{
+                        fontFamily: fontFamilyInter,
+                        fontSize: nameSize,
+                        fontWeight: 700,
+                        color: "#1C1C1E",
+                      }}
+                    >
+                      {bot.name}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: fontFamilyMono,
+                        fontSize: pathSize,
+                        color: bot.color,
+                      }}
+                    >
+                      {bot.path}
+                    </span>
                   </div>
                 </div>
-                <div style={{ flex: 1, padding: "14px 14px", display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
+                <div
+                  style={{
+                    flex: 1,
+                    padding: "14px 14px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 14,
+                    overflow: "hidden",
+                  }}
+                >
                   {bot.messages.map((msg, mi) => {
                     const msgFrame = msgBase + mi * 16;
-                    const msgOp = interpolate(frame - msgFrame, [0, 5], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+                    const msgOp = interpolate(
+                      frame - msgFrame,
+                      [0, 5],
+                      [0, 1],
+                      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+                    );
                     const isUser = msg.role === "user";
                     const isProgress = msg.text.startsWith("⚙️");
                     return (
-                      <div key={mi} style={{
-                        alignSelf: isUser ? "flex-end" : "flex-start", maxWidth: "88%",
-                        backgroundColor: isUser ? "#007AFF" : isProgress ? "#F0F0F2" : "#E8F5E9",
-                        borderLeft: !isUser && !isProgress ? "3px solid #34C759" : "none",
-                        borderRadius: isUser ? "16px 16px 0 16px" : "0 16px 16px 16px",
-                        padding: "9px 13px", opacity: msgOp,
-                      }}>
-                        <span style={{ fontFamily: fontFamilyInter, fontSize: msgFont, color: isUser ? "#FFF" : isProgress ? "#6B6B70" : "#1C1C1E", lineHeight: 1.4 }}>{msg.text}</span>
+                      <div
+                        key={mi}
+                        style={{
+                          alignSelf: isUser ? "flex-end" : "flex-start",
+                          maxWidth: "88%",
+                          backgroundColor: isUser
+                            ? "#007AFF"
+                            : isProgress
+                              ? "#F0F0F2"
+                              : "#E8F5E9",
+                          borderLeft:
+                            !isUser && !isProgress
+                              ? "3px solid #34C759"
+                              : "none",
+                          borderRadius: isUser
+                            ? "16px 16px 0 16px"
+                            : "0 16px 16px 16px",
+                          padding: "9px 13px",
+                          opacity: msgOp,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: fontFamilyInter,
+                            fontSize: msgFont,
+                            color: isUser
+                              ? "#FFF"
+                              : isProgress
+                                ? "#6B6B70"
+                                : "#1C1C1E",
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {msg.text}
+                        </span>
                       </div>
                     );
                   })}
@@ -326,7 +495,11 @@ export const Scene2_BotIdentity: React.FC = () => {
             ],
             fontSize: 72,
           },
-          { text: "30s 便可创建一个项目 bot，", fontSize: 56, color: "#8E8E93" },
+          {
+            text: "30s 便可创建一个项目 bot，",
+            fontSize: 56,
+            color: "#8E8E93",
+          },
           {
             segments: [
               { text: "构建你的" },
@@ -348,51 +521,123 @@ export const Scene2_BotIdentity: React.FC = () => {
 // ══════════════════════════════════════════
 
 const MasterHeader: React.FC = () => (
-  <div style={{
-    width: CONFIG.chat.width, height: CONFIG.chat.headerHeight,
-    display: "flex", alignItems: "center", padding: "0 24px", gap: 16,
-    background: "rgba(245, 245, 247, 0.85)", backdropFilter: "blur(20px)",
-    borderBottom: "1px solid rgba(0,0,0,0.06)", borderRadius: "24px 24px 0 0",
-  }}>
-    <div style={{
-      width: 76, height: 76, borderRadius: "50%", background: "linear-gradient(135deg, #007AFF, #5856D6)",
-      boxShadow: "0 4px 12px rgba(0,122,255,0.3)",
-      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, flexShrink: 0,
-    }}>👑</div>
+  <div
+    style={{
+      width: CONFIG.chat.width,
+      height: CONFIG.chat.headerHeight,
+      display: "flex",
+      alignItems: "center",
+      padding: "0 24px",
+      gap: 16,
+      background: "rgba(245, 245, 247, 0.85)",
+      backdropFilter: "blur(20px)",
+      borderBottom: "1px solid rgba(0,0,0,0.06)",
+      borderRadius: "24px 24px 0 0",
+    }}
+  >
+    <div
+      style={{
+        width: 76,
+        height: 76,
+        borderRadius: "50%",
+        background: "linear-gradient(135deg, #007AFF, #5856D6)",
+        boxShadow: "0 4px 12px rgba(0,122,255,0.3)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 36,
+        flexShrink: 0,
+      }}
+    >
+      👑
+    </div>
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <span style={{ fontFamily: fontFamilyInter, fontSize: 36, fontWeight: 700, color: "#1C1C1E" }}>Master Bot</span>
-      <span style={{ fontFamily: fontFamilyInter, fontSize: 22, color: "#AEAEB2" }}>claude-crew 管理中心</span>
+      <span
+        style={{
+          fontFamily: fontFamilyInter,
+          fontSize: 36,
+          fontWeight: 700,
+          color: "#1C1C1E",
+        }}
+      >
+        Master Bot
+      </span>
+      <span
+        style={{ fontFamily: fontFamilyInter, fontSize: 22, color: "#AEAEB2" }}
+      >
+        claude-crew 管理中心
+      </span>
     </div>
   </div>
 );
 
-const MenuBubble: React.FC<{ msg: MenuMsg; opacity: number }> = ({ msg, opacity }) => {
+const MenuBubble: React.FC<{ msg: MenuMsg; opacity: number }> = ({
+  msg,
+  opacity,
+}) => {
   const isUser = msg.role === "user";
   return (
-    <div style={{ alignSelf: isUser ? "flex-end" : "flex-start", maxWidth: "85%", opacity }}>
-      <div style={{
-        backgroundColor: isUser ? "#007AFF" : msg.isSuccess ? "#E8F5E9" : "#F0F0F2",
-        borderRadius: isUser ? "20px 20px 0 20px" : "0 20px 20px 20px",
-        borderLeft: msg.isSuccess ? "3px solid #34C759" : "none",
-        padding: "12px 16px",
-      }}>
-        <span style={{
-          fontFamily: msg.role === "user" ? fontFamilyMono : fontFamilyInter,
-          fontSize: 28, color: isUser ? "#FFF" : "#1C1C1E", lineHeight: 1.5, whiteSpace: "pre-wrap",
-        }}>{msg.text}</span>
+    <div
+      style={{
+        alignSelf: isUser ? "flex-end" : "flex-start",
+        maxWidth: "85%",
+        opacity,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: isUser
+            ? "#007AFF"
+            : msg.isSuccess
+              ? "#E8F5E9"
+              : "#F0F0F2",
+          borderRadius: isUser ? "20px 20px 0 20px" : "0 20px 20px 20px",
+          borderLeft: msg.isSuccess ? "3px solid #34C759" : "none",
+          padding: "16px 20px",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: msg.role === "user" ? fontFamilyMono : fontFamilyInter,
+            fontSize: 28,
+            color: isUser ? "#FFF" : "#1C1C1E",
+            lineHeight: 1.6,
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {msg.text}
+        </span>
       </div>
       {/* Inline buttons */}
       {msg.buttons && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            marginTop: 14,
+          }}
+        >
           {msg.buttons.map((row, ri) => (
-            <div key={ri} style={{ display: "flex", gap: 8 }}>
+            <div key={ri} style={{ display: "flex", gap: 10 }}>
               {row.map((btn, bi) => (
-                <div key={bi} style={{
-                  flex: 1, padding: "10px 8px", borderRadius: 12, textAlign: "center",
-                  backgroundColor: btn === msg.highlight ? "#007AFF" : "#E8E8ED",
-                  fontFamily: fontFamilyInter, fontSize: 22, fontWeight: 600,
-                  color: btn === msg.highlight ? "#FFF" : "#1C1C1E",
-                }}>{btn}</div>
+                <div
+                  key={bi}
+                  style={{
+                    flex: 1,
+                    padding: "14px 10px",
+                    borderRadius: 14,
+                    textAlign: "center",
+                    backgroundColor:
+                      btn === msg.highlight ? "#007AFF" : "#E8E8ED",
+                    fontFamily: fontFamilyInter,
+                    fontSize: 24,
+                    fontWeight: 600,
+                    color: btn === msg.highlight ? "#FFF" : "#1C1C1E",
+                  }}
+                >
+                  {btn}
+                </div>
               ))}
             </div>
           ))}
