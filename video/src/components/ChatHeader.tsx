@@ -19,26 +19,30 @@ export const ChatHeader: React.FC = () => {
         height: chat.headerHeight,
         display: "flex",
         alignItems: "center",
-        padding: "0 16px",
+        padding: "0 24px",
         gap: 16,
         opacity,
-        borderBottom: `1px solid #E5E5EA`,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+        background: "rgba(245, 245, 247, 0.85)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(0,0,0,0.06)",
+        borderRadius: "24px 24px 0 0",
       }}
     >
-      {/* Avatar */}
+      {/* Group Avatar */}
       <div
         style={{
           width: header.avatar.size,
           height: header.avatar.size,
           borderRadius: "50%",
-          backgroundColor: header.avatar.fill,
+          background: `linear-gradient(135deg, ${header.avatar.fill}, #0055CC)`,
+          boxShadow: `0 4px 12px ${header.avatar.fill}30`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontSize: 30,
           fontWeight: 700,
-          color: "#FFFFFF",
+          color: "#fff",
           fontFamily: fontFamilyInter,
           flexShrink: 0,
         }}
@@ -52,9 +56,10 @@ export const ChatHeader: React.FC = () => {
           style={{
             fontFamily: fontFamilyInter,
             fontSize: header.titleSize,
-            fontWeight: header.titleWeight,
+            fontWeight: 700,
             color: "#1C1C1E",
             lineHeight: 1.2,
+            letterSpacing: "-0.01em",
           }}
         >
           {header.title}
@@ -63,7 +68,7 @@ export const ChatHeader: React.FC = () => {
           style={{
             fontFamily: fontFamilyInter,
             fontSize: header.subtitleSize,
-            color: header.subtitleColor,
+            color: "#AEAEB2",
             lineHeight: 1.3,
             overflow: "hidden",
             textOverflow: "ellipsis",

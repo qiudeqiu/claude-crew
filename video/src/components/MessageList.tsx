@@ -102,21 +102,24 @@ export const MessageList: React.FC<MessageListProps> = ({ bubbles }) => {
       {visibleBubbles.map(
         ({ bubble, flashFrame, isContinuation, timeSeparator }, i) => (
           <React.Fragment key={bubble.id}>
-            {/* Time separator */}
+            {/* Time separator — pill-shaped label */}
             {timeSeparator && (
               <div
                 style={{
                   textAlign: "center",
-                  marginTop: i === 0 ? 0 : 20,
-                  marginBottom: 12,
+                  marginTop: i === 0 ? 4 : 24,
+                  marginBottom: 16,
                 }}
               >
                 <span
                   style={{
                     fontFamily: fontFamilyInter,
-                    fontSize: 22,
+                    fontSize: 21,
                     color: "#AEAEB2",
                     fontWeight: 500,
+                    backgroundColor: "rgba(0,0,0,0.04)",
+                    padding: "5px 16px",
+                    borderRadius: 20,
                   }}
                 >
                   {timeSeparator}
@@ -125,14 +128,13 @@ export const MessageList: React.FC<MessageListProps> = ({ bubbles }) => {
             )}
             <div
               style={{
-                marginTop:
-                  timeSeparator
+                marginTop: timeSeparator
+                  ? 0
+                  : i === 0
                     ? 0
-                    : i === 0
-                      ? 0
-                      : isContinuation
-                        ? 4
-                        : CONFIG.chat.messageGap,
+                    : isContinuation
+                      ? 4
+                      : CONFIG.chat.messageGap,
               }}
             >
               <ChatBubble

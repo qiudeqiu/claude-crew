@@ -38,20 +38,16 @@ export const Scene1_TeamCollab: React.FC = () => {
   const chatLeft = (canvas.width - chat.width) / 2;
 
   // Chat fades in — Apple-sharp: 0.15s transition
-  const chatOpacity = interpolate(
-    frame,
-    [sec(2.2), sec(2.35)],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  const chatOpacity = interpolate(frame, [sec(2.2), sec(2.35)], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   // Chat fades out — same: 0.15s snap
-  const chatFadeOut = interpolate(
-    frame,
-    [sec(35.8), sec(35.95)],
-    [1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  const chatFadeOut = interpolate(frame, [sec(35.8), sec(35.95)], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   const showChat = frame >= sec(2.1) && frame < sec(36.5);
 
@@ -73,26 +69,29 @@ export const Scene1_TeamCollab: React.FC = () => {
       {showChat && (
         <div style={{ opacity: chatOpacity * chatFadeOut }}>
           <Camera positions={SCENE1_POSITIONS}>
-            <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
+            <AbsoluteFill
+              style={{
+                background: "linear-gradient(180deg, #F5F5F7 0%, #ECECEE 100%)",
+              }}
+            >
+              {/* Chat container card */}
               <div
                 style={{
                   position: "absolute",
                   left: chatLeft,
-                  top: 40,
+                  top: 20,
                   width: chat.width,
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 24,
+                  boxShadow:
+                    "0 2px 20px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1)",
+                  overflow: "hidden",
                 }}
               >
                 <ChatHeader />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: chatLeft,
-                  top: 40 + chat.headerHeight + 12,
-                  width: chat.width,
-                }}
-              >
-                <MessageList bubbles={SCENE1_BUBBLES} />
+                <div style={{ padding: "0" }}>
+                  <MessageList bubbles={SCENE1_BUBBLES} />
+                </div>
               </div>
             </AbsoluteFill>
           </Camera>

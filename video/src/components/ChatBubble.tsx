@@ -200,13 +200,16 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         <div
           style={{
             backgroundColor: bubble.bubbleColor,
-            borderTopLeftRadius: tlr,
-            borderTopRightRadius: trr,
-            borderBottomRightRadius: brr,
-            borderBottomLeftRadius: blr,
-            padding: `${cfg.padding.y}px ${cfg.padding.x}px`,
-            boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+            borderTopLeftRadius: tlr + 4,
+            borderTopRightRadius: trr + 4,
+            borderBottomRightRadius: brr + 4,
+            borderBottomLeftRadius: blr + 4,
+            padding: `${cfg.padding.y + 4}px ${cfg.padding.x + 4}px`,
+            boxShadow: isRight
+              ? "0 1px 4px rgba(0,122,255,0.15), 0 1px 2px rgba(0,0,0,0.04)"
+              : "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03)",
             borderLeft: bubble.type === "result" ? "4px solid #34C759" : "none",
+            borderTop: isRight ? "none" : "1px solid rgba(255,255,255,0.8)",
           }}
         >
           {/* Quote */}
