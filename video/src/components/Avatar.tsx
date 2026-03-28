@@ -8,38 +8,65 @@ interface AvatarProps {
   color: string;
   /** Size in px */
   size?: number;
+  /** Show bot badge */
+  isBot?: boolean;
 }
 
 export const Avatar: React.FC<AvatarProps> = ({
   initial,
   color,
   size = 44,
+  isBot = false,
 }) => {
-  // Emoji avatars (bots) don't need the gradient ring
   const isEmoji = /\p{Emoji}/u.test(initial) && initial.length > 1;
 
   return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        minWidth: size,
-        borderRadius: "50%",
-        background: isEmoji
-          ? color
-          : `linear-gradient(135deg, ${color}, ${adjustBrightness(color, -25)})`,
-        boxShadow: `0 2px 8px ${color}40`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: fontFamilyInter,
-        fontSize: isEmoji ? size * 0.48 : size * 0.42,
-        fontWeight: 700,
-        color: "#fff",
-        lineHeight: 1,
-      }}
-    >
-      {initial}
+    <div style={{ position: "relative", width: size, height: size, minWidth: size }}>
+      {/* Main circle */}
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          background: isEmoji
+            ? color
+            : `linear-gradient(135deg, ${color}, ${adjustBrightness(color, -25)})`,
+          boxShadow: `0 2px 8px ${color}40`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: fontFamilyInter,
+          fontSize: isEmoji ? size * 0.48 : size * 0.42,
+          fontWeight: 700,
+          color: "#fff",
+          lineHeight: 1,
+        }}
+      >
+        {initial}
+      </div>
+
+      {/* Bot badge */}
+      {isBot && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: -2,
+            right: -2,
+            width: size * 0.38,
+            height: size * 0.38,
+            borderRadius: "50%",
+            backgroundColor: "#FFFFFF",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: size * 0.22,
+            lineHeight: 1,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+          }}
+        >
+          🤖
+        </div>
+      )}
     </div>
   );
 };

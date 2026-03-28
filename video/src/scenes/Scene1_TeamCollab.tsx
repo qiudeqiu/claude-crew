@@ -123,17 +123,12 @@ export const Scene1_TeamCollab: React.FC = () => {
             color: "#8E8E93",
           },
           {
-            segments: [
-              { text: "任务", color: "#007AFF" },
-              { text: " · 进度 · 结果 · " },
-              { text: "讨论", color: "#34C759" },
-            ],
+            segments: [{ text: "任务 · 进度 · 结果 · 讨论", color: "#007AFF" }],
             fontSize: 72,
           },
           {
             segments: [
-              { text: "直接" },
-              { text: "开干", color: "#007AFF" },
+              { text: "直接开干。", color: "#1C1C1E" },
               { text: " 💪" },
             ],
             fontSize: 96,

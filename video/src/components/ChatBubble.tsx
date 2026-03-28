@@ -7,17 +7,20 @@ import { sec } from "../helpers";
 import { Avatar } from "./Avatar";
 
 // Avatar config per sender
-const AVATARS: Record<string, { initial: string; color: string }> = {
+const AVATARS: Record<
+  string,
+  { initial: string; color: string; isBot?: boolean }
+> = {
   you: { initial: "我", color: "#1A4D3E" },
   leo: { initial: "李", color: "#3B82F6" },
   momo: { initial: "墨", color: "#A78BFA" },
   nova: { initial: "诺", color: "#EC4899" },
   kira: { initial: "琪", color: "#F59E0B" },
   sage: { initial: "森", color: "#14B8A6" },
-  商城_bot: { initial: "🛒", color: "#10B981" },
-  官网_bot: { initial: "🌐", color: "#3B82F6" },
-  小程序_bot: { initial: "📱", color: "#F59E0B" },
-  活动_bot: { initial: "🎉", color: "#EC4899" },
+  商城_bot: { initial: "🛒", color: "#10B981", isBot: true },
+  官网_bot: { initial: "🌐", color: "#3B82F6", isBot: true },
+  小程序_bot: { initial: "📱", color: "#F59E0B", isBot: true },
+  活动_bot: { initial: "🎉", color: "#EC4899", isBot: true },
 };
 
 // Tool colors for progress bubbles
@@ -167,7 +170,12 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           <div style={{ width: 70, minWidth: 70, flexShrink: 0 }} />
         ) : (
           <div style={{ marginBottom: 2, flexShrink: 0 }}>
-            <Avatar initial={avatar.initial} color={avatar.color} size={70} />
+            <Avatar
+              initial={avatar.initial}
+              color={avatar.color}
+              size={70}
+              isBot={avatar.isBot}
+            />
           </div>
         ))}
 
