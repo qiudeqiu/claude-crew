@@ -1,0 +1,185 @@
+import React from "react";
+import { useCurrentFrame, spring, interpolate } from "remotion";
+import type { Bubble } from "../data/bubbles";
+import { CONFIG } from "../data/bubbles";
+import { fontFamilyInter, fontFamilyMono } from "../fonts";
+import { sec } from "../helpers";
+import { Avatar } from "./Avatar";
+
+// Avatar config per sender
+const AVATARS: Record<
+  string,
+  { initial: string; color: string; isBot?: boolean }
+> = {
+  you: { initial: "我", color: "#1A4D3E" },
+  leo: { initial: "L", color: "#3B82F6" },
+  momo: { initial: "M", color: "#A78BFA" },
+  nova: { initial: "N", color: "#EC4899" },
+  kira: { initial: "K", color: "#F59E0B" },
+  sage: { initial: "S", color: "#14B8A6" },
+  产品A_bot: { initial: "A", color: "#10B981", isBot: true },
+  产品B_bot: { initial: "B", color: "#3B82F6", isBot: true },
+  产品C_bot: { initial: "C", color: "#F59E0B", isBot: true },
+  产品D_bot: { initial: "D", color: "#EC4899", isBot: true },
+};
+
+interface ChatBubbleProps {
+  bubble: Bubble;
+  /** Frame at which content was last updated (for progress flash) */
+  flashFrame?: number;
+}
+
+export const ChatBubble: React.FC<ChatBubbleProps> = ({
+  bubble,
+  flashFrame,
+}) => {
+  const frame = useCurrentFrame();
+  const fps = CONFIG.fps;
+  const enterFrame = sec(bubble.time);
+  const rel = frame - enterFrame;
+
+  // Snappy spring entrance: quick pop-in, minimal overshoot
+  const springVal =
+    rel >= 0
+      ? spring({
+          fps,
+          frame: rel,
+          config: {
+            damping: 26,
+            stiffness: 380,
+            overshootClamping: false,
+          },
+        })
+      : 0;
+
+  const scale = interpolate(springVal, [0, 1], [0.85, 1]);
+  const opacity = interpolate(rel, [0, 2], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  // Progress update flash: quick opacity dip when content changes
+  let flashOpacity = 1;
+  if (flashFrame !== undefined && flashFrame > 0) {
+    const flashRel = frame - flashFrame;
+    if (flashRel >= 0 && flashRel < 6) {
+      flashOpacity = interpolate(flashRel, [0, 2, 5], [0.7, 0.7, 1], {
+        extrapolateRight: "clamp",
+      });
+    }
+  }
+
+  const isRight = bubble.side === "right";
+  const cfg = CONFIG.bubble;
+  const sideConfig = cfg[bubble.side];
+  const fontFamily =
+    bubble.font === "JetBrains Mono" ? fontFamilyMono : fontFamilyInter;
+  const fontSize =
+    bubble.type === "progress" ? cfg.progressTextSize : cfg.textSize;
+  const [tlr, trr, brr, blr] = sideConfig.cornerRadius;
+
+  const avatar = AVATARS[bubble.sender];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: isRight ? "row-reverse" : "row",
+        alignItems: "flex-end",
+        gap: 10,
+        width: "100%",
+        opacity: opacity * flashOpacity,
+        transform: `scale(${scale})`,
+        transformOrigin: isRight ? "bottom right" : "bottom left",
+      }}
+    >
+      {/* Avatar — only on left (incoming) side, like Apple iMessage */}
+      {!isRight && avatar && (
+        <div style={{ marginBottom: 2, flexShrink: 0 }}>
+          <Avatar
+            initial={avatar.initial}
+            color={avatar.color}
+            size={70}
+            isBot={avatar.isBot}
+          />
+        </div>
+      )}
+
+      {/* Bubble column */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: isRight ? "flex-end" : "flex-start",
+          maxWidth: `${sideConfig.maxWidthRatio * 100}%`,
+        }}
+      >
+        {/* Name label */}
+        {bubble.nameLabel && (
+          <span
+            style={{
+              fontFamily: fontFamilyInter,
+              fontSize: cfg.nameSize,
+              fontWeight: 600,
+              color: bubble.nameColor,
+              marginBottom: 3,
+              paddingLeft: 4,
+            }}
+          >
+            {bubble.nameLabel}
+          </span>
+        )}
+
+        {/* Bubble body */}
+        <div
+          style={{
+            backgroundColor: bubble.bubbleColor,
+            borderTopLeftRadius: tlr,
+            borderTopRightRadius: trr,
+            borderBottomRightRadius: brr,
+            borderBottomLeftRadius: blr,
+            padding: `${cfg.padding.y}px ${cfg.padding.x}px`,
+          }}
+        >
+          {/* Quote */}
+          {bubble.quote && (
+            <div
+              style={{
+                borderLeft: `${cfg.replyBorderWidth}px solid ${cfg.replyBorderColor}`,
+                paddingLeft: 8,
+                marginBottom: 6,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: fontFamilyInter,
+                  fontSize: cfg.replyTextSize,
+                  color: cfg.replyTextColor,
+                  lineHeight: 1.3,
+                }}
+              >
+                {bubble.quote.length > 40
+                  ? bubble.quote.slice(0, 40) + "..."
+                  : bubble.quote}
+              </span>
+            </div>
+          )}
+
+          {/* Content */}
+          <span
+            style={{
+              fontFamily,
+              fontSize,
+              color: bubble.textColor,
+              lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
+            {bubble.content}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
