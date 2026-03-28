@@ -1,6 +1,7 @@
 import React from "react";
 import { useCurrentFrame, spring, interpolate } from "remotion";
 import { CONFIG } from "../data/bubbles";
+import type { BubblePosition } from "../helpers";
 import { sec, BUBBLE_POSITIONS } from "../helpers";
 
 const W = CONFIG.canvas.width;
@@ -19,31 +20,34 @@ const ANCHOR_Y = H * (2 / 3);
 
 interface CameraProps {
   children: React.ReactNode;
+  /** Override bubble positions (for filtered bubble sets) */
+  positions?: BubblePosition[];
 }
 
-export const Camera: React.FC<CameraProps> = ({ children }) => {
+export const Camera: React.FC<CameraProps> = ({
+  children,
+  positions = BUBBLE_POSITIONS,
+}) => {
   const frame = useCurrentFrame();
   const fps = CONFIG.fps;
 
-  // Find latest visible bubble and compute where its bottom edge is
   let contentBottom = 0;
   let latestBubbleFrame = 0;
   let prevContentBottom = 0;
 
-  for (const pos of BUBBLE_POSITIONS) {
+  for (const pos of positions) {
     const bf = sec(pos.time);
     if (bf <= frame) {
       prevContentBottom = contentBottom;
-      contentBottom = HEADER_OFFSET + pos.topY + pos.height + CONFIG.chat.messagePadding.y;
+      contentBottom =
+        HEADER_OFFSET + pos.topY + pos.height + CONFIG.chat.messagePadding.y;
       latestBubbleFrame = bf;
     }
   }
 
-  // How far past the anchor point the content extends
   const overflow = Math.max(0, contentBottom - ANCHOR_Y);
   const prevOverflow = Math.max(0, prevContentBottom - ANCHOR_Y);
 
-  // Shift up by overflow amount with spring easing
   let shiftY = 0;
   if (overflow > 0) {
     const relFrame = frame - latestBubbleFrame;

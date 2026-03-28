@@ -48,17 +48,17 @@ export interface BubblePosition {
 }
 
 /**
- * Precompute the Y position of every bubble, assuming no scroll.
+ * Compute the Y position of every bubble, assuming no scroll.
  * Bubbles stack vertically with gap between them.
  */
-function _computePositions(): BubblePosition[] {
+export function computePositions(bubbles: Bubble[]): BubblePosition[] {
   const gap = CONFIG.chat.messageGap;
   const pad = CONFIG.chat.messagePadding.y;
   const result: BubblePosition[] = [];
-  let y = pad; // start from top padding
+  let y = pad;
 
-  for (const b of BUBBLES) {
-    if (b.updateTarget) continue; // updates don't add new space
+  for (const b of bubbles) {
+    if (b.updateTarget) continue;
     const h = estimateBubbleHeight(b);
     result.push({
       id: b.id,
@@ -74,8 +74,8 @@ function _computePositions(): BubblePosition[] {
   return result;
 }
 
-/** All bubble positions, precomputed once at module load */
-export const BUBBLE_POSITIONS = _computePositions();
+/** All bubble positions (full BUBBLES array), precomputed once at module load */
+export const BUBBLE_POSITIONS = computePositions(BUBBLES);
 
 /** Map from bubble ID to position */
 export const POSITION_MAP = new Map(BUBBLE_POSITIONS.map((p) => [p.id, p]));
