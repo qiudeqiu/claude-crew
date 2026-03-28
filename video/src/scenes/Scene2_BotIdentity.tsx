@@ -1,229 +1,236 @@
 import React from "react";
-import {
-  AbsoluteFill,
-  useCurrentFrame,
-  spring,
-  interpolate,
-  Easing,
-} from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import { CONFIG } from "../data/bubbles";
-import { fontFamilyInter } from "../fonts";
-import { sec } from "../helpers";
+import type { Bubble } from "../data/bubbles";
+import { sec, computePositions } from "../helpers";
+import { ChatHeader } from "../components/ChatHeader";
+import { MessageList } from "../components/MessageList";
+import { Camera } from "../components/Camera";
 import { AppleTextCard } from "../components/AppleTextCard";
 
-const W = CONFIG.canvas.width;
-const H = CONFIG.canvas.height;
-const CX = W / 2;
-const CY = H / 2 - 40;
-const FPS = CONFIG.fps;
-
-/** Identity labels that radiate from the center bot */
-const IDENTITIES = [
-  { emoji: "💻", label: "全栈项目", angle: -90 },
-  { emoji: "🔍", label: "Code Review", angle: -45 },
-  { emoji: "✍️", label: "写作助手", angle: 0 },
-  { emoji: "🎓", label: "技术导师", angle: 45 },
-  { emoji: "📊", label: "数据分析", angle: 90 },
-  { emoji: "🎨", label: "设计系统", angle: 135 },
-  { emoji: "🚀", label: "DevOps", angle: 180 },
-  { emoji: "🌐", label: "翻译引擎", angle: -135 },
+/**
+ * Scene 2 chat data — one bot, many roles.
+ * Same bot "@项目_bot" handles code review, writing, debugging, teaching.
+ * Shows versatility + continuous memory.
+ */
+const SCENE2_BUBBLES: Bubble[] = [
+  // User asks for code review
+  {
+    id: "s2-1",
+    time: 0.3,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "@项目_bot review 一下刚提交的 PR",
+    font: "Inter",
+    phase: "s2",
+  },
+  {
+    id: "s2-2",
+    time: 1.2,
+    sender: "项目_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "项目_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "✅ 已审查 3 个文件，发现 1 个潜在问题：auth.ts:42 缺少 token 过期校验，建议添加 refresh 逻辑",
+    font: "Inter",
+    phase: "s2",
+  },
+  // User asks for writing
+  {
+    id: "s2-3",
+    time: 2.8,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "@项目_bot 给这个功能写一份用户文档",
+    font: "Inter",
+    phase: "s2",
+  },
+  {
+    id: "s2-4",
+    time: 3.8,
+    sender: "项目_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "项目_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "✅ 文档已生成到 docs/auth-flow.md，包含流程图、配置说明和常见问题",
+    font: "Inter",
+    phase: "s2",
+  },
+  // User asks about architecture — bot remembers context
+  {
+    id: "s2-5",
+    time: 5.2,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "@项目_bot 新人入职，帮我整理一份架构说明",
+    font: "Inter",
+    phase: "s2",
+  },
+  {
+    id: "s2-6",
+    time: 6.3,
+    sender: "项目_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "项目_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "✅ 已生成架构说明：前端 React + 后端 Express + 数据库 PostgreSQL，含模块依赖图和 API 清单",
+    font: "Inter",
+    phase: "s2",
+  },
+  // User asks to fix bug — bot remembers the auth issue it found
+  {
+    id: "s2-7",
+    time: 7.6,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "@项目_bot 刚才 review 发现的那个 token 问题，直接修掉",
+    font: "Inter",
+    phase: "s2",
+  },
+  {
+    id: "s2-8",
+    time: 8.8,
+    sender: "项目_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "项目_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "✅ 已修复 auth.ts:42，添加了 token refresh 逻辑 + 过期重试，5 个测试全部通过",
+    font: "Inter",
+    phase: "s2",
+  },
 ];
 
-const RADIUS = 360; // distance from center to identity cards
-const CENTER_SIZE = 120; // center bot circle size
-const CARD_SIZE = 130; // identity card size
+// Offset for chat timeline (appears after opening text)
+const CHAT_START = 3.0;
+const PACE = 0.65;
+
+const OFFSET_BUBBLES = SCENE2_BUBBLES.map((b) => ({
+  ...b,
+  time: CHAT_START + b.time * PACE,
+}));
+
+const POSITIONS = computePositions(OFFSET_BUBBLES);
+
+// Custom header for this scene — single bot, not a group
+const SCENE2_HEADER = {
+  ...CONFIG.header,
+  title: "项目_bot",
+  subtitle: "绑定目录: /projects/my-app",
+};
 
 /**
  * Scene 2: One Bot = Many Identities
  *
- * 0-2.5s:   Opening text card
- * 2.5-10s:  Radial expansion animation
- * 10-15s:   Closing text card
+ * 0-2.8s:    Opening text (Apple style, 2 lines max)
+ * 2.8-11s:   Chat — same bot handles review, docs, architecture, bugfix
+ * 11-15s:    Closing text
  */
 export const SCENE2_DURATION = 15;
 
 export const Scene2_BotIdentity: React.FC = () => {
   const frame = useCurrentFrame();
+  const { canvas, chat } = CONFIG;
+  const chatLeft = (canvas.width - chat.width) / 2;
 
-  // Animation phase: center bot appears at 3s, identities spread 3.5-6s
-  const centerAppearFrame = sec(3);
-  const spreadStart = sec(3.8);
-
-  // Center bot spring
-  const centerRel = frame - centerAppearFrame;
-  const centerSpring =
-    centerRel >= 0
-      ? spring({ fps: FPS, frame: centerRel, config: { damping: 14, stiffness: 180 } })
-      : 0;
-  const centerScale = interpolate(centerSpring, [0, 1], [0, 1]);
-  const centerOpacity = interpolate(centerRel, [0, 4], [0, 1], {
+  const chatOpacity = interpolate(frame, [sec(2.7), sec(2.85)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-
-  // Fade out animation content before closing
-  const contentFadeOut = interpolate(
-    frame,
-    [sec(9.5), sec(9.8)],
-    [1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-
-  const showAnimation = frame >= centerAppearFrame - 5 && frame < sec(10.5);
+  const chatFadeOut = interpolate(frame, [sec(10.5), sec(10.65)], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const showChat = frame >= sec(2.6) && frame < sec(11);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
-      {/* Opening text card */}
+      {/* Opening text — Apple minimal: 2 big lines */}
       <AppleTextCard
         lines={[
           {
             segments: [
-              { text: "一个 ", color: "#8E8E93" },
+              { text: "一个 " },
               { text: "bot", color: "#007AFF" },
               { text: "，" },
             ],
-            fontSize: 88,
+            fontSize: 96,
           },
-          { text: "可以是一个项目、", fontSize: 56, color: "#1C1C1E" },
-          { text: "一个 Agent、一个 Skill、", fontSize: 56, color: "#1C1C1E" },
           {
             segments: [
-              { text: "一位导师，可以是" },
+              { text: "可以是" },
               { text: "一切", color: "#007AFF" },
               { text: "。" },
             ],
-            fontSize: 56,
+            fontSize: 96,
           },
         ]}
-        startTime={0.2}
+        startTime={0.3}
         fadeOutTime={2.5}
-        lineDelay={14}
       />
 
-      {/* Radial expansion animation */}
-      {showAnimation && (
-        <AbsoluteFill style={{ opacity: contentFadeOut }}>
-          {/* Connection lines */}
-          <svg
-            width={W}
-            height={H}
-            style={{ position: "absolute", top: 0, left: 0 }}
-          >
-            {IDENTITIES.map((id, i) => {
-              const delay = i * 3;
-              const lineRel = frame - spreadStart - delay;
-              const lineProgress =
-                lineRel >= 0
-                  ? spring({
-                      fps: FPS,
-                      frame: lineRel,
-                      config: { damping: 20, stiffness: 100 },
-                    })
-                  : 0;
-
-              const rad = (id.angle * Math.PI) / 180;
-              const ex = CX + Math.cos(rad) * RADIUS * lineProgress;
-              const ey = CY + Math.sin(rad) * RADIUS * lineProgress;
-
-              return (
-                <line
-                  key={i}
-                  x1={CX}
-                  y1={CY}
-                  x2={ex}
-                  y2={ey}
-                  stroke="#E0E0E0"
-                  strokeWidth={1.5}
-                  strokeDasharray="6,4"
-                  opacity={lineProgress * 0.6}
-                />
-              );
-            })}
-          </svg>
-
-          {/* Identity cards */}
-          {IDENTITIES.map((id, i) => {
-            const delay = i * 3;
-            const cardRel = frame - spreadStart - delay;
-            const cardSpring =
-              cardRel >= 0
-                ? spring({
-                    fps: FPS,
-                    frame: cardRel,
-                    config: { damping: 16, stiffness: 160 },
-                  })
-                : 0;
-
-            const rad = (id.angle * Math.PI) / 180;
-            const x = CX + Math.cos(rad) * RADIUS * cardSpring - CARD_SIZE / 2;
-            const y = CY + Math.sin(rad) * RADIUS * cardSpring - CARD_SIZE / 2;
-            const cardOpacity = interpolate(cardRel, [0, 6], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
-
-            return (
+      {/* Chat — same bot, different tasks */}
+      {showChat && (
+        <div style={{ opacity: chatOpacity * chatFadeOut }}>
+          <Camera positions={POSITIONS}>
+            <AbsoluteFill
+              style={{
+                background:
+                  "linear-gradient(180deg, #F5F5F7 0%, #ECECEE 100%)",
+              }}
+            >
               <div
-                key={i}
                 style={{
                   position: "absolute",
-                  left: x,
-                  top: y,
-                  width: CARD_SIZE,
-                  height: CARD_SIZE,
-                  borderRadius: 24,
+                  left: chatLeft,
+                  top: 20,
+                  width: chat.width,
                   backgroundColor: "#FFFFFF",
-                  boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  opacity: cardOpacity,
-                  transform: `scale(${interpolate(cardSpring, [0, 1], [0.5, 1])})`,
+                  borderRadius: 24,
+                  boxShadow:
+                    "0 2px 20px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1)",
+                  overflow: "hidden",
                 }}
               >
-                <span style={{ fontSize: 40, lineHeight: 1 }}>{id.emoji}</span>
-                <span
-                  style={{
-                    fontFamily: fontFamilyInter,
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: "#1C1C1E",
-                    textAlign: "center",
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {id.label}
-                </span>
+                {/* Custom header showing single bot + path */}
+                <Scene2Header />
+                <div style={{ padding: "0" }}>
+                  <MessageList bubbles={OFFSET_BUBBLES} />
+                </div>
               </div>
-            );
-          })}
-
-          {/* Center bot circle — on top */}
-          <div
-            style={{
-              position: "absolute",
-              left: CX - CENTER_SIZE / 2,
-              top: CY - CENTER_SIZE / 2,
-              width: CENTER_SIZE,
-              height: CENTER_SIZE,
-              borderRadius: "50%",
-              background: "#007AFF",
-              boxShadow: "0 4px 24px rgba(0,122,255,0.35)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transform: `scale(${centerScale})`,
-              opacity: centerOpacity,
-            }}
-          >
-            <span style={{ fontSize: 52, lineHeight: 1 }}>🤖</span>
-          </div>
-        </AbsoluteFill>
+            </AbsoluteFill>
+          </Camera>
+        </div>
       )}
 
-      {/* Closing text card */}
+      {/* Closing text */}
       <AppleTextCard
         lines={[
           {
@@ -234,17 +241,94 @@ export const Scene2_BotIdentity: React.FC = () => {
             ],
             fontSize: 80,
           },
-          {
-            segments: [
-              { text: "它一定" },
-              { text: "坚守岗位", color: "#1C1C1E" },
-              { text: "。 🤖" },
-            ],
-            fontSize: 80,
-          },
+          { text: "它一定坚守岗位。🤖", fontSize: 80 },
         ]}
-        startTime={10.2}
+        startTime={11}
       />
     </AbsoluteFill>
+  );
+};
+
+/** Custom header for Scene 2 — shows bot name + bound directory */
+import { fontFamilyInter } from "../fonts";
+import { fontFamilyMono } from "../fonts";
+
+const Scene2Header: React.FC = () => {
+  const frame = useCurrentFrame();
+  const opacity = interpolate(frame, [0, sec(0.3)], [0, 1], {
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <div
+      style={{
+        width: CONFIG.chat.width,
+        height: CONFIG.chat.headerHeight,
+        display: "flex",
+        alignItems: "center",
+        padding: "0 24px",
+        gap: 16,
+        opacity,
+        background: "rgba(245, 245, 247, 0.85)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(0,0,0,0.06)",
+        borderRadius: "24px 24px 0 0",
+      }}
+    >
+      {/* Bot avatar */}
+      <div
+        style={{
+          width: 76,
+          height: 76,
+          borderRadius: "50%",
+          background: "#007AFF",
+          boxShadow: "0 4px 12px rgba(0,122,255,0.3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 36,
+          flexShrink: 0,
+          position: "relative",
+        }}
+      >
+        <span>🤖</span>
+        <div
+          style={{
+            position: "absolute",
+            bottom: -2,
+            right: -2,
+            width: 24,
+            height: 24,
+            borderRadius: "50%",
+            backgroundColor: "#34C759",
+            border: "3px solid #FFFFFF",
+          }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span
+          style={{
+            fontFamily: fontFamilyInter,
+            fontSize: 36,
+            fontWeight: 700,
+            color: "#1C1C1E",
+            lineHeight: 1.2,
+          }}
+        >
+          项目_bot
+        </span>
+        <span
+          style={{
+            fontFamily: fontFamilyMono,
+            fontSize: 20,
+            color: "#007AFF",
+            lineHeight: 1.3,
+          }}
+        >
+          ~/projects/my-app
+        </span>
+      </div>
+    </div>
   );
 };
