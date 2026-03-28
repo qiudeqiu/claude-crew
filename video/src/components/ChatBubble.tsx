@@ -138,6 +138,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
             borderBottomRightRadius: brr,
             borderBottomLeftRadius: blr,
             padding: `${cfg.padding.y}px ${cfg.padding.x}px`,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+            borderLeft: bubble.type === "result" ? "4px solid #34C759" : "none",
           }}
         >
           {/* Quote */}

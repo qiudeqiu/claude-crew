@@ -23,6 +23,7 @@ export const ChatHeader: React.FC = () => {
         gap: 16,
         opacity,
         borderBottom: `1px solid #E5E5EA`,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
       }}
     >
       {/* Avatar */}
