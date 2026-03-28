@@ -27,11 +27,14 @@ interface ChatBubbleProps {
   bubble: Bubble;
   /** Frame at which content was last updated (for progress flash) */
   flashFrame?: number;
+  /** Hide name label and avatar (same sender continuation) */
+  hideSenderInfo?: boolean;
 }
 
 export const ChatBubble: React.FC<ChatBubbleProps> = ({
   bubble,
   flashFrame,
+  hideSenderInfo = false,
 }) => {
   const frame = useCurrentFrame();
   const fps = CONFIG.fps;
@@ -93,17 +96,16 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         transformOrigin: isRight ? "bottom right" : "bottom left",
       }}
     >
-      {/* Avatar — only on left (incoming) side, like Apple iMessage */}
-      {!isRight && avatar && (
-        <div style={{ marginBottom: 2, flexShrink: 0 }}>
-          <Avatar
-            initial={avatar.initial}
-            color={avatar.color}
-            size={70}
-            isBot={avatar.isBot}
-          />
-        </div>
-      )}
+      {/* Avatar — only on left side, hidden for continuation messages */}
+      {!isRight &&
+        avatar &&
+        (hideSenderInfo ? (
+          <div style={{ width: 70, minWidth: 70, flexShrink: 0 }} />
+        ) : (
+          <div style={{ marginBottom: 2, flexShrink: 0 }}>
+            <Avatar initial={avatar.initial} color={avatar.color} size={70} />
+          </div>
+        ))}
 
       {/* Bubble column */}
       <div
@@ -115,7 +117,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         }}
       >
         {/* Name label */}
-        {bubble.nameLabel && (
+        {bubble.nameLabel && !hideSenderInfo && (
           <span
             style={{
               fontFamily: fontFamilyInter,

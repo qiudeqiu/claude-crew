@@ -23,16 +23,16 @@ export const ClosingScene: React.FC = () => {
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // Group 2 visible from 61s, fade out at ~62.8s
+  // Group 2 visible from 61s, fade out by 62.5s
   const group2Opacity = interpolate(
     frame,
-    [sec(61), sec(61.3), sec(62.5), sec(62.8)],
+    [sec(61), sec(61.3), sec(62.2), sec(62.5)],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // GitHub card from 63s
-  const cardOpacity = interpolate(frame, [sec(63), sec(63.4)], [0, 1], {
+  // GitHub card from 62.5s (seamless after group2)
+  const cardOpacity = interpolate(frame, [sec(62.5), sec(62.9)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });

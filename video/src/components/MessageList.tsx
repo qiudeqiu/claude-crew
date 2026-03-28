@@ -8,13 +8,10 @@ import { frameToSec, sec } from "../helpers";
 interface VisibleBubble {
   bubble: Bubble;
   flashFrame: number;
+  /** True if previous bubble was from the same sender (hide name/avatar, tighter gap) */
+  isContinuation: boolean;
 }
 
-/**
- * Renders visible bubbles at their natural positions — NO auto-scroll.
- * The Camera component handles all viewport movement.
- * Tracks progress update flash frames for animation.
- */
 interface MessageListProps {
   bubbles: Bubble[];
 }
@@ -34,16 +31,27 @@ export const MessageList: React.FC<MessageListProps> = ({ bubbles }) => {
           map.set(b.updateTarget, {
             bubble: { ...existing.bubble, content: b.content },
             flashFrame: sec(b.time),
+            isContinuation: existing.isContinuation,
           });
         }
       } else {
         map.set(b.id, {
           bubble: b,
           flashFrame: 0,
+          isContinuation: false,
         });
       }
     }
-    return Array.from(map.values());
+
+    // Mark continuations (same sender in sequence)
+    const list = Array.from(map.values());
+    for (let i = 1; i < list.length; i++) {
+      if (list[i].bubble.sender === list[i - 1].bubble.sender) {
+        list[i] = { ...list[i], isContinuation: true };
+      }
+    }
+
+    return list;
   }, [bubbles, currentTime]);
 
   return (
@@ -53,15 +61,21 @@ export const MessageList: React.FC<MessageListProps> = ({ bubbles }) => {
         padding: `${CONFIG.chat.messagePadding.y}px ${CONFIG.chat.messagePadding.x}px`,
         display: "flex",
         flexDirection: "column",
-        gap: CONFIG.chat.messageGap,
       }}
     >
-      {visibleBubbles.map(({ bubble, flashFrame }) => (
-        <ChatBubble
+      {visibleBubbles.map(({ bubble, flashFrame, isContinuation }, i) => (
+        <div
           key={bubble.id}
-          bubble={bubble}
-          flashFrame={flashFrame}
-        />
+          style={{
+            marginTop: i === 0 ? 0 : isContinuation ? 4 : CONFIG.chat.messageGap,
+          }}
+        >
+          <ChatBubble
+            bubble={bubble}
+            flashFrame={flashFrame}
+            hideSenderInfo={isContinuation}
+          />
+        </div>
       ))}
     </div>
   );
