@@ -58,12 +58,9 @@ export const Scene1_TeamCollab: React.FC = () => {
           frame,
           [0, sec(0.2), sec(2.0), sec(2.2)],
           [0, 1, 1, 0],
-          {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          },
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
         )}
-        position="above"
+        textBlockHeight={460}
       />
 
       {/* Opening text card — 1x speed */}

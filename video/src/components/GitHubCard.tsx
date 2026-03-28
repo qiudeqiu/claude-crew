@@ -117,36 +117,25 @@ export const GitHubCard: React.FC<GitHubCardProps> = ({ startTime }) => {
  */
 export const ProjectBadge: React.FC<{
   opacity: number;
-  position?: "above" | "below";
-}> = ({ opacity, position = "below" }) => {
+  /** Estimated total height of the text block below (px) */
+  textBlockHeight?: number;
+}> = ({ opacity, textBlockHeight = 440 }) => {
   if (opacity <= 0) return null;
+
+  // AppleTextCard is vertically centered in 1920px canvas with paddingLeft:80
+  // Text block top ≈ (1920 - textBlockHeight) / 2
+  // Badge sits 20px above that
+  const textTop = (1920 - textBlockHeight) / 2;
+  const badgeTop = textTop - 56; // 56 = badge height(~36) + 20px gap
+
   return (
     <div
       style={{
         position: "absolute",
-        ...(position === "above"
-          ? {
-              top: 0,
-              left: 80,
-              right: 0,
-              bottom: 0,
-              display: "flex",
-              alignItems: "center",
-            }
-          : {
-              bottom: 180,
-              left: 0,
-              right: 0,
-              display: "flex",
-              justifyContent: "center",
-            }),
+        left: 80,
+        top: badgeTop,
         opacity,
-        // When "above", position badge above the vertically-centered text
-        // AppleTextCard centers at ~50%, so badge sits at ~33%
-        ...(position === "above" && {
-          alignItems: "center",
-          paddingBottom: 480,
-        }),
+        display: "flex",
       }}
     >
       <div
