@@ -1,16 +1,18 @@
 import React from "react";
-import {
-  AbsoluteFill,
-  useCurrentFrame,
-  interpolate,
-  Easing,
-} from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate, Easing } from "remotion";
+import { CONFIG } from "../data/bubbles";
 import { fontFamilyInter } from "../fonts";
 import { sec } from "../helpers";
 
 /**
  * Apple-style text card — large, left-aligned, two-tone,
- * per-line staggered fade-in with subtle upward drift.
+ * per-line staggered fade-in with barely-perceptible upward drift.
+ *
+ * Matches Apple's timing:
+ * - ~500ms between lines (15 frames at 30fps)
+ * - ~100ms fade-in per line (3 frames)
+ * - ~4px upward drift (subtle)
+ * - text holds after appearing before next line
  */
 
 export interface TextLine {
@@ -31,7 +33,7 @@ interface AppleTextCardProps {
   fadeOutTime?: number;
   /** Background color (default transparent) */
   background?: string;
-  /** Delay between each line in frames (default 4) */
+  /** Delay between each line in frames (default 12 ≈ 400ms) */
   lineDelay?: number;
   /** Left padding in px (default 80) */
   paddingLeft?: number;
@@ -42,18 +44,19 @@ export const AppleTextCard: React.FC<AppleTextCardProps> = ({
   startTime,
   fadeOutTime,
   background,
-  lineDelay = 4,
+  lineDelay = 24,
   paddingLeft = 80,
 }) => {
   const frame = useCurrentFrame();
   const startFrame = sec(startTime);
 
-  // Overall fade out
+  // Overall fade out — quick and decisive, ~200ms
+  const fadeOutFrames = Math.round(CONFIG.fps * 0.2);
   const fadeOut =
     fadeOutTime !== undefined
       ? interpolate(
           frame,
-          [sec(fadeOutTime), sec(fadeOutTime) + 8],
+          [sec(fadeOutTime), sec(fadeOutTime) + fadeOutFrames],
           [1, 0],
           { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
         )
@@ -72,20 +75,22 @@ export const AppleTextCard: React.FC<AppleTextCardProps> = ({
         justifyContent: "center",
         paddingLeft,
         paddingRight: 80,
-        gap: 8,
+        gap: 6,
       }}
     >
       {lines.map((line, i) => {
         const lineFrame = startFrame + i * lineDelay;
         const rel = frame - lineFrame;
 
-        // Per-line: quick fade + 8px upward drift, no bounce
-        const opacity = interpolate(rel, [0, 5], [0, 1], {
+        // Per-line: ~100ms fade + ~130ms drift — Apple-matched, fps-aware
+        const fadeFrames = Math.round(CONFIG.fps * 0.1);
+        const driftFrames = Math.round(CONFIG.fps * 0.13);
+        const opacity = interpolate(rel, [0, fadeFrames], [0, 1], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.out(Easing.ease),
         });
-        const translateY = interpolate(rel, [0, 6], [8, 0], {
+        const translateY = interpolate(rel, [0, driftFrames], [4, 0], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.out(Easing.cubic),

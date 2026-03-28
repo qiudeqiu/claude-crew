@@ -116,17 +116,20 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
       : 0;
 
   const scale = interpolate(springVal, [0, 1], [0.85, 1]);
-  const opacity = interpolate(rel, [0, 2], [0, 1], {
+  const fadeIn = Math.round(fps * 0.07); // ~70ms
+  const opacity = interpolate(rel, [0, fadeIn], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   // Progress update flash: quick opacity dip when content changes
+  const flashLen = Math.round(fps * 0.2); // ~200ms
   let flashOpacity = 1;
   if (flashFrame !== undefined && flashFrame > 0) {
     const flashRel = frame - flashFrame;
-    if (flashRel >= 0 && flashRel < 6) {
-      flashOpacity = interpolate(flashRel, [0, 2, 5], [0.7, 0.7, 1], {
+    if (flashRel >= 0 && flashRel < flashLen) {
+      const mid = Math.round(flashLen * 0.35);
+      flashOpacity = interpolate(flashRel, [0, mid, flashLen], [0.7, 0.7, 1], {
         extrapolateRight: "clamp",
       });
     }

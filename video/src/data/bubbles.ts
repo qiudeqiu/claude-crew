@@ -684,7 +684,7 @@ export const CLOSING: ClosingText[] = [
 
 export const CONFIG = {
   canvas: { width: 1080, height: 1920 },
-  fps: 30,
+  fps: 60,
   durationInSeconds: 65,
   background: "#F5F5F7",
 

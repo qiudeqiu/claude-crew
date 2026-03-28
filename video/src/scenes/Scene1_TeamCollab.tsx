@@ -111,7 +111,7 @@ export const Scene1_TeamCollab: React.FC = () => {
           { text: "直接开干 💪", fontSize: 96, color: "#1C1C1E" },
         ]}
         startTime={37}
-        lineDelay={5}
+        lineDelay={28}
       />
     </AbsoluteFill>
   );
