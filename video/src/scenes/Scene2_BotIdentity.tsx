@@ -232,7 +232,7 @@ export const Scene2_BotIdentity: React.FC = () => {
             extrapolateRight: "clamp",
           },
         )}
-        textBlockHeight={380}
+        textBlockHeight={270}
       />
 
       {/* ── Opening text ── */}
