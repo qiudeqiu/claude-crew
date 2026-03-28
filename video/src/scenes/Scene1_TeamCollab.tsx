@@ -52,6 +52,20 @@ export const Scene1_TeamCollab: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
+      {/* Project badge — above text, visible from start */}
+      <ProjectBadge
+        opacity={interpolate(
+          frame,
+          [0, sec(0.2), sec(2.0), sec(2.2)],
+          [0, 1, 1, 0],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          },
+        )}
+        position="above"
+      />
+
       {/* Opening text card — 1x speed */}
       <AppleTextCard
         lines={[
@@ -71,18 +85,6 @@ export const Scene1_TeamCollab: React.FC = () => {
         ]}
         startTime={0.3}
         fadeOutTime={2.0}
-      />
-      {/* Project badge below opening text */}
-      <ProjectBadge
-        opacity={interpolate(
-          frame,
-          [sec(0.8), sec(1.2), sec(1.8), sec(2.0)],
-          [0, 0.7, 0.7, 0],
-          {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          },
-        )}
       />
 
       {/* Chat scene — 1.5x speed */}

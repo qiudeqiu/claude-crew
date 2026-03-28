@@ -21,7 +21,11 @@ export const GitHubCard: React.FC<GitHubCardProps> = ({ startTime }) => {
 
   const sp =
     rel >= 0
-      ? spring({ fps: FPS, frame: rel, config: { damping: 20, stiffness: 180 } })
+      ? spring({
+          fps: FPS,
+          frame: rel,
+          config: { damping: 20, stiffness: 180 },
+        })
       : 0;
   const scale = interpolate(sp, [0, 1], [0.9, 1]);
   const opacity = interpolate(rel, [0, 8], [0, 1], {
@@ -88,7 +92,7 @@ export const GitHubCard: React.FC<GitHubCardProps> = ({ startTime }) => {
               fontWeight: 600,
             }}
           >
-            github.com/anthropics/claude-crew
+            github.com/qiudeqiu/claude-crew
           </span>
         </div>
 
@@ -111,18 +115,38 @@ export const GitHubCard: React.FC<GitHubCardProps> = ({ startTime }) => {
  * Project badge — visible below opening text cards.
  * Bigger, with background card and URL.
  */
-export const ProjectBadge: React.FC<{ opacity: number }> = ({ opacity }) => {
+export const ProjectBadge: React.FC<{
+  opacity: number;
+  position?: "above" | "below";
+}> = ({ opacity, position = "below" }) => {
   if (opacity <= 0) return null;
   return (
     <div
       style={{
         position: "absolute",
-        bottom: 180,
-        left: 0,
-        right: 0,
-        display: "flex",
-        justifyContent: "center",
+        ...(position === "above"
+          ? {
+              top: 0,
+              left: 80,
+              right: 0,
+              bottom: 0,
+              display: "flex",
+              alignItems: "center",
+            }
+          : {
+              bottom: 180,
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "center",
+            }),
         opacity,
+        // When "above", position badge above the vertically-centered text
+        // AppleTextCard centers at ~50%, so badge sits at ~33%
+        ...(position === "above" && {
+          alignItems: "center",
+          paddingBottom: 480,
+        }),
       }}
     >
       <div
