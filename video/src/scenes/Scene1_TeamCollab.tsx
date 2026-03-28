@@ -26,9 +26,9 @@ const SCENE1_POSITIONS = computePositions(SCENE1_BUBBLES);
 /**
  * Scene 1: Team Collaboration
  *
- * 0-3s:    Opening text card (Apple style)
- * 3-37s:   Chat scene (Phase 1-7)
- * 37-42s:  Closing text card
+ * 0-2.2s:   Opening text card (Apple style)
+ * 2.2-36s:  Chat scene (Phase 1-7)
+ * 36-42s:   Closing text card
  */
 export const SCENE1_DURATION = 42;
 
@@ -37,19 +37,23 @@ export const Scene1_TeamCollab: React.FC = () => {
   const { canvas, chat } = CONFIG;
   const chatLeft = (canvas.width - chat.width) / 2;
 
-  // Chat fades in after intro
-  const chatOpacity = interpolate(frame, [sec(2.5), sec(3.5)], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // Chat fades in — Apple-sharp: 0.15s transition
+  const chatOpacity = interpolate(
+    frame,
+    [sec(2.2), sec(2.35)],
+    [0, 1],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
 
-  // Chat fades out before closing
-  const chatFadeOut = interpolate(frame, [sec(35.5), sec(36.5)], [1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // Chat fades out — same: 0.15s snap
+  const chatFadeOut = interpolate(
+    frame,
+    [sec(35.8), sec(35.95)],
+    [1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
 
-  const showChat = frame >= sec(2.5) && frame < sec(37);
+  const showChat = frame >= sec(2.1) && frame < sec(36.5);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
@@ -62,7 +66,7 @@ export const Scene1_TeamCollab: React.FC = () => {
           { text: "搞定全部。", fontSize: 96, color: "#1C1C1E" },
         ]}
         startTime={0.3}
-        fadeOutTime={2.5}
+        fadeOutTime={2.1}
       />
 
       {/* Chat scene */}
@@ -110,7 +114,7 @@ export const Scene1_TeamCollab: React.FC = () => {
           },
           { text: "直接开干 💪", fontSize: 96, color: "#1C1C1E" },
         ]}
-        startTime={37}
+        startTime={36.2}
         lineDelay={28}
       />
     </AbsoluteFill>

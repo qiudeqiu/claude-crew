@@ -101,22 +101,23 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
   const enterFrame = sec(bubble.time);
   const rel = frame - enterFrame;
 
-  // Snappy spring entrance: quick pop-in, minimal overshoot
+  // Smooth glide entrance: scale + slide-up, no harsh pop
   const springVal =
     rel >= 0
       ? spring({
           fps,
           frame: rel,
           config: {
-            damping: 26,
-            stiffness: 380,
-            overshootClamping: false,
+            damping: 22,
+            stiffness: 220,
+            overshootClamping: true,
           },
         })
       : 0;
 
-  const scale = interpolate(springVal, [0, 1], [0.85, 1]);
-  const fadeIn = Math.round(fps * 0.07); // ~70ms
+  const scale = interpolate(springVal, [0, 1], [0.92, 1]);
+  const slideUp = interpolate(springVal, [0, 1], [6, 0]);
+  const fadeIn = Math.round(fps * 0.08); // ~80ms
   const opacity = interpolate(rel, [0, fadeIn], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -155,7 +156,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         gap: 10,
         width: "100%",
         opacity: opacity * flashOpacity,
-        transform: `scale(${scale})`,
+        transform: `scale(${scale}) translateY(${slideUp}px)`,
         transformOrigin: isRight ? "bottom right" : "bottom left",
       }}
     >
