@@ -11,6 +11,11 @@ import {
   Scene4_SoloCommander,
   SCENE4_DURATION,
 } from "./scenes/Scene4_SoloCommander";
+import { Scene5_Memory, SCENE5_DURATION } from "./scenes/Scene5_Memory";
+import {
+  Scene6_ProductIntro,
+  SCENE6_DURATION,
+} from "./scenes/Scene6_ProductIntro";
 
 const FPS = CONFIG.fps;
 const W = CONFIG.canvas.width;
@@ -53,6 +58,26 @@ export const RemotionRoot: React.FC = () => {
         id="Scene2-BotIdentity"
         component={Scene2_BotIdentity}
         durationInFrames={FPS * SCENE2_DURATION}
+        fps={FPS}
+        width={W}
+        height={H}
+      />
+
+      {/* Scene 5: Memory Continuity */}
+      <Composition
+        id="Scene5-Memory"
+        component={Scene5_Memory}
+        durationInFrames={FPS * SCENE5_DURATION}
+        fps={FPS}
+        width={W}
+        height={H}
+      />
+
+      {/* Scene 6: Product Introduction */}
+      <Composition
+        id="Scene6-ProductIntro"
+        component={Scene6_ProductIntro}
+        durationInFrames={FPS * SCENE6_DURATION}
         fps={FPS}
         width={W}
         height={H}
