@@ -18,10 +18,10 @@ const H = CONFIG.canvas.height;
 
 // ══════════════════════════════════════════
 // Reuse Scene 1 data (team collaboration) for Moment A
-// Take Phase 1-4 for a dense multi-person snapshot
+// Take Phase 1-7 (full team content) for maximum density
 // ══════════════════════════════════════════
 const MOMENT_A_START = 6.2;
-const MOMENT_A_PACE = 0.5; // readable pace
+const MOMENT_A_PACE = 0.28; // fast to fit all Phase 1-7
 
 const MOMENT_A_BUBBLES = BUBBLES.filter((b) => {
   const p = b.phase;
@@ -29,7 +29,10 @@ const MOMENT_A_BUBBLES = BUBBLES.filter((b) => {
     p.startsWith("1-") ||
     p.startsWith("2-") ||
     p.startsWith("3-") ||
-    p.startsWith("4-")
+    p.startsWith("4-") ||
+    p.startsWith("5-") ||
+    p.startsWith("6-") ||
+    p.startsWith("7-")
   );
 }).map((b) => ({
   ...b,
@@ -41,11 +44,12 @@ const MOMENT_A_POS = computePositions(MOMENT_A_BUBBLES);
 // Reuse Scene 4 data (solo commander) for Moment B
 // ══════════════════════════════════════════
 const MOMENT_B_START = 10.2;
-const MOMENT_B_PACE = 0.45;
+const MOMENT_B_PACE = 0.35;
 
 const SCENE4_BUBBLES: Bubble[] = [
+  // ── 4 rapid commands ──
   {
-    id: "s6-cmd1",
+    id: "s6-c1",
     time: 0.3,
     sender: "you",
     side: "right",
@@ -53,12 +57,12 @@ const SCENE4_BUBBLES: Bubble[] = [
     nameColor: "",
     bubbleColor: "#007AFF",
     textColor: "#FFFFFF",
-    content: "@商城_bot 支付超时改成 60s，加个重试",
+    content: "@商城_bot 把支付超时从 30s 改成 60s，加个重试",
     font: "Inter",
     phase: "s6-cmd",
   },
   {
-    id: "s6-cmd2",
+    id: "s6-c2",
     time: 0.9,
     sender: "you",
     side: "right",
@@ -66,12 +70,12 @@ const SCENE4_BUBBLES: Bubble[] = [
     nameColor: "",
     bubbleColor: "#007AFF",
     textColor: "#FFFFFF",
-    content: "@官网_bot hero 文案换春季版",
+    content: "@官网_bot 首页 hero 区文案换成春季版",
     font: "Inter",
     phase: "s6-cmd",
   },
   {
-    id: "s6-cmd3",
+    id: "s6-c3",
     time: 1.4,
     sender: "you",
     side: "right",
@@ -79,12 +83,12 @@ const SCENE4_BUBBLES: Bubble[] = [
     nameColor: "",
     bubbleColor: "#007AFF",
     textColor: "#FFFFFF",
-    content: "@小程序_bot 适配暗黑模式",
+    content: "@小程序_bot 暗黑模式适配一下新组件库",
     font: "Inter",
     phase: "s6-cmd",
   },
   {
-    id: "s6-cmd4",
+    id: "s6-c4",
     time: 1.8,
     sender: "you",
     side: "right",
@@ -92,13 +96,71 @@ const SCENE4_BUBBLES: Bubble[] = [
     nameColor: "",
     bubbleColor: "#007AFF",
     textColor: "#FFFFFF",
-    content: "@活动_bot 生成 A/B 测试方案",
+    content: "@活动_bot 生成一份 A/B 测试方案",
     font: "Inter",
     phase: "s6-cmd",
   },
+  // ── 4 bots working ──
+  {
+    id: "s6-p1",
+    time: 2.6,
+    sender: "商城_bot",
+    side: "left",
+    type: "progress",
+    nameLabel: "商城_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#E8EDF2",
+    textColor: "#505055",
+    content: "⚙️ working... (3s)\n → 🔧 Edit: payment.config.ts",
+    font: "JetBrains Mono",
+    phase: "s6-work",
+  },
+  {
+    id: "s6-p2",
+    time: 2.9,
+    sender: "官网_bot",
+    side: "left",
+    type: "progress",
+    nameLabel: "官网_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#E8EDF2",
+    textColor: "#505055",
+    content: "⚙️ working... (2s)\n → 🔧 Edit: hero-section.tsx",
+    font: "JetBrains Mono",
+    phase: "s6-work",
+  },
+  {
+    id: "s6-p3",
+    time: 3.2,
+    sender: "小程序_bot",
+    side: "left",
+    type: "progress",
+    nameLabel: "小程序_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#E8EDF2",
+    textColor: "#505055",
+    content: "⚙️ working... (4s)\n → 🔧 Read: components/*.tsx",
+    font: "JetBrains Mono",
+    phase: "s6-work",
+  },
+  {
+    id: "s6-p4",
+    time: 3.4,
+    sender: "活动_bot",
+    side: "left",
+    type: "progress",
+    nameLabel: "活动_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#E8EDF2",
+    textColor: "#505055",
+    content: "⚙️ working... (2s)\n → 🔧 Write: ab-test-plan.md",
+    font: "JetBrains Mono",
+    phase: "s6-work",
+  },
+  // ── 4 results ──
   {
     id: "s6-r1",
-    time: 2.8,
+    time: 4.5,
     sender: "商城_bot",
     side: "left",
     type: "result",
@@ -106,13 +168,13 @@ const SCENE4_BUBBLES: Bubble[] = [
     nameColor: "#7A7A80",
     bubbleColor: "#F0F0F2",
     textColor: "#1C1C1E",
-    content: "✅ 超时已改为 60s + 重试逻辑，测试通过",
+    content: "✅ 超时已改为 60s + 添加 3 次重试逻辑，单元测试通过",
     font: "Inter",
     phase: "s6-result",
   },
   {
     id: "s6-r2",
-    time: 3.3,
+    time: 5.0,
     sender: "官网_bot",
     side: "left",
     type: "result",
@@ -120,13 +182,13 @@ const SCENE4_BUBBLES: Bubble[] = [
     nameColor: "#7A7A80",
     bubbleColor: "#F0F0F2",
     textColor: "#1C1C1E",
-    content: "✅ Hero 文案已更新，CTA 同步调整",
+    content: "✅ Hero 文案已更新为春季版，CTA 按钮和副标题同步调整",
     font: "Inter",
     phase: "s6-result",
   },
   {
     id: "s6-r3",
-    time: 3.7,
+    time: 5.4,
     sender: "小程序_bot",
     side: "left",
     type: "result",
@@ -134,13 +196,13 @@ const SCENE4_BUBBLES: Bubble[] = [
     nameColor: "#7A7A80",
     bubbleColor: "#F0F0F2",
     textColor: "#1C1C1E",
-    content: "✅ 12 个组件暗黑模式已适配",
+    content: "✅ 暗黑模式已适配 12 个新组件，色值和间距对齐设计稿",
     font: "Inter",
     phase: "s6-result",
   },
   {
     id: "s6-r4",
-    time: 4.1,
+    time: 5.8,
     sender: "活动_bot",
     side: "left",
     type: "result",
@@ -148,9 +210,23 @@ const SCENE4_BUBBLES: Bubble[] = [
     nameColor: "#7A7A80",
     bubbleColor: "#F0F0F2",
     textColor: "#1C1C1E",
-    content: "✅ A/B 方案已生成，3 组变量 × 2 指标",
+    content: "✅ A/B 测试方案已生成：3 组变量 × 2 个转化指标，预计 7 天出结果",
     font: "Inter",
     phase: "s6-result",
+  },
+  // ── Mic drop ──
+  {
+    id: "s6-done",
+    time: 6.8,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "完美 👏",
+    font: "Inter",
+    phase: "s6-done",
   },
 ];
 
