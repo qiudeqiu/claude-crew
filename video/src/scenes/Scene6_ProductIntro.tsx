@@ -11,7 +11,7 @@ import { GitHubCard, ProjectBadge } from "../components/GitHubCard";
 import { GlassBackground } from "../components/GlassBackground";
 import { fontFamilyInter } from "../fonts";
 
-export const SCENE6_DURATION = 35;
+export const SCENE6_DURATION = 45;
 
 const W = CONFIG.canvas.width;
 const H = CONFIG.canvas.height;
@@ -25,10 +25,10 @@ const MOMENT_A_PACE = 0.65; // comfortable reading pace
 
 // Extra team bubbles to make the chat denser
 const EXTRA_TEAM: Bubble[] = [
-  // Phase 7 continuation: more cross-project interaction
+  // Continues right after Phase 4 (time ~13.15) for denser packing
   {
     id: "s6a-kira2",
-    time: 36,
+    time: 14,
     sender: "kira",
     side: "left",
     type: "chat",
@@ -42,7 +42,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-botB2",
-    time: 37.5,
+    time: 15,
     sender: "官网_bot",
     side: "left",
     type: "progress",
@@ -56,7 +56,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-leo2",
-    time: 38.5,
+    time: 16,
     sender: "leo",
     side: "left",
     type: "chat",
@@ -70,7 +70,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-you2",
-    time: 39.5,
+    time: 17,
     sender: "you",
     side: "right",
     type: "reply",
@@ -84,7 +84,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-botA2",
-    time: 41,
+    time: 18,
     sender: "商城_bot",
     side: "left",
     type: "progress",
@@ -98,7 +98,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-nova2",
-    time: 42,
+    time: 19,
     sender: "nova",
     side: "left",
     type: "chat",
@@ -112,7 +112,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-botB2r",
-    time: 43,
+    time: 20,
     sender: "官网_bot",
     side: "left",
     type: "result",
@@ -126,7 +126,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-sage2",
-    time: 44.5,
+    time: 21,
     sender: "sage",
     side: "left",
     type: "message",
@@ -140,7 +140,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-momo2",
-    time: 45.5,
+    time: 22,
     sender: "momo",
     side: "left",
     type: "chat",
@@ -154,7 +154,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-botA2r",
-    time: 46.5,
+    time: 23,
     sender: "商城_bot",
     side: "left",
     type: "result",
@@ -168,7 +168,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-you3",
-    time: 47.5,
+    time: 24,
     sender: "you",
     side: "right",
     type: "message",
@@ -204,7 +204,7 @@ const MOMENT_A_POS = computePositions(MOMENT_A_BUBBLES);
 // ══════════════════════════════════════════
 // Reuse Scene 4 data (solo commander) for Moment B
 // ══════════════════════════════════════════
-const MOMENT_B_START = 16.2;
+const MOMENT_B_START = 22.8;
 const MOMENT_B_PACE = 0.6;
 
 const SCENE4_BUBBLES: Bubble[] = [
@@ -545,38 +545,38 @@ export const Scene6_ProductIntro: React.FC = () => {
   const { chat } = CONFIG;
   const chatLeft = (W - chat.width) / 2;
 
-  // ── Moment A: team chat (6-15s) ──
+  // ── Moment A: team chat (6-22s) ──
   const momentAOp = interpolate(frame, [sec(6), sec(6.15)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const momentAOut = interpolate(frame, [sec(15.3), sec(15.45)], [1, 0], {
+  const momentAOut = interpolate(frame, [sec(21.8), sec(21.95)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const showA = frame >= sec(5.9) && frame < sec(15.8);
+  const showA = frame >= sec(5.9) && frame < sec(22.2);
 
   const overlayAOp = interpolate(
     frame,
-    [sec(7.5), sec(7.8), sec(14.8), sec(15.2)],
+    [sec(7.5), sec(7.8), sec(21.3), sec(21.7)],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // ── Moment B: solo command (16-24s) ──
-  const momentBOp = interpolate(frame, [sec(16), sec(16.15)], [0, 1], {
+  // ── Moment B: solo command (22.5-32s) ──
+  const momentBOp = interpolate(frame, [sec(22.5), sec(22.65)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const momentBOut = interpolate(frame, [sec(23.8), sec(23.95)], [1, 0], {
+  const momentBOut = interpolate(frame, [sec(31.8), sec(31.95)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const showB = frame >= sec(15.9) && frame < sec(24.2);
+  const showB = frame >= sec(22.4) && frame < sec(32.2);
 
   const overlayBOp = interpolate(
     frame,
-    [sec(17.5), sec(17.8), sec(23.3), sec(23.7)],
+    [sec(24), sec(24.3), sec(31.3), sec(31.7)],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -722,8 +722,8 @@ export const Scene6_ProductIntro: React.FC = () => {
             fontSize: 80,
           },
         ]}
-        startTime={24.2}
-        fadeOutTime={25.8}
+        startTime={32.5}
+        fadeOutTime={34}
         lineDelay={14}
       />
 
@@ -739,8 +739,8 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "上下文不膨胀。", fontSize: 72 },
         ]}
-        startTime={26.2}
-        fadeOutTime={27.8}
+        startTime={34.5}
+        fadeOutTime={36}
         lineDelay={14}
       />
 
@@ -756,8 +756,8 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "重启不失忆。", fontSize: 72 },
         ]}
-        startTime={28.2}
-        fadeOutTime={29.8}
+        startTime={36.5}
+        fadeOutTime={38}
         lineDelay={14}
       />
 
@@ -774,13 +774,13 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "远程解决方案。🚢", fontSize: 72 },
         ]}
-        startTime={30.2}
-        fadeOutTime={32.5}
+        startTime={38.5}
+        fadeOutTime={41}
         lineDelay={18}
       />
 
       {/* ── GitHub card ── */}
-      <GitHubCard startTime={33} />
+      <GitHubCard startTime={41.5} />
     </AbsoluteFill>
   );
 };
