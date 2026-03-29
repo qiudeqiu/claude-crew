@@ -11,7 +11,7 @@ import { GitHubCard, ProjectBadge } from "../components/GitHubCard";
 import { GlassBackground } from "../components/GlassBackground";
 import { fontFamilyInter } from "../fonts";
 
-export const SCENE6_DURATION = 25;
+export const SCENE6_DURATION = 35;
 
 const W = CONFIG.canvas.width;
 const H = CONFIG.canvas.height;
@@ -21,7 +21,7 @@ const H = CONFIG.canvas.height;
 // Take Phase 1-7 (full team content) for maximum density
 // ══════════════════════════════════════════
 const MOMENT_A_START = 6.2;
-const MOMENT_A_PACE = 0.5;
+const MOMENT_A_PACE = 0.65; // comfortable reading pace
 
 const MOMENT_A_BUBBLES = BUBBLES.filter((b) => {
   const p = b.phase;
@@ -43,8 +43,8 @@ const MOMENT_A_POS = computePositions(MOMENT_A_BUBBLES);
 // ══════════════════════════════════════════
 // Reuse Scene 4 data (solo commander) for Moment B
 // ══════════════════════════════════════════
-const MOMENT_B_START = 10.2;
-const MOMENT_B_PACE = 0.5;
+const MOMENT_B_START = 16.2;
+const MOMENT_B_PACE = 0.6;
 
 const SCENE4_BUBBLES: Bubble[] = [
   // ── 4 rapid commands ──
@@ -214,10 +214,93 @@ const SCENE4_BUBBLES: Bubble[] = [
     font: "Inter",
     phase: "s6-result",
   },
+  // ── Follow-up commands ──
+  {
+    id: "s6-c5",
+    time: 6.5,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "@商城_bot 顺便把错误提示也优化一下",
+    font: "Inter",
+    phase: "s6-followup",
+  },
+  {
+    id: "s6-c6",
+    time: 7.0,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "@活动_bot 方案加一个社交裂变的变量",
+    font: "Inter",
+    phase: "s6-followup",
+  },
+  {
+    id: "s6-p5",
+    time: 7.8,
+    sender: "商城_bot",
+    side: "left",
+    type: "progress",
+    nameLabel: "商城_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#E8EDF2",
+    textColor: "#505055",
+    content: "⚙️ working... (2s)\n → 🔧 Edit: payment-error.tsx",
+    font: "JetBrains Mono",
+    phase: "s6-work2",
+  },
+  {
+    id: "s6-p6",
+    time: 8.2,
+    sender: "活动_bot",
+    side: "left",
+    type: "progress",
+    nameLabel: "活动_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#E8EDF2",
+    textColor: "#505055",
+    content: "⚙️ working... (1s)\n → 🔧 Edit: ab-test-plan.md",
+    font: "JetBrains Mono",
+    phase: "s6-work2",
+  },
+  {
+    id: "s6-r5",
+    time: 9.2,
+    sender: "商城_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "商城_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "✅ 错误提示已优化为用户友好文案，支持中英文",
+    font: "Inter",
+    phase: "s6-result2",
+  },
+  {
+    id: "s6-r6",
+    time: 9.6,
+    sender: "活动_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "活动_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "✅ 已添加社交裂变变量，方案更新为 4 组 × 2 指标",
+    font: "Inter",
+    phase: "s6-result2",
+  },
   // ── Mic drop ──
   {
     id: "s6-done",
-    time: 6.8,
+    time: 10.5,
     sender: "you",
     side: "right",
     type: "message",
@@ -301,38 +384,38 @@ export const Scene6_ProductIntro: React.FC = () => {
   const { chat } = CONFIG;
   const chatLeft = (W - chat.width) / 2;
 
-  // ── Moment A: team chat (6-10s) ──
+  // ── Moment A: team chat (6-15s) ──
   const momentAOp = interpolate(frame, [sec(6), sec(6.15)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const momentAOut = interpolate(frame, [sec(9.8), sec(9.95)], [1, 0], {
+  const momentAOut = interpolate(frame, [sec(15.3), sec(15.45)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const showA = frame >= sec(5.9) && frame < sec(10.2);
+  const showA = frame >= sec(5.9) && frame < sec(15.8);
 
   const overlayAOp = interpolate(
     frame,
-    [sec(7), sec(7.3), sec(9.5), sec(9.8)],
+    [sec(7.5), sec(7.8), sec(14.8), sec(15.2)],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // ── Moment B: solo command (10-13s) ──
-  const momentBOp = interpolate(frame, [sec(10), sec(10.15)], [0, 1], {
+  // ── Moment B: solo command (16-24s) ──
+  const momentBOp = interpolate(frame, [sec(16), sec(16.15)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const momentBOut = interpolate(frame, [sec(12.8), sec(12.95)], [1, 0], {
+  const momentBOut = interpolate(frame, [sec(23.8), sec(23.95)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const showB = frame >= sec(9.9) && frame < sec(13.2);
+  const showB = frame >= sec(15.9) && frame < sec(24.2);
 
   const overlayBOp = interpolate(
     frame,
-    [sec(11), sec(11.3), sec(12.5), sec(12.8)],
+    [sec(17.5), sec(17.8), sec(23.3), sec(23.7)],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -478,8 +561,8 @@ export const Scene6_ProductIntro: React.FC = () => {
             fontSize: 80,
           },
         ]}
-        startTime={13.2}
-        fadeOutTime={14.8}
+        startTime={24.2}
+        fadeOutTime={25.8}
         lineDelay={14}
       />
 
@@ -495,8 +578,8 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "上下文不膨胀。", fontSize: 72 },
         ]}
-        startTime={15.2}
-        fadeOutTime={16.8}
+        startTime={26.2}
+        fadeOutTime={27.8}
         lineDelay={14}
       />
 
@@ -512,8 +595,8 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "重启不失忆。", fontSize: 72 },
         ]}
-        startTime={17.2}
-        fadeOutTime={18.8}
+        startTime={28.2}
+        fadeOutTime={29.8}
         lineDelay={14}
       />
 
@@ -530,13 +613,13 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "远程解决方案。🚢", fontSize: 72 },
         ]}
-        startTime={19.2}
-        fadeOutTime={21.5}
+        startTime={30.2}
+        fadeOutTime={32.5}
         lineDelay={18}
       />
 
       {/* ── GitHub card ── */}
-      <GitHubCard startTime={22} />
+      <GitHubCard startTime={33} />
     </AbsoluteFill>
   );
 };
