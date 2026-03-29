@@ -43,7 +43,7 @@ Each solution has its sweet spot. Pick the one that fits your workflow:
 | Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting | ✅ |
 | Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app | Slash commands |
 | Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ | ✅ 3 display styles |
-| Multi-agent support | Claude (Codex, Gemini planned) | Claude only | Claude only | Claude, Codex, Gemini | 7 agents |
+| Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini | 7 agents |
 | Multi-platform support | Telegram | Web / Mobile app | Telegram | iOS / Android | 10 platforms |
 
 **Which one is right for you?**

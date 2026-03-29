@@ -43,7 +43,7 @@
 | 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本 | ✅ |
 | 手机端管理 | ✅ 按钮菜单 | ✅ claude.ai / 移动端 | ✅ Telegram | ✅ 原生 app | 斜杠命令 |
 | 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ | ✅ 3 种显示风格 |
-| 多 agent 支持 | Claude（Codex、Gemini 计划中） | 仅 Claude | 仅 Claude | Claude、Codex、Gemini | 7 种 agent |
+| 多 agent 支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini | 7 种 agent |
 | 多平台支持 | Telegram | Web / 移动端 app | Telegram | iOS / Android | 10 种平台 |
 
 **哪个适合你？**
