@@ -21,7 +21,7 @@ const H = CONFIG.canvas.height;
 // Take Phase 1-4 for a dense multi-person snapshot
 // ══════════════════════════════════════════
 const MOMENT_A_START = 6.2;
-const MOMENT_A_PACE = 0.35; // very fast
+const MOMENT_A_PACE = 0.5; // readable pace
 
 const MOMENT_A_BUBBLES = BUBBLES.filter((b) => {
   const p = b.phase;
@@ -41,60 +41,116 @@ const MOMENT_A_POS = computePositions(MOMENT_A_BUBBLES);
 // Reuse Scene 4 data (solo commander) for Moment B
 // ══════════════════════════════════════════
 const MOMENT_B_START = 10.2;
-const MOMENT_B_PACE = 0.32;
+const MOMENT_B_PACE = 0.45;
 
 const SCENE4_BUBBLES: Bubble[] = [
   {
-    id: "s6-cmd1", time: 0.3, sender: "you", side: "right", type: "message",
-    nameColor: "", bubbleColor: "#007AFF", textColor: "#FFFFFF",
+    id: "s6-cmd1",
+    time: 0.3,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
     content: "@商城_bot 支付超时改成 60s，加个重试",
-    font: "Inter", phase: "s6-cmd",
+    font: "Inter",
+    phase: "s6-cmd",
   },
   {
-    id: "s6-cmd2", time: 0.9, sender: "you", side: "right", type: "message",
-    nameColor: "", bubbleColor: "#007AFF", textColor: "#FFFFFF",
+    id: "s6-cmd2",
+    time: 0.9,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
     content: "@官网_bot hero 文案换春季版",
-    font: "Inter", phase: "s6-cmd",
+    font: "Inter",
+    phase: "s6-cmd",
   },
   {
-    id: "s6-cmd3", time: 1.4, sender: "you", side: "right", type: "message",
-    nameColor: "", bubbleColor: "#007AFF", textColor: "#FFFFFF",
+    id: "s6-cmd3",
+    time: 1.4,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
     content: "@小程序_bot 适配暗黑模式",
-    font: "Inter", phase: "s6-cmd",
+    font: "Inter",
+    phase: "s6-cmd",
   },
   {
-    id: "s6-cmd4", time: 1.8, sender: "you", side: "right", type: "message",
-    nameColor: "", bubbleColor: "#007AFF", textColor: "#FFFFFF",
+    id: "s6-cmd4",
+    time: 1.8,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
     content: "@活动_bot 生成 A/B 测试方案",
-    font: "Inter", phase: "s6-cmd",
+    font: "Inter",
+    phase: "s6-cmd",
   },
   {
-    id: "s6-r1", time: 2.8, sender: "商城_bot", side: "left", type: "result",
-    nameLabel: "商城_bot", nameColor: "#7A7A80",
-    bubbleColor: "#F0F0F2", textColor: "#1C1C1E",
+    id: "s6-r1",
+    time: 2.8,
+    sender: "商城_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "商城_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
     content: "✅ 超时已改为 60s + 重试逻辑，测试通过",
-    font: "Inter", phase: "s6-result",
+    font: "Inter",
+    phase: "s6-result",
   },
   {
-    id: "s6-r2", time: 3.3, sender: "官网_bot", side: "left", type: "result",
-    nameLabel: "官网_bot", nameColor: "#7A7A80",
-    bubbleColor: "#F0F0F2", textColor: "#1C1C1E",
+    id: "s6-r2",
+    time: 3.3,
+    sender: "官网_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "官网_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
     content: "✅ Hero 文案已更新，CTA 同步调整",
-    font: "Inter", phase: "s6-result",
+    font: "Inter",
+    phase: "s6-result",
   },
   {
-    id: "s6-r3", time: 3.7, sender: "小程序_bot", side: "left", type: "result",
-    nameLabel: "小程序_bot", nameColor: "#7A7A80",
-    bubbleColor: "#F0F0F2", textColor: "#1C1C1E",
+    id: "s6-r3",
+    time: 3.7,
+    sender: "小程序_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "小程序_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
     content: "✅ 12 个组件暗黑模式已适配",
-    font: "Inter", phase: "s6-result",
+    font: "Inter",
+    phase: "s6-result",
   },
   {
-    id: "s6-r4", time: 4.1, sender: "活动_bot", side: "left", type: "result",
-    nameLabel: "活动_bot", nameColor: "#7A7A80",
-    bubbleColor: "#F0F0F2", textColor: "#1C1C1E",
+    id: "s6-r4",
+    time: 4.1,
+    sender: "活动_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "活动_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
     content: "✅ A/B 方案已生成，3 组变量 × 2 指标",
-    font: "Inter", phase: "s6-result",
+    font: "Inter",
+    phase: "s6-result",
   },
 ];
 
@@ -340,18 +396,12 @@ export const Scene6_ProductIntro: React.FC = () => {
       <AppleTextCard
         lines={[
           {
-            segments: [
-              { text: "一个进程", color: "#007AFF" },
-              { text: "，" },
-            ],
+            segments: [{ text: "一个进程", color: "#007AFF" }, { text: "，" }],
             fontSize: 80,
           },
           { text: "后台常驻，", fontSize: 80 },
           {
-            segments: [
-              { text: "永不掉线", color: "#007AFF" },
-              { text: "。" },
-            ],
+            segments: [{ text: "永不掉线", color: "#007AFF" }, { text: "。" }],
             fontSize: 80,
           },
         ]}
