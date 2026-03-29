@@ -11,7 +11,7 @@ import { GitHubCard, ProjectBadge } from "../components/GitHubCard";
 import { GlassBackground } from "../components/GlassBackground";
 import { fontFamilyInter } from "../fonts";
 
-export const SCENE6_DURATION = 45;
+export const SCENE6_DURATION = 47;
 
 const W = CONFIG.canvas.width;
 const H = CONFIG.canvas.height;
@@ -204,7 +204,7 @@ const MOMENT_A_POS = computePositions(MOMENT_A_BUBBLES);
 // ══════════════════════════════════════════
 // Reuse Scene 4 data (solo commander) for Moment B
 // ══════════════════════════════════════════
-const MOMENT_B_START = 22.8;
+const MOMENT_B_START = 24.8;
 const MOMENT_B_PACE = 0.6;
 
 const SCENE4_BUBBLES: Bubble[] = [
@@ -563,20 +563,20 @@ export const Scene6_ProductIntro: React.FC = () => {
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // ── Moment B: solo command (22.5-32s) ──
-  const momentBOp = interpolate(frame, [sec(22.5), sec(22.65)], [0, 1], {
+  // ── Moment B: solo command (24.5-34s) ──
+  const momentBOp = interpolate(frame, [sec(24.5), sec(24.65)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const momentBOut = interpolate(frame, [sec(31.8), sec(31.95)], [1, 0], {
+  const momentBOut = interpolate(frame, [sec(33.8), sec(33.95)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const showB = frame >= sec(22.4) && frame < sec(32.2);
+  const showB = frame >= sec(24.4) && frame < sec(34.2);
 
   const overlayBOp = interpolate(
     frame,
-    [sec(24), sec(24.3), sec(31.3), sec(31.7)],
+    [sec(26), sec(26.3), sec(33.3), sec(33.7)],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -674,6 +674,25 @@ export const Scene6_ProductIntro: React.FC = () => {
         </div>
       )}
 
+      {/* ── Transition text: solo intro ── */}
+      <AppleTextCard
+        lines={[
+          { text: "就算是一个人，", fontSize: 72, color: "#8E8E93" },
+          {
+            segments: [
+              { text: "也能" },
+              { text: "强大", color: "#007AFF" },
+              { text: "且" },
+              { text: "高效", color: "#007AFF" },
+              { text: "。" },
+            ],
+            fontSize: 80,
+          },
+        ]}
+        startTime={22.2}
+        fadeOutTime={24.2}
+      />
+
       {/* ── Moment B: Solo multi-project (Scene 4 data) ── */}
       {showB && (
         <div style={{ opacity: momentBOp * momentBOut }}>
@@ -722,8 +741,8 @@ export const Scene6_ProductIntro: React.FC = () => {
             fontSize: 80,
           },
         ]}
-        startTime={32.5}
-        fadeOutTime={34}
+        startTime={34.5}
+        fadeOutTime={36}
         lineDelay={14}
       />
 
@@ -739,8 +758,8 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "上下文不膨胀。", fontSize: 72 },
         ]}
-        startTime={34.5}
-        fadeOutTime={36}
+        startTime={36.5}
+        fadeOutTime={38}
         lineDelay={14}
       />
 
@@ -756,8 +775,8 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "重启不失忆。", fontSize: 72 },
         ]}
-        startTime={36.5}
-        fadeOutTime={38}
+        startTime={38.5}
+        fadeOutTime={40}
         lineDelay={14}
       />
 
@@ -774,13 +793,13 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "远程解决方案。🚢", fontSize: 72 },
         ]}
-        startTime={38.5}
-        fadeOutTime={41}
+        startTime={40.5}
+        fadeOutTime={43}
         lineDelay={18}
       />
 
       {/* ── GitHub card ── */}
-      <GitHubCard startTime={41.5} />
+      <GitHubCard startTime={43.5} />
     </AbsoluteFill>
   );
 };
