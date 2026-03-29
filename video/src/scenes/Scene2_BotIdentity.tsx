@@ -10,6 +10,7 @@ import { CONFIG } from "../data/bubbles";
 import { fontFamilyInter, fontFamilyMono } from "../fonts";
 import { sec } from "../helpers";
 import { AppleTextCard } from "../components/AppleTextCard";
+import { GlassBackground } from "../components/GlassBackground";
 import { GitHubCard, ProjectBadge } from "../components/GitHubCard";
 
 const FPS = CONFIG.fps;
@@ -263,11 +264,7 @@ export const Scene2_BotIdentity: React.FC = () => {
       {/* ── Master bot menu flow ── */}
       {showMenu && (
         <div style={{ opacity: menuOp * menuFadeOut }}>
-          <AbsoluteFill
-            style={{
-              background: "linear-gradient(180deg, #F5F5F7 0%, #ECECEE 100%)",
-            }}
-          >
+          <GlassBackground>
             <div
               style={{
                 position: "absolute",
@@ -306,7 +303,7 @@ export const Scene2_BotIdentity: React.FC = () => {
                 })}
               </div>
             </div>
-          </AbsoluteFill>
+          </GlassBackground>
         </div>
       )}
 

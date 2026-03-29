@@ -7,6 +7,7 @@ import { GitHubCard, ProjectBadge } from "../components/GitHubCard";
 import { MessageList } from "../components/MessageList";
 import { Camera } from "../components/Camera";
 import { AppleTextCard } from "../components/AppleTextCard";
+import { GlassBackground } from "../components/GlassBackground";
 
 // Filter Phase 1-7, chat at 1.5x speed
 const FIRST_BUBBLE_TIME = 0.5;
@@ -88,11 +89,7 @@ export const Scene1_TeamCollab: React.FC = () => {
       {showChat && (
         <div style={{ opacity: chatOpacity * chatFadeOut }}>
           <Camera positions={SCENE1_POSITIONS}>
-            <AbsoluteFill
-              style={{
-                background: "linear-gradient(180deg, #F5F5F7 0%, #ECECEE 100%)",
-              }}
-            >
+            <GlassBackground>
               <div
                 style={{
                   position: "absolute",
@@ -114,7 +111,7 @@ export const Scene1_TeamCollab: React.FC = () => {
                   <MessageList bubbles={SCENE1_BUBBLES} />
                 </div>
               </div>
-            </AbsoluteFill>
+            </GlassBackground>
           </Camera>
         </div>
       )}
