@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>claude-crew Roadmap</title>
+<style>
+  :root { --bg: #0a0a0a; --card: #111; --border: #222; --green: #10B981; --text: #e5e7eb; --dim: #6b7280; --blue: #3b82f6; --purple: #a78bfa; --pink: #ec4899; --amber: #f59e0b; --teal: #14b8a6; --red: #ef4444; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Inter', sans-serif; line-height: 1.6; padding: 40px 20px; max-width: 960px; margin: 0 auto; }
+  h1 { color: var(--green); font-size: 28px; margin-bottom: 4px; }
+  h2 { color: var(--green); font-size: 18px; margin: 36px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { color: #ccc; font-size: 15px; margin: 20px 0 10px; }
+  p, li { font-size: 14px; }
+  .subtitle { color: var(--dim); font-size: 13px; margin-bottom: 28px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 8px 0; }
+  .mission { background: #0d2818; border-color: #1a4d3e; padding: 20px; margin: 16px 0; border-radius: 12px; }
+  .mission p { font-size: 16px; color: #d1fae5; }
+  blockquote { border-left: 3px solid var(--green); padding: 10px 14px; margin: 10px 0; background: #0d1f17; border-radius: 0 8px 8px 0; font-style: italic; color: #a7f3d0; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--dim); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-right: 4px; }
+  .p0 { background: #7f1d1d; color: #fca5a5; }
+  .p1 { background: #78350f; color: #fde68a; }
+  .p2 { background: #1e3a5f; color: #93c5fd; }
+  .p3 { background: #1f2937; color: #9ca3af; }
+  .done { background: #065f46; color: #a7f3d0; }
+  .wip { background: #78350f; color: #fde68a; }
+  .todo { background: #1f2937; color: #9ca3af; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin: 2px; background: #1e293b; color: #94a3b8; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #1a1a1a; }
+  .item:last-child { border-bottom: none; }
+  .item-content { flex: 1; }
+  .item-title { font-weight: 600; color: #fff; font-size: 14px; }
+  .item-desc { color: var(--dim); font-size: 13px; margin-top: 2px; }
+  .item-tags { margin-top: 4px; }
+  .checkbox { width: 18px; height: 18px; border: 2px solid #444; border-radius: 4px; margin-top: 2px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .checkbox.checked { background: var(--green); border-color: var(--green); color: #000; }
+  .nav { position: fixed; top: 20px; right: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; }
+  .nav a { color: var(--dim); text-decoration: none; display: block; padding: 2px 0; }
+  .nav a:hover { color: var(--green); }
+  @media (max-width: 1100px) { .nav { display: none; } }
+  .stat { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 12px; margin: 3px; }
+  .stat-green { background: #065f46; color: #a7f3d0; }
+  .stat-yellow { background: #78350f; color: #fde68a; }
+  .stat-gray { background: #1f2937; color: #9ca3af; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="#mission">使命</a>
+  <a href="#north-star">北极星</a>
+  <a href="#v020">v0.2 已完成</a>
+  <a href="#v030">v0.3 核心体验</a>
+  <a href="#v040">v0.4 平台扩展</a>
+  <a href="#v050">v0.5 深度协作</a>
+  <a href="#backlog">Backlog</a>
+  <a href="#not-doing">不做的事</a>
+</nav>
+
+<h1>claude-crew Roadmap</h1>
+<p class="subtitle">项目目标、版本规划、待办管理 &mdash; 始终围绕多项目管理和多人远程协作</p>
+
+<!-- ═══════════════════════════════════ -->
+<h2 id="mission">使命</h2>
+
+<div class="mission">
+  <p>让团队在一个群聊里管理所有项目的 Claude Code。</p>
+  <p style="margin-top:8px; font-size:13px; color:#6b7280">不做万能桥接器，不做单人远程控制。做群聊协作工作台。</p>
+</div>
+
+<h2 id="north-star">北极星指标</h2>
+
+<div class="card">
+  <table>
+    <tr><th>指标</th><th>定义</th><th>为什么重要</th></tr>
+    <tr><td><strong>群活跃度</strong></td><td>一个群里每天有多少不同成员 @bot 发任务</td><td>核心：多人在同一个群里协作</td></tr>
+    <tr><td><strong>多项目并行度</strong></td><td>一个群里同时在跑的不同项目 bot 数量</td><td>核心：多项目集群管理</td></tr>
+    <tr><td><strong>手机操作比</strong></td><td>不碰终端就能完成的管理操作占比</td><td>差异化：完全脱离电脑</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<h2 id="v020">v0.2 &mdash; 已完成 <span class="badge done">SHIPPED</span></h2>
+
+<div class="card">
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">多项目 bot 集群</div><div class="item-desc">一个 daemon 管 N 个 bot，每个 bot 绑一个项目</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">@mention 群聊路由</div><div class="item-desc">群里 @谁谁干活，零切换</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">Telegram 按钮式管理</div><div class="item-desc">加 bot、改配置、管用户，全是按钮菜单</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">权限系统</div><div class="item-desc">accessLevel + permissionMode + allowedUsers，两层控制 per-bot 配置</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">approve 审批模式</div><div class="item-desc">默认先只读，需要写操作弹按钮确认</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">实时进度流式输出</div><div class="item-desc">stream-json 事件解析，工具级进度展示</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">置顶仪表盘</div><div class="item-desc">git 分支、最新 commit、context 用量、花费一览</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">内置 cron 定时任务</div><div class="item-desc">HH:MM 或 */N 分钟调度</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">Periodic memory save</div><div class="item-desc">自动保存项目记忆，上下文持久化</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">daemon + watchdog + 开机自启</div><div class="item-desc">PID file、崩溃重启、launchd 集成</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">安全审计修复</div><div class="item-desc">shell 注入、env 白名单、路径阻断、immutable 重构</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">i18n 双语</div><div class="item-desc">en / zh 全覆盖</div></div></div>
+  <div class="item"><div class="checkbox checked">&#10003;</div><div class="item-content"><div class="item-title">未授权用户提示</div><div class="item-desc">非授权用户 @bot 返回权限提示，不再静默</div></div></div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<h2 id="v030">v0.3 &mdash; 核心体验强化 <span class="badge wip">NEXT</span></h2>
+<p style="color:var(--dim); margin-bottom:12px">目标：解决群聊场景下的实际使用痛点，让日常使用更顺畅</p>
+
+<div class="card">
+  <h3>Claude Code 命令透传</h3>
+  <p style="color:var(--dim); margin-bottom:8px">让用户在群里直接使用 Claude Code 的核心命令，无缝衔接终端体验</p>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">/new &mdash; 重置会话</div><div class="item-desc">下次调用不带 --continue，起一个全新的 Claude 会话。解决上下文膨胀变慢的问题</div><div class="item-tags"><span class="tag">多项目管理</span><span class="tag">体验优化</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">/compact &mdash; 压缩上下文</div><div class="item-desc">触发 Claude Code 的 context 压缩，不丢失关键信息的前提下释放空间</div><div class="item-tags"><span class="tag">多项目管理</span><span class="tag">性能</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">/model &mdash; 运行时切模型</div><div class="item-desc">在群里直接切换 bot 的模型（sonnet/opus/haiku），不用进配置菜单</div><div class="item-tags"><span class="tag">效率</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">/effort &mdash; 调整思考深度</div><div class="item-desc">low/medium/high/max，按任务复杂度灵活切换</div><div class="item-tags"><span class="tag">效率</span><span class="tag">成本控制</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">/cost &mdash; 查看花费</div><div class="item-desc">显示当前 bot 的累计花费和 token 用量</div><div class="item-tags"><span class="tag">成本控制</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">/memory &mdash; 查看项目记忆</div><div class="item-desc">显示项目的 CLAUDE.md 内容，了解 bot "记住了什么"</div><div class="item-tags"><span class="tag">项目连续性</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">/status &mdash; bot 状态</div><div class="item-desc">单个 bot 的快捷状态：context 用量、模型、最近活动</div><div class="item-tags"><span class="tag">可观测性</span></div></div></div>
+</div>
+
+<div class="card">
+  <h3>群聊体验优化</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Telegram Thread 支持</div><div class="item-desc">每个 @bot 任务自动开一个话题 thread，进度和结果在 thread 里。主时间线保持干净，展开 thread 看细节。多项目并行时不再混乱</div><div class="item-tags"><span class="tag">多项目管理</span><span class="tag">多人协作</span><span class="badge p0">高优先</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">任务队列</div><div class="item-desc">多人同时 @同一 bot 时排队执行，不再直接拒绝。群里显示队列位置："你是第 2 个，前面还有 1 个任务"</div><div class="item-tags"><span class="tag">多人协作</span><span class="badge p0">高优先</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">结果投票按钮</div><div class="item-desc">bot 结果自动带 ✅ 接受 / 🔄 重做 / 💬 讨论 按钮。团队成员投票，达到阈值自动执行下一步</div><div class="item-tags"><span class="tag">多人协作</span><span class="badge p0">高优先</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Context 用量预警 + 自动压缩</div><div class="item-desc">context 超 80% 主动提醒；超 95% 自动触发压缩，群里通知"已自动压缩 @产品A_bot 的上下文"</div><div class="item-tags"><span class="tag">多项目管理</span><span class="tag">可观测性</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">文件发送</div><div class="item-desc">bot 完成任务后能把生成的文件（图片、PDF、代码文件）直接发到群里，团队不用去服务器看</div><div class="item-tags"><span class="tag">多人协作</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Reaction 快捷操作</div><div class="item-desc">对 bot 结果 react 🔄 重跑、📌 置顶到今日重要结果、❌ 取消正在跑的任务。不用打字就能操作</div><div class="item-tags"><span class="tag">效率</span><span class="tag">多人协作</span></div></div></div>
+</div>
+
+<div class="card">
+  <h3>审批增强</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">审批委托</div><div class="item-desc">/delegate @Leo 2h — 接下来 2 小时 Leo 可以代批 approve 请求，到期自动回收。admin 不在时不卡流程</div><div class="item-tags"><span class="tag">多人协作</span><span class="badge p0">高优先</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">多人审批（多签）</div><div class="item-desc">敏感项目可配置需要 2 人同时批准。按钮上显示"1/2 已批准"，防止单人误操作</div><div class="item-tags"><span class="tag">多人协作</span><span class="tag">安全</span></div></div></div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<h2 id="v040">v0.4 &mdash; 平台扩展 <span class="badge todo">PLANNED</span></h2>
+<p style="color:var(--dim); margin-bottom:12px">目标：把"群聊工作台"范式带到更多平台，覆盖不同团队的聊天习惯</p>
+
+<div class="card">
+  <h3>平台抽象层</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Platform 接口抽象</div><div class="item-desc">定义统一的 Platform interface（sendMessage, editMessage, sendButtons, onMessage 等），把现有 Telegram 代码重构为第一个适配器</div><div class="item-tags"><span class="tag">架构</span><span class="badge p0">前置任务</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Telegram 适配器</div><div class="item-desc">现有代码迁移到 platform/telegram/，验证接口设计可行</div><div class="item-tags"><span class="tag">架构</span></div></div></div>
+</div>
+
+<div class="card">
+  <h3>新平台</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Discord 适配器</div><div class="item-desc">@mention + Thread + Role 天然契合。国际开发者社区标配</div><div class="item-tags"><span class="tag">多人协作</span><span class="tag">国际市场</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">飞书 / Lark 适配器</div><div class="item-desc">中国企业团队标配。卡片消息能力比 Telegram 更强，体验可能更好</div><div class="item-tags"><span class="tag">多人协作</span><span class="tag">中国市场</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">QQ 适配器</div><div class="item-desc">中国年轻开发者和学生群体覆盖</div><div class="item-tags"><span class="tag">中国市场</span></div></div></div>
+</div>
+
+<div class="card">
+  <h3>多 Agent 支持</h3>
+  <p style="color:var(--dim); margin-bottom:8px">不同项目用不同 agent — Python 项目用 Codex，研究项目用 Gemini，主力开发用 Claude</p>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Agent 接口抽象</div><div class="item-desc">定义统一的 Agent interface（spawn, parseStream, getFlags），把现有 Claude Code 调用重构为第一个适配器</div><div class="item-tags"><span class="tag">架构</span><span class="badge p0">前置任务</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Codex 适配器</div><div class="item-desc">OpenAI Codex CLI 集成，每个 bot 可配 agent: "codex"</div><div class="item-tags"><span class="tag">多项目管理</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Gemini CLI 适配器</div><div class="item-desc">Google Gemini CLI 集成，每个 bot 可配 agent: "gemini"</div><div class="item-tags"><span class="tag">多项目管理</span></div></div></div>
+</div>
+
+<div class="card">
+  <h3>基础设施</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Linux systemd 支持</div><div class="item-desc">daemon 适配 systemd，很多用户跑在 Linux 服务器上</div><div class="item-tags"><span class="tag">运维</span></div></div></div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<h2 id="v050">v0.5 &mdash; 深度协作 <span class="badge todo">PLANNED</span></h2>
+<p style="color:var(--dim); margin-bottom:12px">目标：围绕团队协作深挖，让群聊工作台成为不可替代的工作方式</p>
+
+<div class="card">
+  <h3>团队感知</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">智能摘要 /digest</div><div class="item-desc">离开几小时回来，一条命令生成摘要：完成了什么、失败了什么、谁在等你反馈、哪些结果没人确认</div><div class="item-tags"><span class="tag">多人协作</span><span class="tag">异步协作</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">谁在做什么 /who</div><div class="item-desc">实时显示团队工作状态：Leo 正在用 @产品A_bot（12分钟前）、Momo 在 @产品C_bot（刚刚）、其他人空闲</div><div class="item-tags"><span class="tag">多人协作</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">通知订阅 /watch</div><div class="item-desc">每人可选择只关注特定 bot 的结果通知，其他 bot 静音。解决消息量大时的信噪比问题</div><div class="item-tags"><span class="tag">多人协作</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">关键结果 @提及</div><div class="item-desc">bot 结果包含 error/failed/需要确认等关键词时，自动 @相关成员，重要信息不被淹没</div><div class="item-tags"><span class="tag">多人协作</span></div></div></div>
+</div>
+
+<div class="card">
+  <h3>协作流程</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">任务接力 /handoff</div><div class="item-desc">Leo 让 @产品A_bot 改完 API 后，/handoff @Momo "样式需要调整" — Momo 收到通知，带完整上下文继续</div><div class="item-tags"><span class="tag">多人协作</span><span class="badge p1">独占功能</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">跨项目联动</div><div class="item-desc">"@产品A_bot 改完后通知 @产品B_bot 更新前端对接" — bot 间任务链，结果对全员可见</div><div class="item-tags"><span class="tag">多项目管理</span><span class="badge p1">独占功能</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">共享命令模板</div><div class="item-desc">每个 bot 预配常用操作按钮：[跑测试] [代码审查] [更新文档]。新人不用记命令，点按钮就行</div><div class="item-tags"><span class="tag">多人协作</span><span class="tag">效率</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">快捷指令面板 /quick</div><div class="item-desc">弹出按钮面板：[全部跑测试] [全部检查文档] [刷新仪表盘]。一键批量操作多个项目</div><div class="item-tags"><span class="tag">多项目管理</span><span class="tag">效率</span></div></div></div>
+</div>
+
+<div class="card">
+  <h3>团队管理</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">更细粒度的用户角色</div><div class="item-desc">admin / operator / viewer 三级。viewer 只看不发指令，operator 发指令但不能改配置</div><div class="item-tags"><span class="tag">多人协作</span><span class="tag">权限</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Per-role 限速</div><div class="item-desc">管理员不限速，普通成员每 30 秒一条，防止某人刷爆 bot</div><div class="item-tags"><span class="tag">多人协作</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">新人引导</div><div class="item-desc">新成员首次在群里发消息，master bot 自动私聊发引导：能用哪些 bot、怎么 @、常用命令</div><div class="item-tags"><span class="tag">多人协作</span><span class="tag">体验</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">活动日志与审计</div><div class="item-desc">谁在什么时间对哪个项目做了什么操作，可追溯可导出</div><div class="item-tags"><span class="tag">多人协作</span><span class="tag">安全</span></div></div></div>
+</div>
+
+<div class="card">
+  <h3>项目管理</h3>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">跨项目搜索增强</div><div class="item-desc">搜所有项目的代码 + git log + bot 历史输出</div><div class="item-tags"><span class="tag">多项目管理</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">项目健康度</div><div class="item-desc">仪表盘增加：最近 24h 任务数、成功/失败率、平均响应时间</div><div class="item-tags"><span class="tag">多项目管理</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">结果归档 /save</div><div class="item-desc">重要 bot 输出保存到项目目录，不只存在聊天记录里</div><div class="item-tags"><span class="tag">项目连续性</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">项目模板</div><div class="item-desc">新建 bot 时选模板（前端/后端/文档/运营），预配系统提示和权限</div><div class="item-tags"><span class="tag">效率</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Webhook 入口</div><div class="item-desc">CI/CD 失败自动通知对应 bot 修复，结果发群里团队可见</div><div class="item-tags"><span class="tag">自动化</span><span class="tag">多项目管理</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Web 只读状态页</div><div class="item-desc">轻量 HTTP 页面：所有项目状态、bot 在线情况、近期活动</div><div class="item-tags"><span class="tag">可观测性</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Cron 增强</div><div class="item-desc">结果 @相关成员通知，可配"失败时 @Leo @Momo"。共享 cron 让团队都能看到定时任务</div><div class="item-tags"><span class="tag">自动化</span><span class="tag">多人协作</span></div></div></div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<h2 id="backlog">Backlog &mdash; 未排期</h2>
+
+<div class="card">
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">i18n 扩展</div><div class="item-desc">日语、西班牙语等更多语言</div><div class="item-tags"><span class="tag">国际化</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">消息引用增强</div><div class="item-desc">引用消息时自动下载并传递附件（文档、表格等）</div><div class="item-tags"><span class="tag">体验</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">多 STT 引擎</div><div class="item-desc">除 Whisper 外支持更多语音转文字引擎（Groq、云服务等）</div><div class="item-tags"><span class="tag">体验</span></div></div></div>
+  <div class="item"><div class="checkbox">　</div><div class="item-content"><div class="item-title">Bot 健康检查</div><div class="item-desc">定期 ping 各 bot 的 Claude CLI 可用性，异常时群里告警</div><div class="item-tags"><span class="tag">运维</span></div></div></div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<h2 id="not-doing">不做的事</h2>
+
+<div class="card" style="color: var(--dim)">
+  <table>
+    <tr><th>方向</th><th>原因</th></tr>
+    <tr><td>Web 全功能 dashboard</td><td>投入大、维护重。按钮菜单 + 仪表盘 + 状态页已够用</td></tr>
+    <tr><td>云托管版</td><td>设计为本地运行。云版涉及安全、计费、基础设施，不是我们的方向</td></tr>
+    <tr><td>代替终端的完整交互体验</td><td>我们是调度层，不是终端模拟器。复杂调试还是应该去终端</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+
+<div style="margin-top:48px; padding:20px; background:var(--card); border:1px solid var(--border); border-radius:10px">
+  <h3 style="margin:0 0 8px">决策原则</h3>
+  <p style="color:var(--dim); font-size:13px">每个新功能都要回答：</p>
+  <ul style="color:var(--dim); font-size:13px; padding-left:20px; margin-top:6px">
+    <li>这个功能让 <strong style="color:#fff">多人在同一个群里协作</strong> 变得更好了吗？</li>
+    <li>这个功能让 <strong style="color:#fff">多项目集群管理</strong> 变得更顺畅了吗？</li>
+    <li>如果两个都不是，不做。</li>
+  </ul>
+</div>
+
+<p style="text-align:center; color:var(--dim); margin-top:40px; font-size:12px;">
+  claude-crew Roadmap &mdash; Last updated: <span id="ts"></span>
+</p>
+<script>document.getElementById('ts').textContent=new Date().toLocaleString('zh-CN',{hour12:false});</script>
+
+</body>
+</html>
