@@ -493,8 +493,12 @@ export async function invokeClaudeAndReply(
       return;
     }
 
-    for (const chunk of splitMessage(result.text)) {
-      await tgBot.api.sendMessage(chatId, chunk);
+    const projectTag = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff_]/g, "_");
+    const chunks = splitMessage(result.text);
+    for (let i = 0; i < chunks.length; i++) {
+      const text =
+        i === chunks.length - 1 ? `${chunks[i]}\n\n#${projectTag}` : chunks[i];
+      await tgBot.api.sendMessage(chatId, text);
     }
 
     accumulateStats(managed, result);
