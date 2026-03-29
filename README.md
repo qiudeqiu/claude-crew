@@ -31,26 +31,28 @@ Other solutions require you to switch between sessions, tabs, or apps when worki
 
 Each solution has its sweet spot. Pick the one that fits your workflow:
 
-| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder |
-|-----------|:-:|:-:|:-:|:-:|
-| Multi-project (isolated context) | ✅ One bot per project | ✅ One process per project | ❌ Single session | ✅ One session per project |
-| Project switching | ✅ @mention in group chat | Switch in app UI | N/A (single bot) | Switch in app UI |
-| Add project from phone | ✅ Button wizard | ❌ Terminal required | ❌ Terminal required | ✅ Enter path in app |
-| Team collaboration | ✅ Shared group chat, per-bot permissions | ❌ Solo only | ❌ Solo only | ✅ Via device authorization |
-| Process management | ✅ Built-in daemon + watchdog + auto-start | Manual (tmux / systemd) | Manual (tmux / systemd) | ✅ Built-in daemon |
-| Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ |
-| Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting |
-| Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app |
-| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ |
-| Multi-model support | Claude only | Claude only | Claude only | Claude, Codex, Gemini |
-| Client | Telegram (no extra app) | Web / Mobile app | Telegram | Native app (iOS/Android) |
+| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder | cc-connect |
+|-----------|:-:|:-:|:-:|:-:|:-:|
+| Multi-project (isolated context) | ✅ One bot per project | ✅ One process per project | ❌ Single session | ✅ One session per project | ✅ Config-driven array |
+| Project switching | ✅ @mention in group chat | Switch in app UI | N/A (single bot) | Switch in app UI | Switch chat / slash cmd |
+| Shared timeline (all projects visible) | ✅ One group, everyone sees everything | ❌ | ❌ | ❌ | ❌ Each project in separate chat |
+| Add project from phone | ✅ Button wizard | ❌ Terminal required | ❌ Terminal required | ✅ Enter path in app | ❌ Edit config.toml |
+| Team collaboration | ✅ Shared group chat, per-bot permissions | ❌ Solo only | ❌ Solo only | ✅ Via device authorization | ✅ User roles + rate limit |
+| Process management | ✅ Built-in daemon + watchdog + auto-start | Manual (tmux / systemd) | Manual (tmux / systemd) | ✅ Built-in daemon | ✅ launchd / systemd |
+| Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ | ✅ Web dashboard |
+| Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting | ✅ |
+| Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app | Slash commands |
+| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ | ✅ 3 display styles |
+| Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini | 7 agents |
+| Multi-platform support | Telegram | Web / Mobile app | Telegram | iOS / Android | 10 platforms |
 
 **Which one is right for you?**
 
 - **One project, solo, want official support** → [Claude Code Remote](https://code.claude.com/docs/en/remote-control) — first-party, zero setup beyond `claude`
 - **One project, solo, prefer Telegram** → [Claude Code Telegram Plugin](https://code.claude.com/docs/en/channels) — lightweight, official plugin
 - **Multiple projects, want multi-model or a native app** → [Happy Coder](https://happy.engineering/) — supports Claude, Codex, Gemini with a polished mobile experience
-- **Multiple projects, team, want @mention cluster management** → **[claude-crew](https://github.com/qiudeqiu/claude-crew)** — everyone works in one group: @mention to dispatch tasks in parallel, see all progress and results in real time, chat with each other, and react instantly. Team permissions, dashboard, cron — all via Telegram
+- **Multiple projects, multiple agents or platforms** → [cc-connect](https://github.com/chenhg5/cc-connect) — universal bridge for 7 agents × 10 chat platforms, config-driven, web dashboard
+- **Multiple projects, team, want shared group chat workspace** → **[claude-crew](https://github.com/qiudeqiu/claude-crew)** — everyone works in one group: @mention to dispatch tasks in parallel, see all progress and results in real time, chat with each other, and react instantly. Team permissions, dashboard, cron — all via Telegram
 
 ## Table of Contents
 

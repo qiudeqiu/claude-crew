@@ -31,26 +31,28 @@
 
 每个方案都有最适合的场景，选适合你的：
 
-| 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 | Happy Coder |
-|-----|:-:|:-:|:-:|:-:|
-| 多项目（上下文隔离） | ✅ 每个项目一个 bot | ✅ 每个项目一个进程 | ❌ 单 session | ✅ 每个项目一个 session |
-| 项目切换 | ✅ 群内 @mention | 在 app 里切 session | 不适用（单 bot） | 在 app 里切 session |
-| 手机上加新项目 | ✅ 按钮向导 | ❌ 需回终端 | ❌ 需回终端 | ✅ app 内填路径 |
-| 团队协作 | ✅ 共享群聊，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 | ✅ 设备授权 |
-| 进程管理 | ✅ 内置 daemon + watchdog + 开机自启 | 手动（tmux / systemd） | 手动（tmux / systemd） | ✅ 内置 daemon |
-| 统一仪表盘 | ✅ 全部项目状态置顶一条消息 | ❌ | ❌ | ❌ |
-| 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本 |
-| 手机端管理 | ✅ 按钮菜单 | ✅ claude.ai / 移动端 | ✅ Telegram | ✅ 原生 app |
-| 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ |
-| 多模型支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini |
-| 客户端 | Telegram（无需额外 app） | Web / 移动端 app | Telegram | 原生 app（iOS/Android） |
+| 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 | Happy Coder | cc-connect |
+|-----|:-:|:-:|:-:|:-:|:-:|
+| 多项目（上下文隔离） | ✅ 每个项目一个 bot | ✅ 每个项目一个进程 | ❌ 单 session | ✅ 每个项目一个 session | ✅ 配置驱动 |
+| 项目切换 | ✅ 群内 @mention | 在 app 里切 session | 不适用（单 bot） | 在 app 里切 session | 切对话窗口 / 斜杠命令 |
+| 统一时间线（所有项目可见） | ✅ 一个群，所有人看到一切 | ❌ | ❌ | ❌ | ❌ 每个项目独立对话 |
+| 手机上加新项目 | ✅ 按钮向导 | ❌ 需回终端 | ❌ 需回终端 | ✅ app 内填路径 | ❌ 编辑 config.toml |
+| 团队协作 | ✅ 共享群聊，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 | ✅ 设备授权 | ✅ 用户角色 + 限速 |
+| 进程管理 | ✅ 内置 daemon + watchdog + 开机自启 | 手动（tmux / systemd） | 手动（tmux / systemd） | ✅ 内置 daemon | ✅ launchd / systemd |
+| 统一仪表盘 | ✅ 全部项目状态置顶一条消息 | ❌ | ❌ | ❌ | ✅ Web 面板 |
+| 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本 | ✅ |
+| 手机端管理 | ✅ 按钮菜单 | ✅ claude.ai / 移动端 | ✅ Telegram | ✅ 原生 app | 斜杠命令 |
+| 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ | ✅ 3 种显示风格 |
+| 多 agent 支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini | 7 种 agent |
+| 多平台支持 | Telegram | Web / 移动端 app | Telegram | iOS / Android | 10 种平台 |
 
 **哪个适合你？**
 
 - **单项目、个人、要官方支持** → [Claude Code Remote](https://code.claude.com/docs/en/remote-control) — 官方一手方案，开箱即用
 - **单项目、个人、偏好 Telegram** → [Claude Code Telegram 插件](https://code.claude.com/docs/en/channels) — 轻量官方插件
 - **多项目、想用多种模型或原生 app** → [Happy Coder](https://happy.engineering/) — 支持 Claude、Codex、Gemini，精致的移动端体验
-- **多项目、团队、要群聊集群管理** → **[claude-crew](https://github.com/qiudeqiu/claude-crew)** — 全员在同一个群里：@mention 并行派发任务，实时看到所有进度和结果，随时沟通讨论，即时对结果作出反应。团队权限、仪表盘、定时任务，全在 Telegram 内完成
+- **多项目、多 agent 或多平台** → [cc-connect](https://github.com/chenhg5/cc-connect) — 7 种 agent × 10 种聊天平台的万能桥接器，配置驱动，Web 面板
+- **多项目、团队、要共享群聊工作台** → **[claude-crew](https://github.com/qiudeqiu/claude-crew)** — 全员在同一个群里：@mention 并行派发任务，实时看到所有进度和结果，随时沟通讨论，即时对结果作出反应。团队权限、仪表盘、定时任务，全在 Telegram 内完成
 
 ## 目录
 
