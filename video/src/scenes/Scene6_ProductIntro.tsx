@@ -1,656 +1,403 @@
 import React from "react";
-import {
-  AbsoluteFill,
-  useCurrentFrame,
-  interpolate,
-  Easing,
-} from "remotion";
-import { CONFIG } from "../data/bubbles";
-import { fontFamilyInter, fontFamilyMono } from "../fonts";
-import { sec } from "../helpers";
+import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import { CONFIG, BUBBLES } from "../data/bubbles";
+import type { Bubble } from "../data/bubbles";
+import { sec, computePositions } from "../helpers";
+import { ChatHeader } from "../components/ChatHeader";
+import { MessageList } from "../components/MessageList";
+import { Camera } from "../components/Camera";
 import { AppleTextCard } from "../components/AppleTextCard";
 import { GitHubCard, ProjectBadge } from "../components/GitHubCard";
 import { GlassBackground } from "../components/GlassBackground";
+import { fontFamilyInter } from "../fonts";
 
 export const SCENE6_DURATION = 25;
 
-const FPS = CONFIG.fps;
 const W = CONFIG.canvas.width;
 const H = CONFIG.canvas.height;
 
 // ══════════════════════════════════════════
-// Overlay pill — bottom-center text badge
+// Reuse Scene 1 data (team collaboration) for Moment A
+// Take Phase 1-4 for a dense multi-person snapshot
 // ══════════════════════════════════════════
+const MOMENT_A_START = 6.2;
+const MOMENT_A_PACE = 0.35; // very fast
 
-const OverlayPill: React.FC<{ text: string; opacity: number }> = ({
+const MOMENT_A_BUBBLES = BUBBLES.filter((b) => {
+  const p = b.phase;
+  return (
+    p.startsWith("1-") ||
+    p.startsWith("2-") ||
+    p.startsWith("3-") ||
+    p.startsWith("4-")
+  );
+}).map((b) => ({
+  ...b,
+  time: MOMENT_A_START + (b.time - 0.5) * MOMENT_A_PACE,
+}));
+const MOMENT_A_POS = computePositions(MOMENT_A_BUBBLES);
+
+// ══════════════════════════════════════════
+// Reuse Scene 4 data (solo commander) for Moment B
+// ══════════════════════════════════════════
+const MOMENT_B_START = 10.2;
+const MOMENT_B_PACE = 0.32;
+
+const SCENE4_BUBBLES: Bubble[] = [
+  {
+    id: "s6-cmd1", time: 0.3, sender: "you", side: "right", type: "message",
+    nameColor: "", bubbleColor: "#007AFF", textColor: "#FFFFFF",
+    content: "@商城_bot 支付超时改成 60s，加个重试",
+    font: "Inter", phase: "s6-cmd",
+  },
+  {
+    id: "s6-cmd2", time: 0.9, sender: "you", side: "right", type: "message",
+    nameColor: "", bubbleColor: "#007AFF", textColor: "#FFFFFF",
+    content: "@官网_bot hero 文案换春季版",
+    font: "Inter", phase: "s6-cmd",
+  },
+  {
+    id: "s6-cmd3", time: 1.4, sender: "you", side: "right", type: "message",
+    nameColor: "", bubbleColor: "#007AFF", textColor: "#FFFFFF",
+    content: "@小程序_bot 适配暗黑模式",
+    font: "Inter", phase: "s6-cmd",
+  },
+  {
+    id: "s6-cmd4", time: 1.8, sender: "you", side: "right", type: "message",
+    nameColor: "", bubbleColor: "#007AFF", textColor: "#FFFFFF",
+    content: "@活动_bot 生成 A/B 测试方案",
+    font: "Inter", phase: "s6-cmd",
+  },
+  {
+    id: "s6-r1", time: 2.8, sender: "商城_bot", side: "left", type: "result",
+    nameLabel: "商城_bot", nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2", textColor: "#1C1C1E",
+    content: "✅ 超时已改为 60s + 重试逻辑，测试通过",
+    font: "Inter", phase: "s6-result",
+  },
+  {
+    id: "s6-r2", time: 3.3, sender: "官网_bot", side: "left", type: "result",
+    nameLabel: "官网_bot", nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2", textColor: "#1C1C1E",
+    content: "✅ Hero 文案已更新，CTA 同步调整",
+    font: "Inter", phase: "s6-result",
+  },
+  {
+    id: "s6-r3", time: 3.7, sender: "小程序_bot", side: "left", type: "result",
+    nameLabel: "小程序_bot", nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2", textColor: "#1C1C1E",
+    content: "✅ 12 个组件暗黑模式已适配",
+    font: "Inter", phase: "s6-result",
+  },
+  {
+    id: "s6-r4", time: 4.1, sender: "活动_bot", side: "left", type: "result",
+    nameLabel: "活动_bot", nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2", textColor: "#1C1C1E",
+    content: "✅ A/B 方案已生成，3 组变量 × 2 指标",
+    font: "Inter", phase: "s6-result",
+  },
+];
+
+const MOMENT_B_BUBBLES = SCENE4_BUBBLES.map((b) => ({
+  ...b,
+  time: MOMENT_B_START + b.time * MOMENT_B_PACE,
+}));
+const MOMENT_B_POS = computePositions(MOMENT_B_BUBBLES);
+
+// ══════════════════════════════════════════
+// Overlay text — large, centered, semi-transparent background
+// ══════════════════════════════════════════
+const OverlayText: React.FC<{ text: string; opacity: number }> = ({
   text,
   opacity,
-}) => (
-  <div
-    style={{
-      position: "absolute",
-      bottom: 120,
-      left: 0,
-      right: 0,
-      display: "flex",
-      justifyContent: "center",
-      opacity,
-    }}
-  >
-    <div
-      style={{
-        padding: "12px 32px",
-        borderRadius: 24,
-        backgroundColor: "rgba(255,255,255,0.95)",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: fontFamilyInter,
-          fontSize: 28,
-          fontWeight: 600,
-          color: "#1C1C1E",
-        }}
-      >
-        {text}
-      </span>
-    </div>
-  </div>
-);
-
-// ══════════════════════════════════════════
-// Chat container style (reused across moments)
-// ══════════════════════════════════════════
-
-const chatContainerStyle: React.CSSProperties = {
-  position: "absolute",
-  left: (W - CONFIG.chat.width) / 2,
-  top: 20,
-  width: CONFIG.chat.width,
-  background: "rgba(255,255,255,0.72)",
-  backdropFilter: "blur(40px) saturate(1.8)",
-  WebkitBackdropFilter: "blur(40px) saturate(1.8)",
-  borderRadius: 24,
-  boxShadow: "0 2px 24px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.08)",
-  border: "1px solid rgba(255,255,255,0.6)",
-  overflow: "hidden",
-};
-
-// ══════════════════════════════════════════
-// Reusable inline header component
-// ══════════════════════════════════════════
-
-interface GroupHeaderProps {
-  title: string;
-  subtitle: string;
-  avatarText: string;
-  gradient: string;
-  shadowColor: string;
-}
-
-const GroupHeader: React.FC<GroupHeaderProps> = ({
-  title,
-  subtitle,
-  avatarText,
-  gradient,
-  shadowColor,
-}) => (
-  <div
-    style={{
-      width: CONFIG.chat.width,
-      height: CONFIG.chat.headerHeight,
-      display: "flex",
-      alignItems: "center",
-      padding: "0 24px",
-      gap: 16,
-      background: "rgba(245, 245, 247, 0.85)",
-      backdropFilter: "blur(20px)",
-      borderBottom: "1px solid rgba(0,0,0,0.06)",
-      borderRadius: "24px 24px 0 0",
-    }}
-  >
-    <div
-      style={{
-        width: 76,
-        height: 76,
-        borderRadius: "50%",
-        background: gradient,
-        boxShadow: `0 4px 12px ${shadowColor}`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 30,
-        fontWeight: 700,
-        color: "#fff",
-        fontFamily: fontFamilyInter,
-        flexShrink: 0,
-      }}
-    >
-      {avatarText}
-    </div>
-    <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-      <span
-        style={{
-          fontFamily: fontFamilyInter,
-          fontSize: 36,
-          fontWeight: 700,
-          color: "#1C1C1E",
-          lineHeight: 1.2,
-        }}
-      >
-        {title}
-      </span>
-      <span
-        style={{
-          fontFamily: fontFamilyInter,
-          fontSize: 22,
-          color: "#AEAEB2",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {subtitle}
-      </span>
-    </div>
-  </div>
-);
-
-// ══════════════════════════════════════════
-// Simple chat bubble
-// ══════════════════════════════════════════
-
-interface SimpleBubble {
-  role: "user" | "bot";
-  text: string;
-  nameLabel?: string;
-  botName?: string;
-  isSuccess?: boolean;
-}
-
-const ChatBubbleInline: React.FC<{
-  msg: SimpleBubble;
-  opacity: number;
-  fontSize?: number;
-}> = ({ msg, opacity, fontSize = 28 }) => {
-  const isUser = msg.role === "user";
-  const isSuccess = msg.isSuccess ?? msg.text.startsWith("✅");
-
-  return (
-    <div
-      style={{
-        alignSelf: isUser ? "flex-end" : "flex-start",
-        maxWidth: "85%",
-        opacity,
-      }}
-    >
-      {!isUser && msg.nameLabel && (
-        <span
-          style={{
-            fontFamily: fontFamilyInter,
-            fontSize: 20,
-            fontWeight: 600,
-            color: "#7A7A80",
-            marginBottom: 4,
-            display: "block",
-          }}
-        >
-          {msg.nameLabel}
-        </span>
-      )}
-      <div
-        style={{
-          backgroundColor: isUser
-            ? "#007AFF"
-            : isSuccess
-              ? "#E8F5E9"
-              : "#F0F0F2",
-          borderRadius: isUser ? "20px 20px 0 20px" : "0 20px 20px 20px",
-          borderLeft: isSuccess ? "3px solid #34C759" : "none",
-          padding: "12px 18px",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: fontFamilyInter,
-            fontSize,
-            color: isUser ? "#FFF" : "#1C1C1E",
-            lineHeight: 1.5,
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          {msg.text}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-// ══════════════════════════════════════════
-// Menu bubble (reused from Scene2 pattern)
-// ══════════════════════════════════════════
-
-interface MenuMsg {
-  role: "user" | "bot";
-  text: string;
-  buttons?: string[][];
-  highlight?: string;
-  isSuccess?: boolean;
-}
-
-const MenuBubble: React.FC<{ msg: MenuMsg; opacity: number }> = ({
-  msg,
-  opacity,
 }) => {
-  const isUser = msg.role === "user";
-  const hasButtons = !!msg.buttons;
+  if (opacity <= 0) return null;
   return (
     <div
       style={{
-        alignSelf: isUser ? "flex-end" : "flex-start",
-        maxWidth: isUser ? "75%" : hasButtons ? "100%" : "85%",
-        width: hasButtons ? "100%" : undefined,
+        position: "absolute",
+        bottom: 100,
+        left: 40,
+        right: 40,
+        display: "flex",
+        justifyContent: "center",
         opacity,
+        zIndex: 10,
       }}
     >
       <div
         style={{
-          backgroundColor: isUser
-            ? "#007AFF"
-            : msg.isSuccess
-              ? "#E8F5E9"
-              : "#F0F0F2",
-          borderRadius: isUser ? "20px 20px 0 20px" : "0 20px 20px 20px",
-          borderLeft: msg.isSuccess ? "3px solid #34C759" : "none",
-          padding: "16px 20px",
+          padding: "16px 36px",
+          borderRadius: 20,
+          backgroundColor: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(12px)",
         }}
       >
         <span
           style={{
-            fontFamily: msg.role === "user" ? fontFamilyMono : fontFamilyInter,
-            fontSize: 28,
-            color: isUser ? "#FFF" : "#1C1C1E",
-            lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
+            fontFamily: fontFamilyInter,
+            fontSize: 32,
+            fontWeight: 700,
+            color: "#FFFFFF",
+            letterSpacing: "-0.01em",
           }}
         >
-          {msg.text}
+          {text}
         </span>
       </div>
-      {msg.buttons && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-            marginTop: 14,
-          }}
-        >
-          {msg.buttons.map((row, ri) => (
-            <div key={ri} style={{ display: "flex", gap: 10 }}>
-              {row.map((btn, bi) => (
-                <div
-                  key={bi}
-                  style={{
-                    flex: 1,
-                    padding: "14px 10px",
-                    borderRadius: 14,
-                    textAlign: "center",
-                    backgroundColor:
-                      btn === msg.highlight ? "#007AFF" : "#E8E8ED",
-                    fontFamily: fontFamilyInter,
-                    fontSize: 24,
-                    fontWeight: 600,
-                    color: btn === msg.highlight ? "#FFF" : "#1C1C1E",
-                  }}
-                >
-                  {btn}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
 
 // ══════════════════════════════════════════
-// Moment 1: Solo multi-project command
-// ══════════════════════════════════════════
-
-const MOMENT1_MSGS: SimpleBubble[] = [
-  { role: "user", text: "@商城_bot 支付超时改成 60s" },
-  { role: "user", text: "@官网_bot hero 文案换春季版" },
-  { role: "user", text: "@小程序_bot 适配暗黑模式" },
-  {
-    role: "bot",
-    text: "✅ 超时已修改，测试通过",
-    nameLabel: "商城_bot",
-    isSuccess: true,
-  },
-  {
-    role: "bot",
-    text: "✅ 文案已更新",
-    nameLabel: "官网_bot",
-    isSuccess: true,
-  },
-  {
-    role: "bot",
-    text: "✅ 12 个组件已适配",
-    nameLabel: "小程序_bot",
-    isSuccess: true,
-  },
-];
-
-// ══════════════════════════════════════════
-// Moment 2: Team collaboration
-// ══════════════════════════════════════════
-
-const MOMENT2_MSGS: SimpleBubble[] = [
-  {
-    role: "user",
-    text: "@商城_bot 支付接口加个重试逻辑",
-    nameLabel: "Leo",
-  },
-  {
-    role: "user",
-    text: "@官网_bot 落地页文案换成五一活动的",
-    nameLabel: "Nova",
-  },
-  {
-    role: "bot",
-    text: "✅ 已添加 retry，3 个测试通过",
-    nameLabel: "商城_bot",
-    isSuccess: true,
-  },
-  {
-    role: "user",
-    text: "官网的 banner 我做好了，等会儿发",
-    nameLabel: "Momo",
-  },
-  {
-    role: "bot",
-    text: "✅ 文案已更新，CTA 同步调整",
-    nameLabel: "官网_bot",
-    isSuccess: true,
-  },
-];
-
-// ══════════════════════════════════════════
-// Moment 3: Master bot menu flow
-// ══════════════════════════════════════════
-
-const MOMENT3_MSGS: MenuMsg[] = [
-  { role: "user", text: "/menu" },
-  {
-    role: "bot",
-    text: "🤖 Claude Crew\n━━━━━━━━━━\n🟢 3 个项目在线",
-    buttons: [
-      ["🤖 Bots", "⚙️ Config"],
-      ["📊 Status", "🔄 Restart"],
-    ],
-    highlight: "🤖 Bots",
-  },
-  {
-    role: "bot",
-    text: "✅ @电商_bot 已添加！\n📂 电商项目 → ~/projects/shop",
-    isSuccess: true,
-    buttons: [["🔄 重启生效"]],
-    highlight: "🔄 重启生效",
-  },
-];
-
-// ══════════════════════════════════════════
-// Main scene component
+// Scene 6: Product Introduction
+//
+// 0-2s:    "Claude Code 用户都有一个问题。"
+// 2-4s:    "多项目 = 多终端 = 碎片化。"
+// 4-6s:    "如果所有项目，都在一个 Telegram 群里？"
+// 6-10s:   Scene1 team chat + overlay "任务·进度·结果·讨论，同一条时间线"
+// 10-13s:  Scene4 solo command + overlay "@mention 路由，多项目零切换"
+// 13-15s:  "一个进程，后台常驻，永不掉线。"
+// 15-17s:  "独立短进程，上下文不膨胀。"
+// 17-19s:  "项目记忆持久化，重启不失忆。"
+// 19-22s:  CTA
+// 22-25s:  GitHub
 // ══════════════════════════════════════════
 
 export const Scene6_ProductIntro: React.FC = () => {
   const frame = useCurrentFrame();
+  const { chat } = CONFIG;
+  const chatLeft = (W - chat.width) / 2;
 
-  // ── Moment 1 timing (3-7s) ──
-  const m1FadeIn = interpolate(frame, [sec(2.8), sec(2.95)], [0, 1], {
+  // ── Moment A: team chat (6-10s) ──
+  const momentAOp = interpolate(frame, [sec(6), sec(6.15)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const m1FadeOut = interpolate(frame, [sec(6.8), sec(6.95)], [1, 0], {
+  const momentAOut = interpolate(frame, [sec(9.8), sec(9.95)], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const showM1 = frame >= sec(2.7) && frame < sec(7.2);
+  const showA = frame >= sec(5.9) && frame < sec(10.2);
 
-  // ── Moment 2 timing (7-12s) ──
-  const m2FadeIn = interpolate(frame, [sec(7.0), sec(7.15)], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const m2FadeOut = interpolate(frame, [sec(11.8), sec(11.95)], [1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const showM2 = frame >= sec(6.9) && frame < sec(12.2);
-
-  // ── Moment 3 timing (12-16s) ──
-  const m3FadeIn = interpolate(frame, [sec(12.0), sec(12.15)], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const m3FadeOut = interpolate(frame, [sec(15.8), sec(15.95)], [1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const showM3 = frame >= sec(11.9) && frame < sec(16.2);
-
-  // ── Pill opacities (synced with each moment) ──
-  const pill1Op = interpolate(
+  const overlayAOp = interpolate(
     frame,
-    [sec(3.5), sec(3.65), sec(6.5), sec(6.65)],
-    [0, 1, 1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-  const pill2Op = interpolate(
-    frame,
-    [sec(7.5), sec(7.65), sec(11.5), sec(11.65)],
-    [0, 1, 1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-  const pill3Op = interpolate(
-    frame,
-    [sec(12.5), sec(12.65), sec(15.5), sec(15.65)],
+    [sec(7), sec(7.3), sec(9.5), sec(9.8)],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // ── Message stagger base frames ──
-  const m1Base = sec(3.0);
-  const m2Base = sec(7.2);
-  const m3Base = sec(12.2);
+  // ── Moment B: solo command (10-13s) ──
+  const momentBOp = interpolate(frame, [sec(10), sec(10.15)], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const momentBOut = interpolate(frame, [sec(12.8), sec(12.95)], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const showB = frame >= sec(9.9) && frame < sec(13.2);
+
+  const overlayBOp = interpolate(
+    frame,
+    [sec(11), sec(11.3), sec(12.5), sec(12.8)],
+    [0, 1, 1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
 
   return (
     <AbsoluteFill style={{ backgroundColor: CONFIG.background }}>
-      {/* ── Opening: ProjectBadge + text (0-3s) ── */}
-      <ProjectBadge
-        opacity={interpolate(
-          frame,
-          [0, sec(0.2), sec(2.5), sec(2.7)],
-          [0, 1, 1, 0],
-          { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-        )}
-        textBlockHeight={300}
-      />
-
+      {/* ── Text card 1: Hook ── */}
       <AppleTextCard
         lines={[
           {
             segments: [
-              { text: "只需" },
+              { text: "Claude Code", color: "#007AFF" },
+              { text: " 用户" },
+            ],
+            fontSize: 80,
+          },
+          { text: "都有一个问题。", fontSize: 80 },
+        ]}
+        startTime={0.2}
+        fadeOutTime={1.8}
+        lineDelay={18}
+      />
+
+      {/* ── Text card 2: Problem ── */}
+      <AppleTextCard
+        lines={[
+          {
+            segments: [
+              { text: "多项目", color: "#007AFF" },
+              { text: " = 多终端" },
+            ],
+            fontSize: 80,
+          },
+          {
+            segments: [
+              { text: "= " },
+              { text: "碎片化", color: "#007AFF" },
+              { text: "。" },
+            ],
+            fontSize: 80,
+          },
+        ]}
+        startTime={2.2}
+        fadeOutTime={3.8}
+        lineDelay={18}
+      />
+
+      {/* ── Text card 3: Solution tease ── */}
+      <AppleTextCard
+        lines={[
+          { text: "如果所有项目，", fontSize: 72 },
+          { text: "都在一个", fontSize: 72 },
+          {
+            segments: [
+              { text: "Telegram 群", color: "#007AFF" },
+              { text: "里？" },
+            ],
+            fontSize: 72,
+          },
+        ]}
+        startTime={4.2}
+        fadeOutTime={5.8}
+        lineDelay={16}
+      />
+
+      {/* ── Moment A: Team collaboration (Scene 1 data) ── */}
+      {showA && (
+        <div style={{ opacity: momentAOp * momentAOut }}>
+          <Camera positions={MOMENT_A_POS}>
+            <GlassBackground>
+              <div
+                style={{
+                  position: "absolute",
+                  left: chatLeft,
+                  top: 20,
+                  width: chat.width,
+                  background: "rgba(255,255,255,0.72)",
+                  backdropFilter: "blur(40px) saturate(1.8)",
+                  WebkitBackdropFilter: "blur(40px) saturate(1.8)",
+                  borderRadius: 24,
+                  boxShadow:
+                    "0 2px 24px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.08)",
+                  border: "1px solid rgba(255,255,255,0.6)",
+                  overflow: "hidden",
+                }}
+              >
+                <ChatHeader />
+                <div style={{ padding: "0" }}>
+                  <MessageList bubbles={MOMENT_A_BUBBLES} />
+                </div>
+              </div>
+            </GlassBackground>
+          </Camera>
+          <OverlayText
+            text="任务 · 进度 · 结果 · 讨论，同一条时间线"
+            opacity={overlayAOp}
+          />
+        </div>
+      )}
+
+      {/* ── Moment B: Solo multi-project (Scene 4 data) ── */}
+      {showB && (
+        <div style={{ opacity: momentBOp * momentBOut }}>
+          <Camera positions={MOMENT_B_POS}>
+            <GlassBackground>
+              <div
+                style={{
+                  position: "absolute",
+                  left: chatLeft,
+                  top: 20,
+                  width: chat.width,
+                  background: "rgba(255,255,255,0.72)",
+                  backdropFilter: "blur(40px) saturate(1.8)",
+                  WebkitBackdropFilter: "blur(40px) saturate(1.8)",
+                  borderRadius: 24,
+                  boxShadow:
+                    "0 2px 24px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.08)",
+                  border: "1px solid rgba(255,255,255,0.6)",
+                  overflow: "hidden",
+                }}
+              >
+                <ChatHeader />
+                <div style={{ padding: "0" }}>
+                  <MessageList bubbles={MOMENT_B_BUBBLES} />
+                </div>
+              </div>
+            </GlassBackground>
+          </Camera>
+          <OverlayText
+            text="@mention 路由，多项目零切换"
+            opacity={overlayBOp}
+          />
+        </div>
+      )}
+
+      {/* ── Text card 4: Always online ── */}
+      <AppleTextCard
+        lines={[
+          {
+            segments: [
               { text: "一个进程", color: "#007AFF" },
-              { text: " + " },
-              { text: "一个 bot", color: "#007AFF" },
+              { text: "，" },
+            ],
+            fontSize: 80,
+          },
+          { text: "后台常驻，", fontSize: 80 },
+          {
+            segments: [
+              { text: "永不掉线", color: "#007AFF" },
+              { text: "。" },
+            ],
+            fontSize: 80,
+          },
+        ]}
+        startTime={13.2}
+        fadeOutTime={14.8}
+        lineDelay={14}
+      />
+
+      {/* ── Text card 5: Context ── */}
+      <AppleTextCard
+        lines={[
+          {
+            segments: [
+              { text: "独立短进程", color: "#007AFF" },
               { text: "，" },
             ],
             fontSize: 72,
           },
-          {
-            text: "你将拥有永不掉线的",
-            fontSize: 56,
-            color: "#8E8E93",
-          },
-          {
-            segments: [{ text: "Claude Code", color: "#007AFF" }],
-            fontSize: 72,
-          },
-          { text: "多项目远程集群管理系统。", fontSize: 72 },
+          { text: "上下文不膨胀。", fontSize: 72 },
         ]}
-        startTime={0.3}
-        fadeOutTime={2.8}
+        startTime={15.2}
+        fadeOutTime={16.8}
+        lineDelay={14}
       />
 
-      {/* ── Moment 1: Solo multi-project (3-7s) ── */}
-      {showM1 && (
-        <div style={{ opacity: m1FadeIn * m1FadeOut }}>
-          <GlassBackground>
-            <div style={chatContainerStyle}>
-              <GroupHeader
-                title="我的项目群"
-                subtitle="商城_bot, 官网_bot, 小程序_bot"
-                avatarText="💼"
-                gradient="linear-gradient(135deg, #FFD700, #FFA500)"
-                shadowColor="rgba(255,165,0,0.3)"
-              />
-              <div
-                style={{
-                  padding: "16px 20px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 18,
-                }}
-              >
-                {MOMENT1_MSGS.map((msg, i) => {
-                  const msgFrame = m1Base + i * 18;
-                  const msgOp = interpolate(frame - msgFrame, [0, 5], [0, 1], {
-                    extrapolateLeft: "clamp",
-                    extrapolateRight: "clamp",
-                  });
-                  if (msgOp <= 0) return null;
-                  return (
-                    <ChatBubbleInline key={i} msg={msg} opacity={msgOp} />
-                  );
-                })}
-              </div>
-            </div>
-            <OverlayPill
-              text="一个群 @mention，多项目并行"
-              opacity={pill1Op}
-            />
-          </GlassBackground>
-        </div>
-      )}
-
-      {/* ── Moment 2: Team collaboration (7-12s) ── */}
-      {showM2 && (
-        <div style={{ opacity: m2FadeIn * m2FadeOut }}>
-          <GlassBackground>
-            <div style={chatContainerStyle}>
-              <GroupHeader
-                title="claude-crew"
-                subtitle="Leo, Nova, Momo + 3 bots"
-                avatarText="CC"
-                gradient="linear-gradient(135deg, #007AFF, #0055CC)"
-                shadowColor="rgba(0,122,255,0.3)"
-              />
-              <div
-                style={{
-                  padding: "16px 20px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 18,
-                }}
-              >
-                {MOMENT2_MSGS.map((msg, i) => {
-                  const msgFrame = m2Base + i * 20;
-                  const msgOp = interpolate(frame - msgFrame, [0, 5], [0, 1], {
-                    extrapolateLeft: "clamp",
-                    extrapolateRight: "clamp",
-                  });
-                  if (msgOp <= 0) return null;
-
-                  // Team members on left side, bot results on left too
-                  const isTeamUser =
-                    msg.role === "user" &&
-                    msg.nameLabel !== undefined &&
-                    !msg.isSuccess;
-
-                  return (
-                    <ChatBubbleInline
-                      key={i}
-                      msg={{
-                        ...msg,
-                        // Team members show on left side
-                        role: isTeamUser ? "bot" : msg.role,
-                      }}
-                      opacity={msgOp}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-            <OverlayPill
-              text="全员同一条时间线"
-              opacity={pill2Op}
-            />
-          </GlassBackground>
-        </div>
-      )}
-
-      {/* ── Moment 3: Mobile 30s setup (12-16s) ── */}
-      {showM3 && (
-        <div style={{ opacity: m3FadeIn * m3FadeOut }}>
-          <GlassBackground>
-            <div style={chatContainerStyle}>
-              <GroupHeader
-                title="Master Bot"
-                subtitle="claude-crew 管理中心"
-                avatarText="👑"
-                gradient="linear-gradient(135deg, #007AFF, #5856D6)"
-                shadowColor="rgba(0,122,255,0.3)"
-              />
-              <div
-                style={{
-                  padding: "16px 20px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 20,
-                }}
-              >
-                {MOMENT3_MSGS.map((msg, i) => {
-                  const msgFrame = m3Base + i * 24;
-                  const msgOp = interpolate(frame - msgFrame, [0, 5], [0, 1], {
-                    extrapolateLeft: "clamp",
-                    extrapolateRight: "clamp",
-                  });
-                  if (msgOp <= 0) return null;
-                  return <MenuBubble key={i} msg={msg} opacity={msgOp} />;
-                })}
-              </div>
-            </div>
-            <OverlayPill
-              text="手机 30s 开新项目"
-              opacity={pill3Op}
-            />
-          </GlassBackground>
-        </div>
-      )}
-
-      {/* ── Closing text (16-20s) ── */}
+      {/* ── Text card 6: Memory ── */}
       <AppleTextCard
         lines={[
           {
-            text: "来认识一下可能是目前",
-            fontSize: 56,
-            color: "#8E8E93",
+            segments: [
+              { text: "项目记忆", color: "#007AFF" },
+              { text: "持久化，" },
+            ],
+            fontSize: 72,
           },
+          { text: "重启不失忆。", fontSize: 72 },
+        ]}
+        startTime={17.2}
+        fadeOutTime={18.8}
+        lineDelay={14}
+      />
+
+      {/* ── CTA ── */}
+      <AppleTextCard
+        lines={[
+          { text: "来认识一下可能是目前", fontSize: 56, color: "#8E8E93" },
           {
             segments: [
               { text: "最佳的 " },
@@ -660,12 +407,13 @@ export const Scene6_ProductIntro: React.FC = () => {
           },
           { text: "远程解决方案。🚢", fontSize: 72 },
         ]}
-        startTime={16.5}
-        fadeOutTime={20}
+        startTime={19.2}
+        fadeOutTime={21.5}
+        lineDelay={18}
       />
 
-      {/* ── GitHub card (20-25s) ── */}
-      <GitHubCard startTime={20.5} />
+      {/* ── GitHub card ── */}
+      <GitHubCard startTime={22} />
     </AbsoluteFill>
   );
 };
