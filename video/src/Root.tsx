@@ -7,6 +7,10 @@ import {
   Scene2_BotIdentity,
   SCENE2_DURATION,
 } from "./scenes/Scene2_BotIdentity";
+import {
+  Scene4_SoloCommander,
+  SCENE4_DURATION,
+} from "./scenes/Scene4_SoloCommander";
 
 const FPS = CONFIG.fps;
 const W = CONFIG.canvas.width;
@@ -34,6 +38,16 @@ export const RemotionRoot: React.FC = () => {
         width={W}
         height={H}
       />
+      {/* Scene 4: Solo Commander */}
+      <Composition
+        id="Scene4-SoloCommander"
+        component={Scene4_SoloCommander}
+        durationInFrames={FPS * SCENE4_DURATION}
+        fps={FPS}
+        width={W}
+        height={H}
+      />
+
       {/* Scene 2: One Bot = Many Identities */}
       <Composition
         id="Scene2-BotIdentity"
