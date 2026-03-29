@@ -21,7 +21,7 @@ const H = CONFIG.canvas.height;
 // Take Phase 1-7 (full team content) for maximum density
 // ══════════════════════════════════════════
 const MOMENT_A_START = 6.2;
-const MOMENT_A_PACE = 0.28; // fast to fit all Phase 1-7
+const MOMENT_A_PACE = 0.5;
 
 const MOMENT_A_BUBBLES = BUBBLES.filter((b) => {
   const p = b.phase;
@@ -44,7 +44,7 @@ const MOMENT_A_POS = computePositions(MOMENT_A_BUBBLES);
 // Reuse Scene 4 data (solo commander) for Moment B
 // ══════════════════════════════════════════
 const MOMENT_B_START = 10.2;
-const MOMENT_B_PACE = 0.35;
+const MOMENT_B_PACE = 0.5;
 
 const SCENE4_BUBBLES: Bubble[] = [
   // ── 4 rapid commands ──
@@ -286,7 +286,7 @@ const OverlayText: React.FC<{ text: string; opacity: number }> = ({
 //
 // 0-2s:    "Claude Code 用户都有一个问题。"
 // 2-4s:    "多项目 = 多终端 = 碎片化。"
-// 4-6s:    "如果所有项目，都在一个 Telegram 群里？"
+// 4-6s:    "如果所有项目，都在一个 IM 群里？"
 // 6-10s:   Scene1 team chat + overlay "任务·进度·结果·讨论，同一条时间线"
 // 10-13s:  Scene4 solo command + overlay "@mention 路由，多项目零切换"
 // 13-15s:  "一个进程，后台常驻，永不掉线。"
@@ -386,10 +386,7 @@ export const Scene6_ProductIntro: React.FC = () => {
           { text: "如果所有项目，", fontSize: 72 },
           { text: "都在一个", fontSize: 72 },
           {
-            segments: [
-              { text: "Telegram 群", color: "#007AFF" },
-              { text: "里？" },
-            ],
+            segments: [{ text: "IM 群", color: "#007AFF" }, { text: "里？" }],
             fontSize: 72,
           },
         ]}
