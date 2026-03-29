@@ -23,18 +23,179 @@ const H = CONFIG.canvas.height;
 const MOMENT_A_START = 6.2;
 const MOMENT_A_PACE = 0.65; // comfortable reading pace
 
-const MOMENT_A_BUBBLES = BUBBLES.filter((b) => {
-  const p = b.phase;
-  return (
-    p.startsWith("1-") ||
-    p.startsWith("2-") ||
-    p.startsWith("3-") ||
-    p.startsWith("4-") ||
-    p.startsWith("5-") ||
-    p.startsWith("6-") ||
-    p.startsWith("7-")
-  );
-}).map((b) => ({
+// Extra team bubbles to make the chat denser
+const EXTRA_TEAM: Bubble[] = [
+  // Phase 7 continuation: more cross-project interaction
+  {
+    id: "s6a-kira2",
+    time: 36,
+    sender: "kira",
+    side: "left",
+    type: "chat",
+    nameLabel: "Kira",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "@官网_bot CTA 按钮文案再改一版，突出限时",
+    font: "Inter",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-botB2",
+    time: 37.5,
+    sender: "官网_bot",
+    side: "left",
+    type: "progress",
+    nameLabel: "官网_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#E8EDF2",
+    textColor: "#505055",
+    content: "⚙️ working... (2s)\n → 🔧 Edit: hero-section.tsx",
+    font: "JetBrains Mono",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-leo2",
+    time: 38.5,
+    sender: "leo",
+    side: "left",
+    type: "chat",
+    nameLabel: "Leo",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "商城的 retry 逻辑我看了，建议加个指数退避",
+    font: "Inter",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-you2",
+    time: 39.5,
+    sender: "you",
+    side: "right",
+    type: "reply",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "有道理，@商城_bot 把 retry 改成指数退避",
+    quote: "建议加个指数退避",
+    font: "Inter",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-botA2",
+    time: 41,
+    sender: "商城_bot",
+    side: "left",
+    type: "progress",
+    nameLabel: "商城_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#E8EDF2",
+    textColor: "#505055",
+    content: "⚙️ working... (3s)\n → 🔧 Edit: payment.ts\n → 🔧 Bash: npm test",
+    font: "JetBrains Mono",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-nova2",
+    time: 42,
+    sender: "nova",
+    side: "left",
+    type: "chat",
+    nameLabel: "Nova",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "落地页数据出来了，转化率比上周高 23% 🎉",
+    font: "Inter",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-botB2r",
+    time: 43,
+    sender: "官网_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "官网_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "✅ CTA 按钮已更新：「限时特惠 · 立即抢购」，A/B 两版同步部署",
+    font: "Inter",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-sage2",
+    time: 44.5,
+    sender: "sage",
+    side: "left",
+    type: "message",
+    nameLabel: "Sage",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "@小程序_bot 把转化率数据同步到运营日报里",
+    font: "Inter",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-momo2",
+    time: 45.5,
+    sender: "momo",
+    side: "left",
+    type: "chat",
+    nameLabel: "Momo",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "深色模式的渐变背景版做好了，大家看看",
+    font: "Inter",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-botA2r",
+    time: 46.5,
+    sender: "商城_bot",
+    side: "left",
+    type: "result",
+    nameLabel: "商城_bot",
+    nameColor: "#7A7A80",
+    bubbleColor: "#F0F0F2",
+    textColor: "#1C1C1E",
+    content: "✅ retry 已改为指数退避（1s/2s/4s），8 个测试全部通过",
+    font: "Inter",
+    phase: "7-extra",
+  },
+  {
+    id: "s6a-you3",
+    time: 47.5,
+    sender: "you",
+    side: "right",
+    type: "message",
+    nameColor: "",
+    bubbleColor: "#007AFF",
+    textColor: "#FFFFFF",
+    content: "全部搞定 👏 今天效率爆表",
+    font: "Inter",
+    phase: "7-extra",
+  },
+];
+
+const MOMENT_A_BUBBLES = [
+  ...BUBBLES.filter((b) => {
+    const p = b.phase;
+    return (
+      p.startsWith("1-") ||
+      p.startsWith("2-") ||
+      p.startsWith("3-") ||
+      p.startsWith("4-") ||
+      p.startsWith("5-") ||
+      p.startsWith("6-") ||
+      p.startsWith("7-")
+    );
+  }),
+  ...EXTRA_TEAM,
+].map((b) => ({
   ...b,
   time: MOMENT_A_START + (b.time - 0.5) * MOMENT_A_PACE,
 }));
