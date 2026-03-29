@@ -21,14 +21,14 @@ const H = CONFIG.canvas.height;
 // Take Phase 1-7 (full team content) for maximum density
 // ══════════════════════════════════════════
 const MOMENT_A_START = 6.2;
-const MOMENT_A_PACE = 0.65; // comfortable reading pace
+const MOMENT_A_PACE = 0.35; // fit 31 bubbles in 16s window
 
 // Extra team bubbles to make the chat denser
 const EXTRA_TEAM: Bubble[] = [
   // Continues right after Phase 4 (time ~13.15) for denser packing
   {
     id: "s6a-kira2",
-    time: 14,
+    time: 35,
     sender: "kira",
     side: "left",
     type: "chat",
@@ -42,7 +42,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-botB2",
-    time: 15,
+    time: 36,
     sender: "官网_bot",
     side: "left",
     type: "progress",
@@ -56,7 +56,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-leo2",
-    time: 16,
+    time: 37,
     sender: "leo",
     side: "left",
     type: "chat",
@@ -70,7 +70,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-you2",
-    time: 17,
+    time: 38,
     sender: "you",
     side: "right",
     type: "reply",
@@ -84,7 +84,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-botA2",
-    time: 18,
+    time: 39,
     sender: "商城_bot",
     side: "left",
     type: "progress",
@@ -98,7 +98,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-nova2",
-    time: 19,
+    time: 40,
     sender: "nova",
     side: "left",
     type: "chat",
@@ -112,7 +112,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-botB2r",
-    time: 20,
+    time: 41,
     sender: "官网_bot",
     side: "left",
     type: "result",
@@ -126,7 +126,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-sage2",
-    time: 21,
+    time: 42,
     sender: "sage",
     side: "left",
     type: "message",
@@ -140,7 +140,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-momo2",
-    time: 22,
+    time: 43,
     sender: "momo",
     side: "left",
     type: "chat",
@@ -154,7 +154,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-botA2r",
-    time: 23,
+    time: 44,
     sender: "商城_bot",
     side: "left",
     type: "result",
@@ -168,7 +168,7 @@ const EXTRA_TEAM: Bubble[] = [
   },
   {
     id: "s6a-you3",
-    time: 24,
+    time: 45,
     sender: "you",
     side: "right",
     type: "message",
