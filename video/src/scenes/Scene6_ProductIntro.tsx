@@ -175,7 +175,7 @@ const ChatBubbleInline: React.FC<{
   fontSize?: number;
 }> = ({ msg, opacity, fontSize = 28 }) => {
   const isUser = msg.role === "user";
-  const isSuccess = msg.isSuccess ?? msg.text.startsWith("\u2705");
+  const isSuccess = msg.isSuccess ?? msg.text.startsWith("✅");
 
   return (
     <div
@@ -321,25 +321,25 @@ const MenuBubble: React.FC<{ msg: MenuMsg; opacity: number }> = ({
 // ══════════════════════════════════════════
 
 const MOMENT1_MSGS: SimpleBubble[] = [
-  { role: "user", text: "@\u5546\u57CE_bot \u652F\u4ED8\u8D85\u65F6\u6539\u6210 60s" },
-  { role: "user", text: "@\u5B98\u7F51_bot hero \u6587\u6848\u6362\u6625\u5B63\u7248" },
-  { role: "user", text: "@\u5C0F\u7A0B\u5E8F_bot \u9002\u914D\u6697\u9ED1\u6A21\u5F0F" },
+  { role: "user", text: "@商城_bot 支付超时改成 60s" },
+  { role: "user", text: "@官网_bot hero 文案换春季版" },
+  { role: "user", text: "@小程序_bot 适配暗黑模式" },
   {
     role: "bot",
-    text: "\u2705 \u8D85\u65F6\u5DF2\u4FEE\u6539\uFF0C\u6D4B\u8BD5\u901A\u8FC7",
-    nameLabel: "\u5546\u57CE_bot",
+    text: "✅ 超时已修改，测试通过",
+    nameLabel: "商城_bot",
     isSuccess: true,
   },
   {
     role: "bot",
-    text: "\u2705 \u6587\u6848\u5DF2\u66F4\u65B0",
-    nameLabel: "\u5B98\u7F51_bot",
+    text: "✅ 文案已更新",
+    nameLabel: "官网_bot",
     isSuccess: true,
   },
   {
     role: "bot",
-    text: "\u2705 12 \u4E2A\u7EC4\u4EF6\u5DF2\u9002\u914D",
-    nameLabel: "\u5C0F\u7A0B\u5E8F_bot",
+    text: "✅ 12 个组件已适配",
+    nameLabel: "小程序_bot",
     isSuccess: true,
   },
 ];
@@ -351,29 +351,29 @@ const MOMENT1_MSGS: SimpleBubble[] = [
 const MOMENT2_MSGS: SimpleBubble[] = [
   {
     role: "user",
-    text: "@\u5546\u57CE_bot \u652F\u4ED8\u63A5\u53E3\u52A0\u4E2A\u91CD\u8BD5\u903B\u8F91",
+    text: "@商城_bot 支付接口加个重试逻辑",
     nameLabel: "Leo",
   },
   {
     role: "user",
-    text: "@\u5B98\u7F51_bot \u843D\u5730\u9875\u6587\u6848\u6362\u6210\u4E94\u4E00\u6D3B\u52A8\u7684",
+    text: "@官网_bot 落地页文案换成五一活动的",
     nameLabel: "Nova",
   },
   {
     role: "bot",
-    text: "\u2705 \u5DF2\u6DFB\u52A0 retry\uFF0C3 \u4E2A\u6D4B\u8BD5\u901A\u8FC7",
-    nameLabel: "\u5546\u57CE_bot",
+    text: "✅ 已添加 retry，3 个测试通过",
+    nameLabel: "商城_bot",
     isSuccess: true,
   },
   {
     role: "user",
-    text: "\u5B98\u7F51\u7684 banner \u6211\u505A\u597D\u4E86\uFF0C\u7B49\u4F1A\u513F\u53D1",
+    text: "官网的 banner 我做好了，等会儿发",
     nameLabel: "Momo",
   },
   {
     role: "bot",
-    text: "\u2705 \u6587\u6848\u5DF2\u66F4\u65B0\uFF0CCTA \u540C\u6B65\u8C03\u6574",
-    nameLabel: "\u5B98\u7F51_bot",
+    text: "✅ 文案已更新，CTA 同步调整",
+    nameLabel: "官网_bot",
     isSuccess: true,
   },
 ];
@@ -386,19 +386,19 @@ const MOMENT3_MSGS: MenuMsg[] = [
   { role: "user", text: "/menu" },
   {
     role: "bot",
-    text: "\uD83E\uDD16 Claude Crew\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\uD83D\uDFE2 3 \u4E2A\u9879\u76EE\u5728\u7EBF",
+    text: "🤖 Claude Crew\n━━━━━━━━━━\n🟢 3 个项目在线",
     buttons: [
-      ["\uD83E\uDD16 Bots", "\u2699\uFE0F Config"],
-      ["\uD83D\uDCCA Status", "\uD83D\uDD04 Restart"],
+      ["🤖 Bots", "⚙️ Config"],
+      ["📊 Status", "🔄 Restart"],
     ],
-    highlight: "\uD83E\uDD16 Bots",
+    highlight: "🤖 Bots",
   },
   {
     role: "bot",
-    text: "\u2705 @\u7535\u5546_bot \u5DF2\u6DFB\u52A0\uFF01\n\uD83D\uDCC2 \u7535\u5546\u9879\u76EE \u2192 ~/projects/shop",
+    text: "✅ @电商_bot 已添加！\n📂 电商项目 → ~/projects/shop",
     isSuccess: true,
-    buttons: [["\uD83D\uDD04 \u91CD\u542F\u751F\u6548"]],
-    highlight: "\uD83D\uDD04 \u91CD\u542F\u751F\u6548",
+    buttons: [["🔄 重启生效"]],
+    highlight: "🔄 重启生效",
   },
 ];
 
@@ -484,16 +484,16 @@ export const Scene6_ProductIntro: React.FC = () => {
         lines={[
           {
             segments: [
-              { text: "\u53EA\u9700" },
-              { text: "\u4E00\u4E2A\u8FDB\u7A0B", color: "#007AFF" },
+              { text: "只需" },
+              { text: "一个进程", color: "#007AFF" },
               { text: " + " },
-              { text: "\u4E00\u4E2A bot", color: "#007AFF" },
-              { text: "\uFF0C" },
+              { text: "一个 bot", color: "#007AFF" },
+              { text: "，" },
             ],
             fontSize: 72,
           },
           {
-            text: "\u4F60\u5C06\u62E5\u6709\u6C38\u4E0D\u6389\u7EBF\u7684",
+            text: "你将拥有永不掉线的",
             fontSize: 56,
             color: "#8E8E93",
           },
@@ -501,7 +501,7 @@ export const Scene6_ProductIntro: React.FC = () => {
             segments: [{ text: "Claude Code", color: "#007AFF" }],
             fontSize: 72,
           },
-          { text: "\u591A\u9879\u76EE\u8FDC\u7A0B\u96C6\u7FA4\u7BA1\u7406\u7CFB\u7EDF\u3002", fontSize: 72 },
+          { text: "多项目远程集群管理系统。", fontSize: 72 },
         ]}
         startTime={0.3}
         fadeOutTime={2.8}
@@ -513,9 +513,9 @@ export const Scene6_ProductIntro: React.FC = () => {
           <GlassBackground>
             <div style={chatContainerStyle}>
               <GroupHeader
-                title="\u6211\u7684\u9879\u76EE\u7FA4"
-                subtitle="\u5546\u57CE_bot, \u5B98\u7F51_bot, \u5C0F\u7A0B\u5E8F_bot"
-                avatarText="\uD83D\uDCBC"
+                title="我的项目群"
+                subtitle="商城_bot, 官网_bot, 小程序_bot"
+                avatarText="💼"
                 gradient="linear-gradient(135deg, #FFD700, #FFA500)"
                 shadowColor="rgba(255,165,0,0.3)"
               />
@@ -541,7 +541,7 @@ export const Scene6_ProductIntro: React.FC = () => {
               </div>
             </div>
             <OverlayPill
-              text="\u4E00\u4E2A\u7FA4 @mention\uFF0C\u591A\u9879\u76EE\u5E76\u884C"
+              text="一个群 @mention，多项目并行"
               opacity={pill1Op}
             />
           </GlassBackground>
@@ -597,7 +597,7 @@ export const Scene6_ProductIntro: React.FC = () => {
               </div>
             </div>
             <OverlayPill
-              text="\u5168\u5458\u540C\u4E00\u6761\u65F6\u95F4\u7EBF"
+              text="全员同一条时间线"
               opacity={pill2Op}
             />
           </GlassBackground>
@@ -611,8 +611,8 @@ export const Scene6_ProductIntro: React.FC = () => {
             <div style={chatContainerStyle}>
               <GroupHeader
                 title="Master Bot"
-                subtitle="claude-crew \u7BA1\u7406\u4E2D\u5FC3"
-                avatarText="\uD83D\uDC51"
+                subtitle="claude-crew 管理中心"
+                avatarText="👑"
                 gradient="linear-gradient(135deg, #007AFF, #5856D6)"
                 shadowColor="rgba(0,122,255,0.3)"
               />
@@ -636,7 +636,7 @@ export const Scene6_ProductIntro: React.FC = () => {
               </div>
             </div>
             <OverlayPill
-              text="\u624B\u673A 30s \u5F00\u65B0\u9879\u76EE"
+              text="手机 30s 开新项目"
               opacity={pill3Op}
             />
           </GlassBackground>
@@ -647,18 +647,18 @@ export const Scene6_ProductIntro: React.FC = () => {
       <AppleTextCard
         lines={[
           {
-            text: "\u6765\u8BA4\u8BC6\u4E00\u4E0B\u53EF\u80FD\u662F\u76EE\u524D",
+            text: "来认识一下可能是目前",
             fontSize: 56,
             color: "#8E8E93",
           },
           {
             segments: [
-              { text: "\u6700\u4F73\u7684 " },
+              { text: "最佳的 " },
               { text: "Claude Code", color: "#007AFF" },
             ],
             fontSize: 72,
           },
-          { text: "\u8FDC\u7A0B\u89E3\u51B3\u65B9\u6848\u3002\uD83D\uDEA2", fontSize: 72 },
+          { text: "远程解决方案。🚢", fontSize: 72 },
         ]}
         startTime={16.5}
         fadeOutTime={20}
