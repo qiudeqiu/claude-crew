@@ -13,7 +13,7 @@
 
 **Claude Code — Every Project, Anywhere.**
 
-Bring the full power of Claude Code to multi-project remote management and team collaboration — from one Telegram group.
+Bring the full power of Claude Code to multi-project remote management and team collaboration — from one group chat.
 
 Manage all your projects solo, or collaborate with your team — each project gets a dedicated bot, @mention to dispatch, everything happens in a single shared timeline. Your **master bot** is the control center: add project bots, configure settings, manage team access, and monitor everything from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code on @mention. One group, all projects, everyone in their lane.
 
