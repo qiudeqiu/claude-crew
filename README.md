@@ -44,8 +44,11 @@ All requests, progress, results, and team discussions flow through one timeline.
 | **Access Level** | What the bot CAN do | `readWrite` — full access · `readOnly` — read, search, analyze only |
 | **Permission Mode** | How writes are authorized | `approve` (default) — button confirmation in chat · `auto` — Claude's safety classifier · `allowAll` — pre-authorized |
 | **User Access** | Who can use each bot | `admins` — all bots · `allowedUsers` — per-bot member list · others — rejected with hint |
+| **Multi-sig approval** | How many people must confirm | `approvalRequired: 2` — button shows "Allow (1/2)", resolves only when enough people approve |
+| **Approval delegation** | Temporary approval rights | `/delegate @user 2h` — grants approval power, auto-expires |
+| **Write-op voting** | Team review for code changes | When enabled, bot results that modified files get [Adjust] [Confirm] buttons with configurable voter threshold |
 
-All configurable globally or per-bot, from button menus on your phone. Sensitive project? Set `readOnly`. Trusted solo project? Set `allowAll`. Team project? Set `approve` so writes require explicit confirmation in the group chat.
+All configurable globally or per-bot, from button menus on your phone. Sensitive project? Set `readOnly`. Trusted solo project? Set `allowAll`. Team project? Set `approve` with multi-sig so writes require multiple people to confirm.
 
 ### Phone-first management
 
@@ -59,6 +62,8 @@ Background daemon with watchdog auto-restart and auto-start on login. No tmux, n
 
 Each bot remembers its project's state across sessions through three layers: `--continue` resumes the last conversation, periodic memory saves persist key context to disk, and the pinned dashboard shows every project's git branch, last commit, context usage, and cost at a glance. No matter who changed what or when — open the group and you're up to date.
 
+Use `/new` to reset when context gets stale, `/compact` to compress without losing key info, `/model` and `/effort` to tune per task, `/cost` and `/status` to monitor — all from chat, zero token overhead.
+
 ### Solves real pain points
 
 | Common pain points with other solutions | How claude-crew solves it |
@@ -71,6 +76,7 @@ Each bot remembers its project's state across sessions through three layers: `--
 | Context bloats after a day of use | Independent short-process sessions, periodic memory saves |
 | Restart = lost context | Conversation files + memory files persist on disk |
 | Headless server auth fails | Supports API key — no browser needed |
+| Bot rejects when busy | Task queue — shows position, auto-processes when ready |
 
 ## Table of Contents
 
@@ -572,7 +578,16 @@ No analytics, no telemetry, no cloud sync, no remote database.
 
 ## 📋 Changelog
 
-### v0.2.0 — Multi-project cluster management (current)
+### v0.3.0 — Core experience enhancement (current)
+
+- **Slash commands**: `/new` (reset session), `/compact` (compress context), `/model` (switch model), `/effort` (thinking depth), `/cost` (spend stats), `/memory` (view CLAUDE.md), `/status` (bot state) — all handled at daemon level, most cost zero tokens
+- **Task queue**: busy bot queues tasks instead of rejecting — shows queue position and processes automatically when ready
+- **Write-op voting**: results that modify files automatically get [Adjust] [Confirm] buttons — configurable voters and threshold
+- **Multi-sig approval**: approve mode supports requiring N people to confirm — button shows "Allow (1/2)", resolves when threshold met
+- **Approval delegation**: `/delegate @user 2h` grants temporary approval rights — auto-expires
+- **Context warning**: auto-warns at 80% context usage, auto-compacts at 95% with group notification
+
+### v0.2.0 — Multi-project cluster management
 
 - **@mention routing**: one bot per project, @mention to switch, all in one group chat
 - **Button menus**: add bots, configure settings, manage users — entirely from your phone
