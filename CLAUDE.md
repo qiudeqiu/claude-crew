@@ -9,6 +9,10 @@ The GitHub repo contains ONLY open-source project code and user-facing documenta
 - **Before every git add**: verify no internal files are staged. When in doubt, check .gitignore.
 - **New directories**: if creating a new directory for internal use, add it to .gitignore immediately.
 
+## Iron Rule: Changelog Sync
+
+After completing a version milestone (v0.3, v0.4, etc.) per the roadmap, summarize all changes and append a new version section to the Changelog in both README.md and README_CN.md. Keep existing version entries. Format follows the v0.2.0 entry as template.
+
 ## Iron Rule: README Sync
 
 After every code change, check if README.md needs updating. If any feature, configuration, architecture, or behavior described in README.md has changed, update it before considering the task complete.

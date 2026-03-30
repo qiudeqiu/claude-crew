@@ -560,6 +560,25 @@ No analytics, no telemetry, no cloud sync, no remote database.
 - **Process supervision**: watchdog auto-restarts on crash, gives up after 5 rapid crashes
 - **Self-restart safety**: when a project bot modifies daemon code, it finishes work and replies before restarting
 
+## 📋 Changelog
+
+### v0.2.0 — Multi-project cluster management (current)
+
+- One daemon manages N project bots with @mention routing in group chat
+- Interactive Telegram button menus: add bots, configure settings, manage users — all from phone
+- Two-layer permission system: accessLevel (readWrite/readOnly) + permissionMode (approve/auto/allowAll), per-bot configurable
+- Real-time tool-level progress streaming via stream-json parsing
+- Pinned dashboard: git branch, last commit, context usage, cost — all projects at a glance
+- Built-in cron scheduler (daily or interval-based)
+- Periodic memory save for project context persistence
+- Daemon with watchdog, PID file, and auto-start on login
+- Security audit: shell injection fixes, env allowlist, path blocking, immutable patterns
+- Bilingual UI (English / Chinese)
+- Auto-append #project hashtag to bot replies for per-project timeline filtering
+- Unauthorized user notification (no longer silent)
+- Default permissionMode changed to `approve` for safer onboarding
+- Supports subscription, API key, and cloud provider (Bedrock/Vertex) authentication
+
 ## 🤝 Contributing
 
 PRs welcome! Please open an issue first to discuss what you'd like to change.

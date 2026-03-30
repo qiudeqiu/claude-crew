@@ -569,6 +569,25 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 - **进程守护**：watchdog 崩溃自动重启，连续崩溃 5 次后放弃
 - **自重启安全**：项目 bot 修改 daemon 代码时，先完成并回复，最后才重启
 
+## 📋 更新日志
+
+### v0.2.0 — 多项目集群管理（当前版本）
+
+- 一个 daemon 管理 N 个项目 bot，群内 @mention 路由
+- Telegram 交互式按钮菜单：加 bot、改配置、管用户 — 全在手机上完成
+- 两层权限系统：accessLevel（读写/只读）+ permissionMode（approve/auto/allowAll），per-bot 可配
+- 实时工具级进度流式输出（stream-json 解析）
+- 置顶仪表盘：git 分支、最新 commit、context 用量、花费 — 所有项目一目了然
+- 内置 cron 定时任务调度（每日定时或间隔触发）
+- 定期 memory save 项目上下文持久化
+- daemon + watchdog + PID file + 开机自启
+- 安全审计：shell 注入修复、环境变量白名单、路径阻断、immutable 重构
+- 双语 UI（中文 / 英文）
+- bot 回复自动追加 #项目名 标签，点击筛选项目时间线
+- 未授权用户 @bot 返回权限提示（不再静默忽略）
+- 默认 permissionMode 改为 `approve`，新用户更安全
+- 支持订阅、API key、云厂商（Bedrock/Vertex）三种认证方式
+
 ## 🤝 参与贡献
 
 欢迎 PR！请先开 issue 讨论你想做的改动。
