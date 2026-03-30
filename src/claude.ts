@@ -31,6 +31,7 @@ export async function runClaude(
     disallowedTools?: string;
     permissionMode?: string;
     model?: string;
+    effort?: string;
     appendSystemPrompt?: string;
     onProgress?: (label: string) => void;
     resume?: boolean;
@@ -39,12 +40,13 @@ export async function runClaude(
   const cmd = [
     "claude",
     "-p",
-    ...(opts.resume !== false ? ["--continue"] : []),
+    ...(opts.resume === false ? [] : ["--continue"]),
     "--verbose",
     "--output-format",
     "stream-json",
     ...(opts.permissionMode ? ["--permission-mode", opts.permissionMode] : []),
     ...(opts.model ? ["--model", opts.model] : []),
+    ...(opts.effort ? ["--effort", opts.effort] : []),
     ...(opts.appendSystemPrompt
       ? ["--append-system-prompt", opts.appendSystemPrompt]
       : []),
@@ -383,6 +385,9 @@ export async function invokeClaudeAndReply(
   const dir = config.assignedPath ?? homedir();
   const mode = getBotPermissionMode(config);
   const botModel = getBotModel(config);
+  const botEffort = managed.effort;
+  const shouldContinue = !managed.skipContinue;
+  managed.skipContinue = false; // reset after reading
   const cfg = getConfig();
 
   const s = setupMsg(getLang());
@@ -427,6 +432,8 @@ export async function invokeClaudeAndReply(
       result = await runClaude(dir, prompt, {
         disallowedTools: READONLY_DISALLOWED,
         model: botModel,
+        effort: botEffort,
+        resume: shouldContinue,
         appendSystemPrompt:
           (systemPrompt ? systemPrompt + "\n\n" : "") +
           "You are in read-only mode. You cannot edit, write, or create files. Only read, search, and analyze.",
@@ -435,6 +442,8 @@ export async function invokeClaudeAndReply(
     } else if (mode === "approve") {
       result = await runClaude(dir, prompt, {
         model: botModel,
+        effort: botEffort,
+        resume: shouldContinue,
         appendSystemPrompt: systemPrompt,
         onProgress: progress.onProgress,
       });
@@ -455,6 +464,7 @@ export async function invokeClaudeAndReply(
             {
               allowedTools: approved,
               model: botModel,
+              effort: botEffort,
               appendSystemPrompt: systemPrompt,
               onProgress: progress.onProgress,
               resume: false,
@@ -472,6 +482,8 @@ export async function invokeClaudeAndReply(
       result = await runClaude(dir, prompt, {
         permissionMode: "auto",
         model: botModel,
+        effort: botEffort,
+        resume: shouldContinue,
         appendSystemPrompt: systemPrompt,
         onProgress: progress.onProgress,
       });
@@ -479,6 +491,8 @@ export async function invokeClaudeAndReply(
       result = await runClaude(dir, prompt, {
         allowedTools: WRITE_TOOLS,
         model: botModel,
+        effort: botEffort,
+        resume: shouldContinue,
         appendSystemPrompt: systemPrompt,
         onProgress: progress.onProgress,
       });

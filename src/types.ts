@@ -40,6 +40,10 @@ export type ManagedBot = {
   contextWindow: number;
   lastModel: string;
   lastCostUSD: number;
+  /** Skip --continue on next invocation (set by /new command) */
+  skipContinue?: boolean;
+  /** Override effort level for next invocation (set by /effort command) */
+  effort?: string;
 };
 
 export type CronJob = {

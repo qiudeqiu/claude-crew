@@ -6,6 +6,7 @@ import { splitMessage, downloadPhoto, transcribeVoice } from "./helpers.js";
 import { pendingApprovals } from "./state.js";
 import { invokeClaudeAndReply } from "./claude.js";
 import { handleMasterCommand } from "./commands.js";
+import { handleBotSlashCommand } from "./bot-commands.js";
 import {
   routeCallback,
   routeText,
@@ -401,9 +402,7 @@ export function setupBot(managed: ManagedBot): void {
       const stripped = text.replace(/@\w+/g, "").trim();
       if (
         /^cron\s/i.test(stripped) ||
-        /^(help|status|setup|bots|config|users|restart|search\s)$/i.test(
-          stripped,
-        )
+        /^(help|setup|bots|config|users|restart|search\s)$/i.test(stripped)
       ) {
         const pool = loadPool();
         const masterName =
@@ -413,6 +412,13 @@ export function setupBot(managed: ManagedBot): void {
           .catch(() => {});
         return;
       }
+    }
+
+    // Project bot slash commands (/new, /compact, /model, /effort, /cost, /memory, /status)
+    {
+      const cmdText = text.replace(/@\w+/g, "").trim().replace(/^\//, "");
+      const handled = await handleBotSlashCommand(managed, chatId, cmdText);
+      if (handled) return;
     }
 
     if (!config.assignedPath && config.role !== "master") {
