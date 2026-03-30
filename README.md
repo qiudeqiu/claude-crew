@@ -474,7 +474,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | `language` | `"en"` | Menu language. `"en"` or `"zh"`. Switchable via menu button. |
 | `memoryIntervalMinutes` | `120` | Auto-save conversation memory for active projects (minutes). `0` = disabled. |
 | `masterExecute` | `false` | Allow master bot to run Claude tasks (not just admin commands). |
-| `maxConcurrent` | `3` | Maximum parallel Claude invocations across all bots. |
+| `maxConcurrent` | `3` | Maximum parallel Claude invocations across all bots. Actual limit depends on your subscription or API quota. |
 | `rateLimitSeconds` | `5` | Minimum gap between invocations for the same bot. |
 | `sessionTimeoutMinutes` | `10` | Claude invocation timeout. |
 | `dashboardIntervalMinutes` | `30` | Dashboard auto-refresh interval. |

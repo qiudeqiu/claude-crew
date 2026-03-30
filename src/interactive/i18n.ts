@@ -327,7 +327,7 @@ export function fieldDesc(lang: Lang) {
         pm: "写操作（文件编辑、Shell 命令）的授权方式",
         al: "机器人在项目中的操作权限",
         me: "允许主控机器人执行 Claude 任务（不仅仅是管理命令）",
-        mc: "所有机器人的最大并行 Claude 调用数。遇到限速时调低此值。",
+        mc: "所有机器人的最大并行 Claude 调用数。不同订阅套餐和 API 计划允许的并发数不同，请以实际使用的模型供应商为准。",
         rl: "同一机器人两次调用之间的最小冷却秒数，防止刷屏。",
         st: "单次 Claude 调用的最大时长（分钟），超时将被终止。",
         di: "置顶看板消息的自动刷新间隔（分钟）。",
@@ -344,7 +344,7 @@ export function fieldDesc(lang: Lang) {
         pm: "How write operations (file edits, shell commands) are authorized",
         al: "What the bot is allowed to do in the project",
         me: "Allow the master bot to run Claude tasks (not just admin commands)",
-        mc: "Maximum parallel Claude invocations across all bots. Lower this if you hit rate limits.",
+        mc: "Maximum parallel Claude invocations across all bots. Actual concurrency depends on your subscription plan or API quota — adjust to match your provider's limits.",
         rl: "Minimum cooldown between invocations for the same bot. Prevents accidental spam.",
         st: "Maximum duration for a single Claude invocation before it's killed.",
         di: "How often the pinned dashboard message auto-refreshes.",
@@ -413,7 +413,7 @@ export function optDesc(lang: Lang) {
 export function fieldHint(lang: Lang) {
   return lang === "zh"
     ? {
-        mc: "推荐: Pro 计划 2-3, Max 计划 3-5",
+        mc: "参考: Pro 2-3, Max 5-10, API 按额度调整",
         rl: "0 = 无冷却, 5 = 推荐默认值",
         st: "10 = 默认值, 长任务可调高",
         di: "30 = 默认值。值越小 API 调用越频繁",
@@ -425,7 +425,7 @@ export function fieldHint(lang: Lang) {
         ar: "1 = 默认（单人审批）, 2+ = 多签",
       }
     : {
-        mc: "Recommended: 2-3 for Pro plan, 3-5 for Max plan",
+        mc: "Reference: Pro 2-3, Max 5-10, API key adjust to your quota",
         rl: "0 = no cooldown, 5 = recommended default",
         st: "10 = default, increase for long-running tasks",
         di: "30 = default. Lower values increase API calls",

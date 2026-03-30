@@ -483,7 +483,7 @@ daemon.sh no-autostart   # 禁用开机自启
 | `language` | `"en"` | 菜单语言。`"en"` 或 `"zh"`。可通过菜单按钮切换。 |
 | `memoryIntervalMinutes` | `120` | 定时记忆间隔（分钟）。`0` = 关闭 |
 | `masterExecute` | `false` | 允许 master bot 执行非命令任务 |
-| `maxConcurrent` | `3` | 最大并发 Claude 调用数 |
+| `maxConcurrent` | `3` | 最大并发 Claude 调用数。实际上限取决于你的订阅套餐或 API 额度。 |
 | `rateLimitSeconds` | `5` | 同一 bot 调用间隔（秒） |
 | `sessionTimeoutMinutes` | `10` | 单次调用超时（分钟） |
 | `dashboardIntervalMinutes` | `30` | 看板刷新间隔（分钟） |
