@@ -27,32 +27,41 @@
 
 ![为什么是群聊](docs/scene-group-chat.png)
 
-## 📊 远程方案对比
+## ✨ 亮点
 
-每个方案都有最适合的场景，选适合你的：
+### @mention 切项目 — 零摩擦
 
-| 能力 | **claude-crew** | Claude Code Remote | Claude Code Telegram 插件 | Happy Coder | cc-connect |
-|-----|:-:|:-:|:-:|:-:|:-:|
-| 多项目（上下文隔离） | ✅ 每个项目一个 bot | ✅ 每个项目一个进程 | ❌ 单 session | ✅ 每个项目一个 session | ✅ 配置驱动 |
-| 项目切换 | ✅ 群内 @mention | 在 app 里切 session | 不适用（单 bot） | 在 app 里切 session | 切对话窗口 / 斜杠命令 |
-| 统一时间线（所有项目可见） | ✅ 一个群，所有人看到一切 | ❌ | ❌ | ❌ | ❌ 每个项目独立对话 |
-| 手机上加新项目 | ✅ 按钮向导 | ❌ 需回终端 | ❌ 需回终端 | ✅ app 内填路径 | ❌ 编辑 config.toml |
-| 团队协作 | ✅ 共享群聊，per-bot 权限 | ❌ 仅单人 | ❌ 仅单人 | ✅ 设备授权 | ✅ 用户角色 + 限速 |
-| 进程管理 | ✅ 内置 daemon + watchdog + 开机自启 | 手动（tmux / systemd） | 手动（tmux / systemd） | ✅ 内置 daemon | ✅ launchd / systemd |
-| 统一仪表盘 | ✅ 全部项目状态置顶一条消息 | ❌ | ❌ | ❌ | ✅ Web 面板 |
-| 内置定时任务 | ✅ | 需系统 cron | 需系统 cron | 需脚本 | ✅ |
-| 手机端管理 | ✅ 按钮菜单 | ✅ claude.ai / 移动端 | ✅ Telegram | ✅ 原生 app | 斜杠命令 |
-| 实时进度 | ✅ 工具级流式反馈 | ✅ | ✅ | ✅ | ✅ 3 种显示风格 |
-| 多 agent 支持 | 仅 Claude | 仅 Claude | 仅 Claude | Claude、Codex、Gemini | 7 种 agent |
-| 多平台支持 | Telegram | Web / 移动端 app | Telegram | iOS / Android | 10 种平台 |
+不用切终端、不用切 session、不用切 app。在群里 @任意项目 bot，它就在对应目录下跑 Claude Code。@另一个，它并行跑。所有进度和结果出现在同一条时间线上。
 
-**哪个适合你？**
+### 统一时间线 — 所有人看到一切
 
-- **单项目、个人、要官方支持** → [Claude Code Remote](https://code.claude.com/docs/en/remote-control) — 官方一手方案，开箱即用
-- **单项目、个人、偏好 Telegram** → [Claude Code Telegram 插件](https://code.claude.com/docs/en/channels) — 轻量官方插件
-- **多项目、想用多种模型或原生 app** → [Happy Coder](https://happy.engineering/) — 支持 Claude、Codex、Gemini，精致的移动端体验
-- **多项目、多 agent 或多平台** → [cc-connect](https://github.com/chenhg5/cc-connect) — 7 种 agent × 10 种聊天平台的万能桥接器，配置驱动，Web 面板
-- **多项目、团队、要共享群聊工作台** → **[claude-crew](https://github.com/qiudeqiu/claude-crew)** — 全员在同一个群里：@mention 并行派发任务，实时看到所有进度和结果，随时沟通讨论，即时对结果作出反应。团队权限、仪表盘、定时任务，全在 Telegram 内完成
+每一条请求、每一个进度更新、每一个结果、每一句团队讨论 — 全在一条滚动的时间线里。Bot 完成任务的瞬间，整个团队都看到了。不用"我截个图发一下"，不用"你看一下我的屏幕"。群聊本身就是共享工作台。
+
+### 手机即管理后台 — 不用碰终端
+
+手机上 30 秒加一个新项目 bot：粘贴 token → 填名字 → 填路径 → 上线。配置权限、管理团队、监控所有项目 — 全是按钮菜单。初始安装后，你再也不用碰终端。
+
+### 内置 daemon — 始终在线，不需要 tmux
+
+其他方案需要你保持终端打开或者用 tmux/screen 保活。claude-crew 作为后台 daemon 运行，自带 watchdog 崩溃重启和开机自启。你的 bot 全天候在线。
+
+### 项目上下文隔离
+
+每个 bot 维护自己独立的 Claude Code session。五个项目同时跑，零上下文污染。产品 A 的对话永远不会混进产品 B 的上下文。配合 `--continue` 和定期 memory save，每个 bot 始终知道项目的最新状态。
+
+### 解决真实痛点
+
+| 痛点 | claude-crew 如何解决 |
+|------|---------------------|
+| Remote Control 空闲 5-30 分钟断连 | Telegram Bot API 无状态拉取 — 永不超时断连 |
+| 权限审批提示远程不可达 | approve 模式直接在群聊发按钮，授权人点击即可 |
+| 缺少推送通知 | Telegram 本身就是推送系统 — 每条 bot 回复都会推送到手机 |
+| 单仓库限制 | 一个 bot 一个项目，无限项目，一个 daemon |
+| 需要保持终端 / tmux | 内置 daemon + watchdog + 开机自启 |
+| 长时间使用上下文膨胀变慢 | 每次任务独立短进程，定期 memory save，`--continue` 保持连续性 |
+| 重启后失忆 | 对话文件持久化在磁盘，memory 文件不受任何重启影响 |
+| Headless OAuth 认证失败 | 支持 `ANTHROPIC_API_KEY` — 不需要浏览器 |
+| tmux 强耦合 | 零 tmux 依赖 — 专用 daemon + PID 管理 |
 
 ## 目录
 

@@ -27,32 +27,41 @@ Other solutions require you to switch between sessions, tabs, or apps when worki
 
 ![Why a group chat](docs/scene-group-chat.png)
 
-## 📊 Remote Solutions Comparison
+## ✨ Highlights
 
-Each solution has its sweet spot. Pick the one that fits your workflow:
+### @mention to switch — zero friction
 
-| Capability | **claude-crew** | Claude Code Remote | Claude Code Telegram Plugin | Happy Coder | cc-connect |
-|-----------|:-:|:-:|:-:|:-:|:-:|
-| Multi-project (isolated context) | ✅ One bot per project | ✅ One process per project | ❌ Single session | ✅ One session per project | ✅ Config-driven array |
-| Project switching | ✅ @mention in group chat | Switch in app UI | N/A (single bot) | Switch in app UI | Switch chat / slash cmd |
-| Shared timeline (all projects visible) | ✅ One group, everyone sees everything | ❌ | ❌ | ❌ | ❌ Each project in separate chat |
-| Add project from phone | ✅ Button wizard | ❌ Terminal required | ❌ Terminal required | ✅ Enter path in app | ❌ Edit config.toml |
-| Team collaboration | ✅ Shared group chat, per-bot permissions | ❌ Solo only | ❌ Solo only | ✅ Via device authorization | ✅ User roles + rate limit |
-| Process management | ✅ Built-in daemon + watchdog + auto-start | Manual (tmux / systemd) | Manual (tmux / systemd) | ✅ Built-in daemon | ✅ launchd / systemd |
-| Unified dashboard | ✅ All projects in one pinned message | ❌ | ❌ | ❌ | ✅ Web dashboard |
-| Built-in cron scheduler | ✅ | Via system cron | Via system cron | Via scripting | ✅ |
-| Manage from phone | ✅ Button menus | ✅ claude.ai / mobile app | ✅ Telegram | ✅ Native app | Slash commands |
-| Real-time progress | ✅ Tool-level streaming | ✅ | ✅ | ✅ | ✅ 3 display styles |
-| Multi-agent support | Claude only | Claude only | Claude only | Claude, Codex, Gemini | 7 agents |
-| Multi-platform support | Telegram | Web / Mobile app | Telegram | iOS / Android | 10 platforms |
+No terminal tabs, no session switching, no app hopping. @mention any project bot in the group, it runs Claude Code in that project's directory. @mention another, it runs in parallel. All progress and results appear in the same timeline.
 
-**Which one is right for you?**
+### Shared timeline — everyone sees everything
 
-- **One project, solo, want official support** → [Claude Code Remote](https://code.claude.com/docs/en/remote-control) — first-party, zero setup beyond `claude`
-- **One project, solo, prefer Telegram** → [Claude Code Telegram Plugin](https://code.claude.com/docs/en/channels) — lightweight, official plugin
-- **Multiple projects, want multi-model or a native app** → [Happy Coder](https://happy.engineering/) — supports Claude, Codex, Gemini with a polished mobile experience
-- **Multiple projects, multiple agents or platforms** → [cc-connect](https://github.com/chenhg5/cc-connect) — universal bridge for 7 agents × 10 chat platforms, config-driven, web dashboard
-- **Multiple projects, team, want shared group chat workspace** → **[claude-crew](https://github.com/qiudeqiu/claude-crew)** — everyone works in one group: @mention to dispatch tasks in parallel, see all progress and results in real time, chat with each other, and react instantly. Team permissions, dashboard, cron — all via Telegram
+Every request, every progress update, every result, every team discussion — all in one scrolling timeline. When a bot finishes, your whole team sees it instantly. No "let me share my screen" or "check the screenshot I posted". The group chat IS the shared workspace.
+
+### Phone-first management — no terminal needed
+
+Add a new project bot in 30 seconds from your phone: paste token → name → path → online. Configure permissions, manage team access, monitor all projects — entirely through button menus. After initial setup, you never need to touch a terminal again.
+
+### Built-in daemon — always on, no tmux
+
+Other solutions require you to keep a terminal open or use tmux/screen. claude-crew runs as a background daemon with watchdog auto-restart and auto-start on login. Your bots stay online 24/7.
+
+### Per-project context isolation
+
+Each bot maintains its own independent Claude Code session. Five projects running simultaneously, zero context bleed. Conversations with Product A never pollute Product B's context. Combined with `--continue` and periodic memory saves, each bot always knows its project's latest state.
+
+### Solves real pain points
+
+| Pain point | How claude-crew solves it |
+|-----------|--------------------------|
+| Remote Control drops after 5-30min idle | Telegram Bot API is stateless pull — no idle timeout, ever |
+| Permission prompts unreachable remotely | Approve mode sends buttons directly to group chat, anyone authorized can tap |
+| No push notifications | Telegram IS a push notification system — every bot reply pings your phone |
+| Single repo limitation | One bot per project, unlimited projects, one daemon |
+| Requires active terminal / tmux | Built-in daemon + watchdog + auto-start on login |
+| Context bloats after a day | Independent short-process sessions per task, periodic memory saves, `--continue` for continuity |
+| Restart = amnesia | Conversation files persist on disk, memory files survive any restart |
+| Headless OAuth fails | Supports `ANTHROPIC_API_KEY` — no browser needed |
+| tmux coupling | Zero tmux dependency — purpose-built daemon with PID management |
 
 ## Table of Contents
 
