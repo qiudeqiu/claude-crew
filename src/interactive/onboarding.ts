@@ -89,13 +89,23 @@ export async function handleOnboardCallback(
       return true;
     }
 
+    // No project bots yet — show welcome guide instead of forcing token input
+    const { menuButton } = await import("./keyboards.js");
+    const { botsMsg } = await import("./i18n.js");
+    const bm = botsMsg(lang);
+
     await api
-      .editMessageText(chatId, messageId, m.groupSet, {
-        reply_markup: { inline_keyboard: cancelButton("m:menu", lang) },
+      .editMessageText(chatId, messageId, m.welcomeGuide, {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: bm.addBot, callback_data: "b:a" }],
+            ...menuButton(lang),
+          ],
+        },
       })
       .catch(() => {});
 
-    setConversation(userId, chatId, "onboard:awaitToken");
+    clearConversation(userId, chatId);
     return true;
   }
 

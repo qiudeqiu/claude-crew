@@ -527,6 +527,13 @@ export function onboardMsg(lang: Lang) {
           "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
           "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
           "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        welcomeGuide:
+          "\u2705 群组设置完成！\n\n" +
+          "\ud83c\udf89 下一步：\n\n" +
+          "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
+          "\u2022 添加后在群里 @项目bot 即可让 Claude Code 在该项目中执行任务\n" +
+          "\u2022 @master menu 随时打开管理菜单\n\n" +
+          "\ud83d\udca1 项目 bot 需要先在 @BotFather 创建，拿到 token 后在这里添加",
         invalidToken:
           "\u26a0\ufe0f 这不像一个 bot token。\n\n" +
           "token 格式如: 123456789:ABCdefGHI...\n" +
@@ -586,6 +593,13 @@ export function onboardMsg(lang: Lang) {
           "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
           "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
           "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        welcomeGuide:
+          "\u2705 Group set up!\n\n" +
+          "\ud83c\udf89 Next steps:\n\n" +
+          '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
+          "\u2022 Then @projectbot in the group to run Claude Code tasks in that project\n" +
+          "\u2022 @master menu to open the management menu anytime\n\n" +
+          "\ud83d\udca1 Create a bot in @BotFather first, then add its token here",
         invalidToken:
           "\u26a0\ufe0f That doesn't look like a bot token.\n\n" +
           "Tokens look like: 123456789:ABCdefGHI...\n" +
