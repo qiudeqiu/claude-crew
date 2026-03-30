@@ -140,36 +140,36 @@ ln -sf "$PROJECT_DIR/src/daemon.ts" "$INSTALL_DIR/daemon.ts"
 echo "✅ Scripts linked"
 echo ""
 
-# 8. Start daemon
+# 8. Optional: auto-start on boot
+echo ""
+read -p "🔄 Enable auto-start on login? (y/N): " AUTOSTART
+if [ "$AUTOSTART" = "y" ] || [ "$AUTOSTART" = "Y" ]; then
+  "$INSTALL_DIR/daemon.sh" autostart
+fi
+
+# 9. Start daemon
+echo ""
 echo "Starting daemon..."
 "$INSTALL_DIR/daemon.sh" start
 echo ""
 
-# 9. Summary
+# 10. Summary — final output the user sees
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ claude-crew is running!"
+echo "✅ claude-crew is running! Your bot @${MASTER_USERNAME} is now online."
 echo ""
-echo "Now open Telegram and send any message to @${MASTER_USERNAME}."
-echo "The bot will guide you through the rest:"
+echo "👉 Next steps:"
 echo ""
-echo "  1. Create a private group"
+echo "  1. Create a private group in Telegram"
 echo "  2. Add @${MASTER_USERNAME} to the group"
 echo "  3. Disable Group Privacy in @BotFather:"
 echo "     /mybots → @${MASTER_USERNAME} → Bot Settings → Group Privacy → Turn off"
+echo "  4. The bot auto-detects the group and starts the setup wizard"
 echo ""
-echo "  The bot auto-detects the group and starts the setup wizard."
+echo "  After setup, use @${MASTER_USERNAME} menu to manage everything."
 echo ""
 echo "Terminal commands:"
 echo "  daemon.sh status         View status"
 echo "  daemon.sh logs           View logs"
 echo "  daemon.sh restart        Restart"
 echo "  daemon.sh stop           Stop"
-echo "  daemon.sh autostart      Enable auto-start on login"
-echo "  daemon.sh no-autostart   Disable auto-start"
-echo ""
-
-# 10. Optional: auto-start on boot
-read -p "🔄 Enable auto-start on login? (y/N): " AUTOSTART
-if [ "$AUTOSTART" = "y" ] || [ "$AUTOSTART" = "Y" ]; then
-  "$INSTALL_DIR/daemon.sh" autostart
-fi
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"
