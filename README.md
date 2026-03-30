@@ -29,39 +29,48 @@ Other solutions require you to switch between sessions, tabs, or apps when worki
 
 ## ✨ Highlights
 
-### @mention to switch — zero friction
+### Multi-project cluster management
 
-No terminal tabs, no session switching, no app hopping. @mention any project bot in the group, it runs Claude Code in that project's directory. @mention another, it runs in parallel. All progress and results appear in the same timeline.
+Every project gets a dedicated bot. @mention to dispatch — no terminal tabs, no session switching. Multiple bots run in parallel, each with isolated context. Five projects at once, zero bleed between them. Add a new project from your phone in 30 seconds: paste token → name → path → online.
 
-### Shared timeline — everyone sees everything
+### Team collaboration in a shared timeline
 
-Every request, every progress update, every result, every team discussion — all in one scrolling timeline. When a bot finishes, your whole team sees it instantly. No "let me share my screen" or "check the screenshot I posted". The group chat IS the shared workspace.
+All requests, progress, results, and team discussions flow through one timeline. When a bot finishes, your whole team sees it instantly — no screenshots, no "check my terminal". Team members chat alongside bot activity, react to results, and follow up in real time. Every bot reply is tagged with `#projectName` so you can filter any project's full history with one tap.
 
-### Phone-first management — no terminal needed
+### Permission system built for teams
 
-Add a new project bot in 30 seconds from your phone: paste token → name → path → online. Configure permissions, manage team access, monitor all projects — entirely through button menus. After initial setup, you never need to touch a terminal again.
+| Layer | What it controls | Options |
+|-------|-----------------|---------|
+| **Access Level** | What the bot CAN do | `readWrite` — full access · `readOnly` — read, search, analyze only |
+| **Permission Mode** | How writes are authorized | `approve` (default) — button confirmation in chat · `auto` — Claude's safety classifier · `allowAll` — pre-authorized |
+| **User Access** | Who can use each bot | `admins` — all bots · `allowedUsers` — per-bot member list · others — rejected with hint |
 
-### Built-in daemon — always on, no tmux
+All configurable globally or per-bot, from button menus on your phone. Sensitive project? Set `readOnly`. Trusted solo project? Set `allowAll`. Team project? Set `approve` so writes require explicit confirmation in the group chat.
 
-Other solutions require you to keep a terminal open or use tmux/screen. claude-crew runs as a background daemon with watchdog auto-restart and auto-start on login. Your bots stay online 24/7.
+### Phone-first management
 
-### Per-project context isolation
+Button menus for everything: add/remove project bots, configure permissions and settings, manage team members, view dashboard. After initial `setup.sh`, you never need to touch a terminal again.
 
-Each bot maintains its own independent Claude Code session. Five projects running simultaneously, zero context bleed. Conversations with Product A never pollute Product B's context. Combined with `--continue` and periodic memory saves, each bot always knows its project's latest state.
+### Always on — built-in daemon
+
+Background daemon with watchdog auto-restart and auto-start on login. No tmux, no screen, no "keep the terminal open". Your bots stay online 24/7. Crash? Watchdog restarts in 3 seconds. Reboot? Auto-start brings everything back.
+
+### Project continuity
+
+Each bot remembers its project's state across sessions through three layers: `--continue` resumes the last conversation, periodic memory saves persist key context to disk, and the pinned dashboard shows every project's git branch, last commit, context usage, and cost at a glance. No matter who changed what or when — open the group and you're up to date.
 
 ### Solves real pain points
 
 | Pain point | How claude-crew solves it |
 |-----------|--------------------------|
-| Remote Control drops after 5-30min idle | Telegram Bot API is stateless pull — no idle timeout, ever |
-| Permission prompts unreachable remotely | Approve mode sends buttons directly to group chat, anyone authorized can tap |
-| No push notifications | Telegram IS a push notification system — every bot reply pings your phone |
-| Single repo limitation | One bot per project, unlimited projects, one daemon |
-| Requires active terminal / tmux | Built-in daemon + watchdog + auto-start on login |
-| Context bloats after a day | Independent short-process sessions per task, periodic memory saves, `--continue` for continuity |
-| Restart = amnesia | Conversation files persist on disk, memory files survive any restart |
-| Headless OAuth fails | Supports `ANTHROPIC_API_KEY` — no browser needed |
-| tmux coupling | Zero tmux dependency — purpose-built daemon with PID management |
+| Connection drops after idle | Stateless pull architecture — no idle timeout, ever |
+| Permission prompts unreachable remotely | Approve buttons sent directly to group chat |
+| No push notifications | Every bot reply pushes to your phone |
+| Single repo limitation | One bot per project, unlimited projects |
+| Requires active terminal / tmux | Built-in daemon + watchdog + auto-start |
+| Context bloats after a day of use | Independent short-process sessions, periodic memory saves |
+| Restart = lost context | Conversation files + memory files persist on disk |
+| Headless server auth fails | Supports API key — no browser needed |
 
 ## Table of Contents
 
