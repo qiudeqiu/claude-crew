@@ -424,7 +424,7 @@ daemon.sh no-autostart   # 禁用开机自启
 | **管理员**（`admins` 列表） | 任意 | ✅ | 该 bot 的 `accessLevel` + `permissionMode` |
 | **成员**（在 `allowedUsers` 中） | 包含此用户 | ✅ | 该 bot 的 `accessLevel` + `permissionMode` |
 | **成员**（不在列表中） | 未包含此用户 | ❌ | 无权限 |
-| **其他人** | 任意 | ❌ | 静默忽略 |
+| **其他人** | 任意 | ❌ | 拒绝并提示 |
 
 ### bot-pool.json
 
@@ -499,7 +499,7 @@ daemon.sh no-autostart   # 禁用开机自启
 |------|----------|-----------|
 | **管理员**（`admins` 列表） | 所有 bot | 是 |
 | **成员**（bot 级 `allowedUsers`） | 仅配置了的 bot | 否 |
-| **其他人** | 无 — 静默忽略 | 否 |
+| **其他人** | 无 — 拒绝并提示 | 否 |
 
 > 大部分配置修改后立即生效（权限、限流、超时等）。**需要重启的例外：**`dashboardIntervalMinutes` 和增删机器人。交互式菜单（`@master bots`、`@master config`）在需要时提供一键重启按钮。
 
@@ -567,8 +567,8 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 
 ### 访问控制
 
-- **角色访问控制**：管理员可用所有 bot；成员仅可用配置了其 ID 的 bot；其他人静默忽略
-- **两层权限**：`accessLevel`（读写/只读）+ `permissionMode`（预授权/按钮确认）— 可全局和单 bot 配置
+- **角色访问控制**：管理员可用所有 bot；成员仅可用配置了其 ID 的 bot；其他人拒绝并提示
+- **两层权限**：`accessLevel`（读写/只读）+ `permissionMode`（approve/auto/allowAll）— 可全局和单 bot 配置
 - **环境隔离**：Claude 子进程接收过滤后的环境变量 — bot token 和敏感密钥被排除
 - **Token 保护**：`bot-pool.json` 权限 0600，`.gitignore` 排除
 

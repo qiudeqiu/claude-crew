@@ -146,9 +146,9 @@ See exactly what Claude is doing as it works — file reads, edits, commands, al
 
 Three permission modes, configurable per bot or globally:
 
-- **allowAll** — all tools pre-authorized, no prompts, fastest execution
+- **approve** (default) — first run read-only; if writes needed, sends a button for admin approval
 - **auto** — Claude Code's background safety classifier auto-approves safe ops, blocks dangerous ones
-- **approve** — first run read-only; if writes needed, sends a Telegram button for admin approval
+- **allowAll** — all tools pre-authorized, no prompts, fastest execution
 
 ![Permission](docs/feat-permission.png)
 
@@ -415,7 +415,7 @@ Combined with access control:
 | **Admin** (`admins` list) | Any | ✅ | Bot's `accessLevel` + `permissionMode` |
 | **Member** (in `allowedUsers`) | Lists this user | ✅ | Bot's `accessLevel` + `permissionMode` |
 | **Member** (not in list) | Doesn't list user | ❌ | No access |
-| **Others** | Any | ❌ | Silently ignored |
+| **Others** | Any | ❌ | Rejected with permission hint |
 
 ### bot-pool.json
 
@@ -490,7 +490,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 |------|--------|----------------------|
 | **Admin** (`admins` list) | All bots | Yes |
 | **Member** (per-bot `allowedUsers`) | Only bots that list them | No |
-| **Others** | None — silently ignored | No |
+| **Others** | None — rejected with permission hint | No |
 
 > Most configuration changes take effect immediately (permissions, rate limits, timeouts, etc.). **Exceptions that require restart:** `dashboardIntervalMinutes` and adding/removing bots. The interactive setup (`@master bots`, `@master config`) offers a one-click restart button when needed.
 
@@ -558,8 +558,8 @@ No analytics, no telemetry, no cloud sync, no remote database.
 
 ### Access control
 
-- **Role-based access**: admins can use all bots; members only access bots that list them in `allowedUsers`; all others silently ignored
-- **Two-layer permissions**: `accessLevel` (readWrite/readOnly) + `permissionMode` (allowAll/approve) — configurable globally and per-bot
+- **Role-based access**: admins can use all bots; members only access bots that list them in `allowedUsers`; others rejected with permission hint
+- **Two-layer permissions**: `accessLevel` (readWrite/readOnly) + `permissionMode` (approve/auto/allowAll) — configurable globally and per-bot
 - **Env isolation**: Claude subprocesses receive filtered environment variables — bot tokens and sensitive keys are excluded
 - **Token protection**: `bot-pool.json` stored with mode 0600, excluded from git via `.gitignore`
 
