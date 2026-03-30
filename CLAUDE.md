@@ -1,5 +1,14 @@
 # Project Rules
 
+## Iron Rule: Repo Purity
+
+The GitHub repo contains ONLY open-source project code and user-facing documentation. Everything else stays local:
+
+- **Never commit**: internal planning (roadmap, product-brief), promotional content (video/, scripts, articles), personal notes, .DS_Store, build artifacts (dist/)
+- **Allowed in repo**: source code (src/), scripts (scripts/), README.md, README_CN.md, CLAUDE.md, LICENSE, package.json, docs/ (user-facing images only), .gitignore
+- **Before every git add**: verify no internal files are staged. When in doubt, check .gitignore.
+- **New directories**: if creating a new directory for internal use, add it to .gitignore immediately.
+
 ## Iron Rule: README Sync
 
 After every code change, check if README.md needs updating. If any feature, configuration, architecture, or behavior described in README.md has changed, update it before considering the task complete.

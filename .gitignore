@@ -13,3 +13,4 @@ progress.jsonl
 hook-progress.json
 access.json
 video/
+*.pen
