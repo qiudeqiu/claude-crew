@@ -44,6 +44,18 @@ export type ManagedBot = {
   skipContinue?: boolean;
   /** Override effort level for next invocation (set by /effort command) */
   effort?: string;
+  /** Task queue for when bot is busy */
+  queue: QueuedTask[];
+  /** Last context warning timestamp (prevent spamming) */
+  lastContextWarning?: number;
+};
+
+export type QueuedTask = {
+  chatId: string;
+  userId: string;
+  message: string;
+  imagePath?: string;
+  queuedAt: number;
 };
 
 export type CronJob = {

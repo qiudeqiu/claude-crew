@@ -1,6 +1,12 @@
 import type { ReactionTypeEmoji } from "grammy/types";
 import type { ManagedBot } from "./types.js";
-import { canUseBot, isAdmin, loadPool, WRITE_TOOLS } from "./config.js";
+import {
+  canUseBot,
+  isAdmin,
+  loadPool,
+  WRITE_TOOLS,
+  MAX_QUEUE_SIZE,
+} from "./config.js";
 import { log } from "./logger.js";
 import { splitMessage, downloadPhoto, transcribeVoice } from "./helpers.js";
 import { pendingApprovals } from "./state.js";
@@ -213,11 +219,6 @@ export function setupBot(managed: ManagedBot): void {
       return;
     }
 
-    if (managed.busy) {
-      await ctx.reply(setupMsg(getLang()).busy).catch(() => {});
-      return;
-    }
-
     const photos = ctx.message.photo;
     const best = photos[photos.length - 1];
     const imagePath = await downloadPhoto(
@@ -225,6 +226,35 @@ export function setupBot(managed: ManagedBot): void {
       config.token,
       best.file_id,
     );
+
+    if (managed.busy) {
+      if (managed.queue.length >= MAX_QUEUE_SIZE) {
+        await ctx
+          .reply(
+            setupMsg(getLang()).queueFull(
+              managed.queue.length + 1,
+              MAX_QUEUE_SIZE,
+            ),
+          )
+          .catch(() => {});
+        return;
+      }
+      managed.queue.push({
+        chatId,
+        userId: String(ctx.from.id),
+        message: text,
+        imagePath,
+        queuedAt: Date.now(),
+      });
+      const pos = managed.queue.length;
+      const lang = getLang();
+      const hint =
+        lang === "zh"
+          ? `⏳ 你是第 ${pos + 1} 个，前面还有 ${pos} 个任务`
+          : `⏳ You're #${pos + 1} in queue, ${pos} task(s) ahead`;
+      await tgBot.api.sendMessage(chatId, hint).catch(() => {});
+      return;
+    }
 
     void tgBot.api
       .setMessageReaction(chatId, ctx.message.message_id, [
@@ -252,11 +282,6 @@ export function setupBot(managed: ManagedBot): void {
 
     if (!canUseBot(String(ctx.from.id), config)) {
       await ctx.reply(setupMsg(getLang()).noPermission).catch(() => {});
-      return;
-    }
-
-    if (managed.busy) {
-      await ctx.reply(setupMsg(getLang()).busy).catch(() => {});
       return;
     }
 
@@ -293,6 +318,27 @@ export function setupBot(managed: ManagedBot): void {
           sv.transcription(result.text),
         )
         .catch(() => {});
+    }
+
+    if (managed.busy) {
+      if (managed.queue.length < MAX_QUEUE_SIZE) {
+        managed.queue.push({
+          chatId,
+          userId: String(ctx.from.id),
+          message: result.text,
+          queuedAt: Date.now(),
+        });
+        const pos = managed.queue.length;
+        const lang = getLang();
+        const hint =
+          lang === "zh"
+            ? `⏳ 语音已转写，排队中（第 ${pos + 1} 个）`
+            : `⏳ Voice transcribed, queued (#${pos + 1})`;
+        await tgBot.api.sendMessage(chatId, hint).catch(() => {});
+      } else {
+        await tgBot.api.sendMessage(chatId, sv.busy).catch(() => {});
+      }
+      return;
     }
 
     void invokeClaudeAndReply(managed, chatId, result.text);
@@ -426,19 +472,7 @@ export function setupBot(managed: ManagedBot): void {
       return;
     }
 
-    if (managed.busy) {
-      await ctx.reply(setupMsg(getLang()).busy).catch(() => {});
-      return;
-    }
-
-    // Ack
-    void tgBot.api
-      .setMessageReaction(chatId, msgId, [
-        { type: "emoji", emoji: "\ud83d\udc40" as ReactionTypeEmoji["emoji"] },
-      ])
-      .catch(() => {});
-
-    // Include quoted message content if replying to a message
+    // Build full text (with quoted context) before busy check — needed for queue
     let fullText = text;
     let quotedImagePath: string | undefined;
     const replyMsg = ctx.message.reply_to_message as
@@ -451,6 +485,42 @@ export function setupBot(managed: ManagedBot): void {
         fullText = `${quoted.text}\n\n${text}`;
       }
     }
+
+    // Queue or execute
+    if (managed.busy) {
+      if (managed.queue.length >= MAX_QUEUE_SIZE) {
+        const s = setupMsg(getLang());
+        await tgBot.api
+          .sendMessage(
+            chatId,
+            s.queueFull(managed.queue.length + 1, MAX_QUEUE_SIZE),
+          )
+          .catch(() => {});
+        return;
+      }
+      managed.queue.push({
+        chatId,
+        userId: String(ctx.from.id),
+        message: fullText,
+        imagePath: quotedImagePath,
+        queuedAt: Date.now(),
+      });
+      const pos = managed.queue.length;
+      const lang = getLang();
+      const hint =
+        lang === "zh"
+          ? `⏳ 你是第 ${pos + 1} 个，前面还有 ${pos} 个任务\n💡 并发上限可在 menu → 配置 → maxConcurrent 中调整`
+          : `⏳ You're #${pos + 1} in queue, ${pos} task(s) ahead\n💡 Adjust limit in menu → Config → maxConcurrent`;
+      await tgBot.api.sendMessage(chatId, hint).catch(() => {});
+      return;
+    }
+
+    // Ack
+    void tgBot.api
+      .setMessageReaction(chatId, msgId, [
+        { type: "emoji", emoji: "\ud83d\udc40" as ReactionTypeEmoji["emoji"] },
+      ])
+      .catch(() => {});
 
     void invokeClaudeAndReply(managed, chatId, fullText, quotedImagePath);
   });

@@ -14,6 +14,9 @@ import {
   PROGRESS_THROTTLE_MS,
   APPROVAL_TIMEOUT_MS,
   RESTART_NOTE_FILE,
+  CONTEXT_WARN_THRESHOLD,
+  CONTEXT_COMPACT_THRESHOLD,
+  CONTEXT_WARN_COOLDOWN_MS,
 } from "./config.js";
 import { log } from "./logger.js";
 import { getSafeEnv, formatToolLabel, splitMessage } from "./helpers.js";
@@ -519,6 +522,38 @@ export async function invokeClaudeAndReply(
     log(
       `DONE: ${project} — ${result.text.length} chars, $${result.costUSD.toFixed(4)}, context ${result.contextWindow ? Math.round((result.contextUsed / result.contextWindow) * 100) : "?"}%`,
     );
+
+    // Context usage warning
+    if (result.contextWindow > 0) {
+      const pct = result.contextUsed / result.contextWindow;
+      const now = Date.now();
+      const cooledDown =
+        !managed.lastContextWarning ||
+        now - managed.lastContextWarning > CONTEXT_WARN_COOLDOWN_MS;
+
+      if (pct >= CONTEXT_COMPACT_THRESHOLD && cooledDown) {
+        managed.lastContextWarning = now;
+        const lang = getLang();
+        const msg =
+          lang === "zh"
+            ? `🔄 @${config.username} 上下文已用 ${Math.round(pct * 100)}%，正在自动压缩...`
+            : `🔄 @${config.username} context at ${Math.round(pct * 100)}%, auto-compacting...`;
+        await tgBot.api.sendMessage(chatId, msg).catch(() => {});
+        void invokeClaudeAndReply(
+          managed,
+          chatId,
+          "Please compact your conversation context — keep key information, remove unimportant details",
+        );
+      } else if (pct >= CONTEXT_WARN_THRESHOLD && cooledDown) {
+        managed.lastContextWarning = now;
+        const lang = getLang();
+        const msg =
+          lang === "zh"
+            ? `⚠️ @${config.username} 上下文已用 ${Math.round(pct * 100)}%，建议 /new 重置或 /compact 压缩`
+            : `⚠️ @${config.username} context at ${Math.round(pct * 100)}% — consider /new to reset or /compact to compress`;
+        await tgBot.api.sendMessage(chatId, msg).catch(() => {});
+      }
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log(`FAIL: ${project} — ${msg}`);
@@ -530,5 +565,19 @@ export async function invokeClaudeAndReply(
     clearInterval(typingInterval);
     managed.busy = false;
     daemon.activeInvocations = Math.max(0, daemon.activeInvocations - 1);
+
+    // Process next queued task
+    if (managed.queue.length > 0) {
+      const next = managed.queue.shift()!;
+      log(
+        `QUEUE: ${project} — processing next (${managed.queue.length} remaining)`,
+      );
+      void invokeClaudeAndReply(
+        managed,
+        next.chatId,
+        next.message,
+        next.imagePath,
+      );
+    }
   }
 }

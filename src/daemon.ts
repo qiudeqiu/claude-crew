@@ -117,6 +117,7 @@ async function main(): Promise<void> {
       contextWindow: 0,
       lastModel: "",
       lastCostUSD: 0,
+      queue: [],
     };
 
     managedBots.set(config.token, managed);
