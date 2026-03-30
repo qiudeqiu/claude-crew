@@ -76,6 +76,7 @@ Each bot maintains its own independent Claude Code session. Five projects runnin
 - [Architecture](#-architecture)
 - [Troubleshooting](#-troubleshooting)
 - [Security & Privacy](#-security--privacy)
+- [Changelog](#-changelog)
 - [Contributing](#-contributing)
 
 ## 🎯 Three Ways to Use
