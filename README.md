@@ -61,7 +61,7 @@ Each bot remembers its project's state across sessions through three layers: `--
 
 ### Solves real pain points
 
-| Pain point | How claude-crew solves it |
+| Common pain points with other solutions | How claude-crew solves it |
 |-----------|--------------------------|
 | Connection drops after idle | Stateless pull architecture — no idle timeout, ever |
 | Permission prompts unreachable remotely | Approve buttons sent directly to group chat |
