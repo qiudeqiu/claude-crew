@@ -242,23 +242,19 @@ bash scripts/setup.sh    # asks for your Telegram User ID + master bot token, th
 
 1. Create a private group, add your master bot
 2. Disable Group Privacy: @BotFather → `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**
-3. Send `@master setup` in the group — the interactive wizard guides you through:
-   - Setting the group as your shared control group
-   - Adding your first project bot (token → project name → path)
-   - One-click restart to bring the bot online
-4. Use `@master menu` for all ongoing management — bots, config, users
+3. The bot auto-detects the group and shows a welcome guide
+4. Use `@master menu` to manage everything — add project bots, configure settings, manage users
 
 <details>
 <summary><b>Detailed Setup Guide (step by step)</b></summary>
 
 ## Setup Guide
 
-### Step 1: Clone and Install
+### Step 1: Clone
 
 ```bash
 git clone https://github.com/qiudeqiu/claude-crew.git
 cd claude-crew
-bun install
 ```
 
 ### Step 2: Create a Master Bot
@@ -278,7 +274,8 @@ This will:
 - Ask for your Telegram User ID (get from [@userinfobot](https://t.me/userinfobot))
 - Ask for your master bot token (validates via Telegram API)
 - Create `bot-pool.json` config file at `~/.claude/channels/telegram/`
-- Link scripts and start the daemon
+- Optionally enable auto-start on login
+- Start the daemon
 
 > `setup.sh` only sets up the master bot. Project bots are added afterwards via `@master bots` in Telegram or `manage-pool.sh add` in the terminal.
 
@@ -292,13 +289,11 @@ This will:
 
    > Bots cannot see group messages with Group Privacy enabled!
 
-4. Send `@master setup` in the group — the wizard walks you through:
-   - Setting the group as your shared control group
-   - Creating a project bot via @BotFather
-   - Assigning it to a project directory
-   - One-click restart to bring it online
+4. The bot auto-detects the group and shows a welcome guide with options:
+   - Add project bots (one per project)
+   - Open the management menu
 
-5. Use `@master menu` for all ongoing management
+5. Use `@master menu` for all ongoing management — add bots, configure settings, manage users
 
 That's it. Everything else is managed from Telegram.
 
