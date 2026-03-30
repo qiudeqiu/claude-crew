@@ -336,7 +336,7 @@ export function fieldDesc(lang: Lang) {
         ap: "此机器人管理的项目显示名称",
         ph: "项目目录在磁盘上的绝对路径",
         md: "Claude 模型选择。不同模型在速度、能力和成本之间有不同取舍。",
-        ve: "写操作结果自动带投票按钮，团队确认后才算完成",
+        ve: "写操作结果自动带确认按钮。团队可确认或要求调整（不会自动回滚，调整需手动说明）",
         vc: "投票需要多少人确认才算通过",
         ar: "approve 模式下需要多少人同时批准才能执行写操作",
       }
@@ -353,7 +353,7 @@ export function fieldDesc(lang: Lang) {
         ap: "Display name for the project this bot manages",
         ph: "Absolute path to the project directory on disk",
         md: "Claude model selection. Different models trade off speed, capability, and cost.",
-        ve: "Write-op results automatically get voting buttons for team confirmation",
+        ve: "Write-op results get confirm/adjust buttons. Team can confirm or request changes (no auto-rollback — adjustments are manual)",
         vc: "How many people must confirm a vote for it to pass",
         ar: "How many people must approve in approve mode before writes execute",
       };
