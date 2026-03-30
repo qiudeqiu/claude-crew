@@ -26,23 +26,10 @@ export const pendingApprovals = new Map<
   {
     resolve: (tools: string | null) => void;
     approvedBy: Set<string>;
-    required: number;
-    voters: string[];
+    /** All these user IDs must approve. Empty = any single admin. */
+    requiredApprovers: string[];
   }
 >();
 
 /** Delegated approval: userId → expiresAt timestamp */
 export const delegatedApprovers = new Map<string, number>();
-
-/** Pending vote results: messageId → vote state */
-export const pendingVotes = new Map<
-  string,
-  {
-    botToken: string;
-    chatId: string;
-    messageId: number;
-    approvedBy: Set<string>;
-    required: number;
-    voters: string[];
-  }
->();

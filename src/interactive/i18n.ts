@@ -336,9 +336,8 @@ export function fieldDesc(lang: Lang) {
         ap: "此机器人管理的项目显示名称",
         ph: "项目目录在磁盘上的绝对路径",
         md: "Claude 模型选择。不同模型在速度、能力和成本之间有不同取舍。",
-        ve: "写操作结果自动带确认按钮。团队可确认或要求调整（不会自动回滚，调整需手动说明）",
-        vc: "投票需要多少人确认才算通过",
-        ar: "approve 模式下需要多少人同时批准才能执行写操作",
+        ap_list:
+          "approve 模式下必须全部同意才能执行的审批人列表。空 = 任意管理员即可。",
       }
     : {
         pm: "How write operations (file edits, shell commands) are authorized",
@@ -353,9 +352,8 @@ export function fieldDesc(lang: Lang) {
         ap: "Display name for the project this bot manages",
         ph: "Absolute path to the project directory on disk",
         md: "Claude model selection. Different models trade off speed, capability, and cost.",
-        ve: "Write-op results get confirm/adjust buttons. Team can confirm or request changes (no auto-rollback — adjustments are manual)",
-        vc: "How many people must confirm a vote for it to pass",
-        ar: "How many people must approve in approve mode before writes execute",
+        ap_list:
+          "List of user IDs who must ALL approve before writes execute in approve mode. Empty = any admin.",
       };
 }
 
@@ -378,9 +376,6 @@ export function optDesc(lang: Lang) {
         md_opus: "最强推理 — 复杂架构和深度分析",
         md_haiku: "最快最便宜 — 简单查询和轻量任务",
         md_inherit: "使用全局 model 设置",
-        ve_true: "开启 — 修改文件的结果带 [调整] [确认] 按钮",
-        ve_false: "关闭 — 结果直接发送，无投票按钮",
-        ve_inherit: "使用全局 voting 设置",
       }
     : {
         pm_allowAll:
@@ -402,9 +397,6 @@ export function optDesc(lang: Lang) {
         md_haiku:
           "Fastest and cheapest \u2014 simple queries and lightweight tasks",
         md_inherit: "Use the global model setting",
-        ve_true: "Enabled — write-op results get [Adjust] [Confirm] buttons",
-        ve_false: "Disabled — results sent directly, no voting",
-        ve_inherit: "Use the global voting setting",
       };
 }
 
@@ -421,8 +413,8 @@ export function fieldHint(lang: Lang) {
         wl: '如 "en"、"zh"、"ja"、"ko"，或留空自动检测',
         ap: '如 "my-api"、"frontend"',
         ph: "如 /home/user/projects/my-api",
-        vc: "1 = 一人确认即通过, 2 = 需要两人确认",
-        ar: "1 = 默认（单人审批）, 2+ = 多签",
+        ap_list:
+          '用空格或逗号分隔多个 user ID，如 "123456 789012"。空 = 任意管理员',
       }
     : {
         mc: "Reference: Pro 2-3, Max 5-10, API key adjust to your quota",
@@ -433,8 +425,8 @@ export function fieldHint(lang: Lang) {
         wl: 'e.g. "en", "zh", "ja", "ko", or empty for auto',
         ap: 'e.g. "my-api", "frontend"',
         ph: "e.g. /home/user/projects/my-api",
-        vc: "1 = one person confirms, 2 = requires two confirmations",
-        ar: "1 = default (single approval), 2+ = multi-sig",
+        ap_list:
+          'Space or comma separated user IDs, e.g. "123456 789012". Empty = any admin',
       };
 }
 

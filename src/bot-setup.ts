@@ -9,7 +9,7 @@ import {
 } from "./config.js";
 import { log } from "./logger.js";
 import { splitMessage, downloadPhoto, transcribeVoice } from "./helpers.js";
-import { pendingApprovals, pendingVotes, delegatedApprovers } from "./state.js";
+import { pendingApprovals, delegatedApprovers } from "./state.js";
 import { invokeClaudeAndReply } from "./claude.js";
 import { handleMasterCommand } from "./commands.js";
 import { handleBotSlashCommand } from "./bot-commands.js";
@@ -161,85 +161,6 @@ export function setupBot(managed: ManagedBot): void {
       }
     }
 
-    // Vote callbacks (vote:confirm:id / vote:adjust:id)
-    if (data.startsWith("vote:")) {
-      const [, action, voteId] = data.split(":");
-      const vote = pendingVotes.get(voteId!);
-      if (!vote) {
-        await ctx.answerCallbackQuery({ text: "Expired" });
-        return;
-      }
-
-      if (action === "adjust") {
-        const lang = getLang();
-        await ctx.answerCallbackQuery({
-          text:
-            lang === "zh"
-              ? "请回复说明要调整什么"
-              : "Reply with what to adjust",
-        });
-        return;
-      }
-
-      if (action === "confirm") {
-        if (!vote.voters.includes(userId) && !isAdmin(userId)) {
-          await ctx.answerCallbackQuery({ text: "Not authorized to vote" });
-          return;
-        }
-        if (vote.approvedBy.has(userId)) {
-          await ctx.answerCallbackQuery({ text: "Already voted" });
-          return;
-        }
-        vote.approvedBy.add(userId);
-        const count = vote.approvedBy.size;
-        const lang = getLang();
-
-        if (count >= vote.required) {
-          pendingVotes.delete(voteId!);
-          const doneLabel =
-            lang === "zh"
-              ? `✅ 已确认 (${count}/${vote.required})`
-              : `✅ Confirmed (${count}/${vote.required})`;
-          await ctx.answerCallbackQuery({ text: doneLabel });
-          const msg = ctx.callbackQuery.message;
-          if (msg && "text" in msg && msg.text) {
-            await ctx
-              .editMessageText(`${msg.text}\n\n${doneLabel}`, {
-                reply_markup: { inline_keyboard: [] },
-              })
-              .catch(() => {});
-          }
-        } else {
-          const confirmLabel =
-            lang === "zh"
-              ? `✅ 确认 (${count}/${vote.required})`
-              : `✅ Confirm (${count}/${vote.required})`;
-          const adjustLabel = lang === "zh" ? "🔄 调整" : "🔄 Adjust";
-          await ctx.answerCallbackQuery({ text: `${count}/${vote.required}` });
-          await ctx
-            .editMessageReplyMarkup({
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: adjustLabel,
-                      callback_data: `vote:adjust:${voteId}`,
-                    },
-                    {
-                      text: confirmLabel,
-                      callback_data: `vote:confirm:${voteId}`,
-                    },
-                  ],
-                ],
-              },
-            })
-            .catch(() => {});
-        }
-        return;
-      }
-      return;
-    }
-
     // Approval callbacks (approve:yes:id / approve:no:id)
     // Check: admin OR delegated approver
     const isDelegated = (() => {
@@ -283,10 +204,10 @@ export function setupBot(managed: ManagedBot): void {
       return;
     }
 
-    // Multi-sig: check if user is in voters list
+    // Multi-sig: check if user is in approvers list (admins always allowed)
     if (
-      pending.voters.length > 0 &&
-      !pending.voters.includes(userId) &&
+      pending.requiredApprovers.length > 0 &&
+      !pending.requiredApprovers.includes(userId) &&
       !isAdmin(userId)
     ) {
       await ctx.answerCallbackQuery({ text: "Not authorized to approve" });
@@ -299,29 +220,52 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     pending.approvedBy.add(userId);
-    const count = pending.approvedBy.size;
 
-    if (count >= pending.required) {
+    // If no approvers configured, single approval is enough
+    if (pending.requiredApprovers.length === 0) {
       pendingApprovals.delete(approvalId!);
       pending.resolve(WRITE_TOOLS);
       const s = setupMsg(getLang());
-      const label = `${s.authorized} (${count}/${pending.required})`;
-      await ctx.answerCallbackQuery({ text: label });
+      await ctx.answerCallbackQuery({ text: s.authorized });
       const msg = ctx.callbackQuery.message;
       if (msg && "text" in msg && msg.text) {
         await ctx
-          .editMessageText(`${msg.text}\n\n${label}`, {
+          .editMessageText(`${msg.text}\n\n${s.authorized}`, {
             reply_markup: { inline_keyboard: [] },
           })
           .catch(() => {});
       }
     } else {
+      // Multi-sig: check if all required approvers have approved
+      const allApproved = pending.requiredApprovers.every((id) =>
+        pending.approvedBy.has(id),
+      );
+      const count = pending.approvedBy.size;
+      const total = pending.requiredApprovers.length;
+
+      if (allApproved) {
+        pendingApprovals.delete(approvalId!);
+        pending.resolve(WRITE_TOOLS);
+        const s = setupMsg(getLang());
+        const label = `${s.authorized} (${count}/${total})`;
+        await ctx.answerCallbackQuery({ text: label });
+        const msg = ctx.callbackQuery.message;
+        if (msg && "text" in msg && msg.text) {
+          await ctx
+            .editMessageText(`${msg.text}\n\n${label}`, {
+              reply_markup: { inline_keyboard: [] },
+            })
+            .catch(() => {});
+        }
+        return;
+      }
+
       const lang = getLang();
       const label =
         lang === "zh"
-          ? `✅ 允许 (${count}/${pending.required})`
-          : `✅ Allow (${count}/${pending.required})`;
-      await ctx.answerCallbackQuery({ text: `${count}/${pending.required}` });
+          ? `✅ 允许 (${count}/${total})`
+          : `✅ Allow (${count}/${total})`;
+      await ctx.answerCallbackQuery({ text: `${count}/${total}` });
       await ctx
         .editMessageReplyMarkup({
           reply_markup: {
