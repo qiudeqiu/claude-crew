@@ -299,7 +299,9 @@ export async function showBotConfig(
     `\ud83d\udee1\ufe0f permissionMode: ${pmDisplay}\n   ${fd.pm}\n\n` +
     `\ud83d\udd10 accessLevel: ${alDisplay}\n   ${fd.al}\n\n` +
     `\ud83d\udcc2 project: ${bot.assignedProject ?? "(none)"}\n   ${fd.ap}\n\n` +
-    `\ud83d\udccd path: ${bot.assignedPath ?? "(none)"}\n   ${fd.ph}`;
+    `\ud83d\udccd path: ${bot.assignedPath ?? "(none)"}\n   ${fd.ph}\n\n` +
+    `\ud83d\uddf3\ufe0f voting: ${(bot as unknown as Record<string, unknown>).votingEnabled ?? "(inherit)"}\n   ${fd.ve}\n\n` +
+    `\ud83d\udd10 approvalRequired: ${bot.approvalRequired ?? "(inherit)"}\n   ${fd.ar}`;
 
   const buttons: InlineKeyboardButton[][] = [
     [
@@ -311,6 +313,10 @@ export async function showBotConfig(
       { text: "path", callback_data: `c:be:${username}:ph` },
     ],
     [{ text: "model", callback_data: `c:be:${username}:md` }],
+    [
+      { text: "voting", callback_data: `c:be:${username}:ve` },
+      { text: "approvalRequired", callback_data: `c:be:${username}:ar` },
+    ],
     [{ text: `\u25c0\ufe0f ${c.back}`, callback_data: `b:d:${username}` }],
   ];
 
