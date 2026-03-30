@@ -44,11 +44,10 @@ All requests, progress, results, and team discussions flow through one timeline.
 | **Access Level** | What the bot CAN do | `readWrite` — full access · `readOnly` — read, search, analyze only |
 | **Permission Mode** | How writes are authorized | `approve` (default) — button confirmation in chat · `auto` — Claude's safety classifier · `allowAll` — pre-authorized |
 | **User Access** | Who can use each bot | `admins` — all bots · `allowedUsers` — per-bot member list · others — rejected with hint |
-| **Multi-sig approval** | How many people must confirm | `approvalRequired: 2` — button shows "Allow (1/2)", resolves only when enough people approve |
+| **Approvers** | Who must approve writes | `approvers: ["id1", "id2"]` — ALL listed users must approve before writes execute. Empty = any single admin |
 | **Approval delegation** | Temporary approval rights | `/delegate @user 2h` — grants approval power, auto-expires |
-| **Write-op voting** | Team review for code changes | When enabled, bot results that modified files get [Adjust] [Confirm] buttons with configurable voter threshold |
 
-All configurable globally or per-bot, from button menus on your phone. Sensitive project? Set `readOnly`. Trusted solo project? Set `allowAll`. Team project? Set `approve` with multi-sig so writes require multiple people to confirm.
+All configurable globally or per-bot, from button menus on your phone. Sensitive project? Set `readOnly`. Trusted solo project? Set `allowAll`. Team project? Set `approve` with specific approvers so writes require the right people to confirm.
 
 ### Phone-first management
 
@@ -593,8 +592,7 @@ This project runs as a background daemon with access to your filesystem. You sho
 
 - **Slash commands**: `/new` (reset session), `/compact` (compress context), `/model` (switch model), `/effort` (thinking depth), `/cost` (spend stats), `/memory` (view CLAUDE.md), `/status` (bot state) — all handled at daemon level, most cost zero tokens
 - **Task queue**: busy bot queues tasks instead of rejecting — shows queue position and processes automatically when ready
-- **Write-op voting**: results that modify files automatically get [Adjust] [Confirm] buttons — configurable voters and threshold
-- **Multi-sig approval**: approve mode supports requiring N people to confirm — button shows "Allow (1/2)", resolves when threshold met
+- **Approvers list**: configure specific people who must ALL approve — button shows "Allow (1/2)", resolves when everyone approves
 - **Approval delegation**: `/delegate @user 2h` grants temporary approval rights — auto-expires
 - **Context warning**: auto-warns at 80% context usage, auto-compacts at 95% with group notification
 
