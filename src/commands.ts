@@ -95,7 +95,7 @@ export function handleMasterCommand(
 
   // delegate @user 2h — temporary approval delegation
   const delegateMatch = stripped.match(
-    /^delegate\s+@?(\w+)\s+(\d+)\s*(h|m|min|hour|hours|小时|分钟)?$/i,
+    /^delegate\s+(\d+)\s+(\d+)\s*(h|m|min|hour|hours|小时|分钟)?$/i,
   );
   if (delegateMatch) {
     const targetUser = delegateMatch[1]!;
@@ -162,8 +162,8 @@ export function handleMasterCommand(
       }
     }
     if (results.length === 0)
-      return `\ud83d\udd0d "${keyword}" \u2014 No matches found`;
-    return `\ud83d\udd0d "${keyword}" Search results:\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n${results.join("\n\n")}`;
+      return `\ud83d\udd0d "${safeKeyword}" \u2014 No matches found`;
+    return `\ud83d\udd0d "${safeKeyword}" Search results:\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n${results.join("\n\n")}`;
   }
 
   return undefined; // not a built-in command

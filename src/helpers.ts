@@ -7,7 +7,7 @@ import {
   unlinkSync,
 } from "fs";
 import { join } from "path";
-import { execSync, execFileSync } from "child_process";
+import { execFileSync } from "child_process";
 import { INBOX_DIR, loadPool } from "./config.js";
 import { log } from "./logger.js";
 
@@ -16,13 +16,13 @@ export function gitInfo(
   dir: string,
 ): { branch: string; lastCommit: string; lastCommitAge: string } | null {
   try {
-    const branch = execSync("git rev-parse --abbrev-ref HEAD", {
+    const branch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
       cwd: dir,
       timeout: 5000,
     })
       .toString()
       .trim();
-    const gitLog = execSync('git log -1 --format="%s|||%cr"', {
+    const gitLog = execFileSync("git", ["log", "-1", "--format=%s|||%cr"], {
       cwd: dir,
       timeout: 5000,
     })

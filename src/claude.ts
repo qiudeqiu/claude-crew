@@ -1,5 +1,6 @@
 import { InlineKeyboard } from "grammy";
 import { existsSync } from "fs";
+import { randomBytes } from "crypto";
 import { homedir } from "os";
 import { join } from "path";
 import type { ClaudeResult, ManagedBot } from "./types.js";
@@ -7,6 +8,7 @@ import {
   getConfig,
   loadPool,
   getAdmins,
+  canUseBot,
   getBotAccessLevel,
   getBotPermissionMode,
   getBotModel,
@@ -321,7 +323,7 @@ async function requestApproval(
   denied: string[],
   config: ManagedBot["config"],
 ): Promise<string | null> {
-  const approvalId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const approvalId = randomBytes(16).toString("hex");
   const toolList = denied.map((t) => `  \u2022 ${t}`).join("\n");
 
   const pool = loadPool();
@@ -386,7 +388,7 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
   const isDaemonProject = existsSync(join(dir, "src", "daemon.ts"));
   if (!isDaemonProject) return undefined;
 
-  const safeProject = project.replace(/['"\\`$]/g, "_");
+  const safeProject = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff _-]/g, "_");
   return `WARNING: You are running inside the telegram-pool daemon. If you modify daemon.ts or related files, you MUST: 1) finish ALL edits first, 2) send your reply/summary to the user, 3) write a restart note: echo '{"project":"${safeProject}","summary":"<what you did>"}' > ${RESTART_NOTE_FILE}, 4) ONLY THEN run daemon.sh restart as the very last command. Restarting kills your process — anything after it will not execute.`;
 }
 
@@ -582,9 +584,13 @@ export async function invokeClaudeAndReply(
     managed.busy = false;
     daemon.activeInvocations = Math.max(0, daemon.activeInvocations - 1);
 
-    // Process next queued task
-    if (managed.queue.length > 0) {
+    // Process next queued task — re-validate user access
+    while (managed.queue.length > 0) {
       const next = managed.queue.shift()!;
+      if (!canUseBot(next.userId, config)) {
+        log(`QUEUE: ${project} — skipped revoked user ${next.userId}`);
+        continue;
+      }
       log(
         `QUEUE: ${project} — processing next (${managed.queue.length} remaining)`,
       );
@@ -594,6 +600,7 @@ export async function invokeClaudeAndReply(
         next.message,
         next.imagePath,
       );
+      break;
     }
   }
 }

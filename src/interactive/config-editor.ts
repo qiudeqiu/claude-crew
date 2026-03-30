@@ -482,10 +482,24 @@ async function setGlobalValue(
   let parsedValue: unknown = value;
   if (field.key === "masterExecute") parsedValue = value === "true";
   if (field.key === "approvers") {
-    parsedValue = value
+    const ids = value
       .split(/[,\s]+/)
       .map((s) => s.trim())
       .filter(Boolean);
+    const invalid = ids.filter((id) => !/^\d+$/.test(id));
+    if (invalid.length > 0) {
+      const lang = getLang();
+      await api
+        .sendMessage(
+          chatId,
+          lang === "zh"
+            ? `⚠️ 无效 ID: ${invalid.join(", ")}。请输入数字 Telegram User ID`
+            : `⚠️ Invalid ID: ${invalid.join(", ")}. Please enter numeric Telegram User IDs`,
+        )
+        .catch(() => {});
+      return true;
+    }
+    parsedValue = ids;
   }
   savePool({ ...pool, [field.key]: parsedValue });
   log(`CONFIG: global.${field.key} = ${value} by ${userId}`);

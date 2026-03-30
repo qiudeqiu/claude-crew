@@ -15,7 +15,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from "fs";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import type { ManagedBot } from "./types.js";
 import {
   loadPool,
@@ -47,7 +47,7 @@ import { cleanupExpired } from "./interactive/index.js";
 {
   const myPid = process.pid;
   try {
-    const ps = execSync(`pgrep -f "bun run.*daemon.ts"`, {
+    const ps = execFileSync("pgrep", ["-f", "bun run.*daemon.ts"], {
       encoding: "utf8",
     }).trim();
     const pids = ps

@@ -1,7 +1,12 @@
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import type { ManagedBot } from "./types.js";
-import { loadPool, savePool, getBotModel, CONTEXT_BAR_LENGTH } from "./config.js";
+import {
+  loadPool,
+  savePool,
+  getBotModel,
+  CONTEXT_BAR_LENGTH,
+} from "./config.js";
 import { log } from "./logger.js";
 import { formatCost, formatTokens, splitMessage } from "./helpers.js";
 import { sessionStats } from "./state.js";
@@ -57,7 +62,8 @@ export async function handleBotSlashCommand(
   }
 
   // ── /model [sonnet|opus|haiku] — switch model ──
-  const modelMatch = stripped.match(/^model(?:\s+(sonnet|opus|haiku|.+))?$/i);
+  const ALLOWED_MODELS = /^(claude-[a-z0-9.-]+|sonnet|opus|haiku)$/i;
+  const modelMatch = stripped.match(/^model(?:\s+(\S+))?$/i);
   if (modelMatch) {
     const newModel = modelMatch[1];
     if (!newModel) {
@@ -65,9 +71,18 @@ export async function handleBotSlashCommand(
       await tgBot.api
         .sendMessage(
           chatId,
+          zh ? `🤖 当前模型：${current}` : `🤖 Current model: ${current}`,
+        )
+        .catch(() => {});
+      return true;
+    }
+    if (!ALLOWED_MODELS.test(newModel)) {
+      await tgBot.api
+        .sendMessage(
+          chatId,
           zh
-            ? `🤖 当前模型：${current}`
-            : `🤖 Current model: ${current}`,
+            ? "⚠️ 无效模型。可选：sonnet, opus, haiku"
+            : "⚠️ Invalid model. Options: sonnet, opus, haiku",
         )
         .catch(() => {});
       return true;
@@ -90,9 +105,7 @@ export async function handleBotSlashCommand(
   }
 
   // ── /effort [low|medium|high|max] — adjust thinking depth ──
-  const effortMatch = stripped.match(
-    /^effort(?:\s+(low|medium|high|max))?$/i,
-  );
+  const effortMatch = stripped.match(/^effort(?:\s+(low|medium|high|max))?$/i);
   if (effortMatch) {
     const level = effortMatch[1];
     if (!level) {
@@ -166,14 +179,19 @@ export async function handleBotSlashCommand(
 
   // ── /status — bot status ──
   if (/^status$/i.test(stripped)) {
-    const project = config.assignedProject ?? (zh ? "(未分配)" : "(unassigned)");
+    const project =
+      config.assignedProject ?? (zh ? "(未分配)" : "(unassigned)");
     const path = config.assignedPath ?? (zh ? "(未分配)" : "(unassigned)");
     const model = getBotModel(config) || (zh ? "(默认)" : "(default)");
     const effort = managed.effort || "medium";
     const cost = formatCost(managed.lastCostUSD);
     const busyLabel = managed.busy
-      ? zh ? "🔄 运行中" : "🔄 Running"
-      : zh ? "💤 空闲" : "💤 Idle";
+      ? zh
+        ? "🔄 运行中"
+        : "🔄 Running"
+      : zh
+        ? "💤 空闲"
+        : "💤 Idle";
 
     let contextLine: string;
     if (managed.contextWindow > 0) {
@@ -182,8 +200,7 @@ export async function handleBotSlashCommand(
       );
       const barLen = CONTEXT_BAR_LENGTH;
       const filled = Math.round((pct / 100) * barLen);
-      const bar =
-        "\u2588".repeat(filled) + "\u2591".repeat(barLen - filled);
+      const bar = "\u2588".repeat(filled) + "\u2591".repeat(barLen - filled);
       contextLine = `Context: [${bar}] ${pct}%`;
     } else {
       contextLine = zh ? "Context: (暂无数据)" : "Context: (no data yet)";
