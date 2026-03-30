@@ -574,20 +574,18 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 
 ### v0.2.0 — 多项目集群管理（当前版本）
 
-- 一个 daemon 管理 N 个项目 bot，群内 @mention 路由
-- Telegram 交互式按钮菜单：加 bot、改配置、管用户 — 全在手机上完成
-- 两层权限系统：accessLevel（读写/只读）+ permissionMode（approve/auto/allowAll），per-bot 可配
-- 实时工具级进度流式输出（stream-json 解析）
-- 置顶仪表盘：git 分支、最新 commit、context 用量、花费 — 所有项目一目了然
-- 内置 cron 定时任务调度（每日定时或间隔触发）
-- 定期 memory save 项目上下文持久化
-- daemon + watchdog + PID file + 开机自启
-- 安全审计：shell 注入修复、环境变量白名单、路径阻断、immutable 重构
-- 双语 UI（中文 / 英文）
-- bot 回复自动追加 #项目名 标签，点击筛选项目时间线
-- 未授权用户 @bot 返回权限提示（不再静默忽略）
-- 默认 permissionMode 改为 `approve`，新用户更安全
-- 支持订阅、API key、云厂商（Bedrock/Vertex）三种认证方式
+- **@mention 路由**：每个项目一个 bot，群内 @mention 切换，零摩擦
+- **按钮菜单**：加 bot、改配置、管用户 — 全在手机上完成
+- **两层权限**：accessLevel（读写/只读）+ permissionMode（approve/auto/allowAll），per-bot 可配
+- **实时进度**：Claude 在读什么文件、改什么代码、跑什么命令，实时可见
+- **置顶仪表盘**：git 分支、最新 commit、context 用量、花费 — 所有项目一目了然
+- **定时任务**：每日定时或间隔触发的 cron 调度
+- **项目记忆**：自动定期保存，上下文跨 session 持久化
+- **后台 daemon**：watchdog 崩溃重启、开机自启 — 不需要 tmux
+- **#项目标签**：点击即可筛选该项目的完整时间线
+- **双语 UI**：中文 / 英文
+- **默认 approve 模式**：新用户更安全的默认配置
+- **灵活认证**：支持订阅、API key、云厂商（Bedrock/Vertex）
 
 ## 🤝 参与贡献
 

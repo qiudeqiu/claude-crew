@@ -565,20 +565,18 @@ No analytics, no telemetry, no cloud sync, no remote database.
 
 ### v0.2.0 — Multi-project cluster management (current)
 
-- One daemon manages N project bots with @mention routing in group chat
-- Interactive Telegram button menus: add bots, configure settings, manage users — all from phone
-- Two-layer permission system: accessLevel (readWrite/readOnly) + permissionMode (approve/auto/allowAll), per-bot configurable
-- Real-time tool-level progress streaming via stream-json parsing
-- Pinned dashboard: git branch, last commit, context usage, cost — all projects at a glance
-- Built-in cron scheduler (daily or interval-based)
-- Periodic memory save for project context persistence
-- Daemon with watchdog, PID file, and auto-start on login
-- Security audit: shell injection fixes, env allowlist, path blocking, immutable patterns
-- Bilingual UI (English / Chinese)
-- Auto-append #project hashtag to bot replies for per-project timeline filtering
-- Unauthorized user notification (no longer silent)
-- Default permissionMode changed to `approve` for safer onboarding
-- Supports subscription, API key, and cloud provider (Bedrock/Vertex) authentication
+- **@mention routing**: one bot per project, @mention to switch, all in one group chat
+- **Button menus**: add bots, configure settings, manage users — entirely from your phone
+- **Two-layer permissions**: accessLevel (readWrite/readOnly) + permissionMode (approve/auto/allowAll), configurable per bot
+- **Real-time progress**: see what Claude is doing as it works — file reads, edits, commands
+- **Pinned dashboard**: git branch, last commit, context usage, cost — all projects at a glance
+- **Cron scheduler**: daily or interval-based recurring tasks
+- **Project memory**: automatic periodic saves, context persists across sessions
+- **Background daemon**: watchdog auto-restart, auto-start on login — no tmux needed
+- **#project hashtags**: click to filter any project's full timeline
+- **Bilingual UI**: English and Chinese
+- **Default approve mode**: safer onboarding for new users
+- **Flexible auth**: subscription, API key, or cloud provider (Bedrock/Vertex)
 
 ## 🤝 Contributing
 
