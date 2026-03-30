@@ -571,6 +571,17 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 
 无数据分析、无遥测、无云端同步、无远程数据库。
 
+### 自行验证
+
+本项目作为后台 daemon 运行，可以访问你的文件系统。在信任它之前，你应该自行验证：
+
+- **阅读源码** — 约 7200 行 TypeScript，无混淆无压缩。一个下午就能审完。
+- **从源码直接运行** — `bun run src/daemon.ts` 直接执行 TypeScript，没有编译产物。你看到什么就跑什么。
+- **仅一个依赖** — 只有 [grammY](https://grammy.dev)（Telegram Bot 框架），无隐藏包。查看 `package.json`。
+- **无外部网络请求** — 只和 Telegram Bot API 以及本地 `claude` CLI 通信。验证：`grep -r "fetch" src/` 只会看到 Telegram 文件下载。
+- **无数据收集** — 无 analytics，无 telemetry，无远程数据库。验证：`grep -r "analytics\|telemetry\|track" src/`
+- **运行时监控** — 查看所有网络连接：`lsof -i -p $(cat ~/.claude/channels/telegram/daemon.pid)`
+
 ### 访问控制
 
 - **角色访问控制**：管理员可用所有 bot；成员仅可用配置了其 ID 的 bot；其他人拒绝并提示

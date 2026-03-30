@@ -562,6 +562,17 @@ The only external communication is:
 
 No analytics, no telemetry, no cloud sync, no remote database.
 
+### Verify it yourself
+
+This project runs as a background daemon with access to your filesystem. You should verify it before trusting it:
+
+- **Read the source** — ~7200 lines of TypeScript, no minification, no obfuscation. Small enough to audit in an afternoon.
+- **Runs from source** — `bun run src/daemon.ts` executes the TypeScript directly. No compiled binaries, no build artifacts. What you read is what runs.
+- **One dependency** — only [grammY](https://grammy.dev) (Telegram Bot framework). No hidden packages. Check `package.json`.
+- **No external network calls** — only communicates with Telegram Bot API and your local `claude` CLI. Verify: `grep -r "fetch" src/` shows only Telegram file downloads.
+- **No data collection** — no analytics, no telemetry, no remote database. Verify: `grep -r "analytics\|telemetry\|track" src/`
+- **Monitor at runtime** — check all network connections: `lsof -i -p $(cat ~/.claude/channels/telegram/daemon.pid)`
+
 ### Access control
 
 - **Role-based access**: admins can use all bots; members only access bots that list them in `allowedUsers`; others rejected with permission hint
