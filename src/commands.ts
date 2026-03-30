@@ -1,6 +1,12 @@
 import { execFileSync, spawn } from "child_process";
 import { join } from "path";
-import { loadPool, loadCron, saveCron, STATE_DIR } from "./config.js";
+import {
+  loadPool,
+  loadCron,
+  saveCron,
+  getMasterName,
+  STATE_DIR,
+} from "./config.js";
 import { log } from "./logger.js";
 import { updateDashboard } from "./dashboard.js";
 import { getLang, menuMsg } from "./interactive/i18n.js";
@@ -30,8 +36,7 @@ export function handleMasterCommand(
     const lang = getLang();
     const m = menuMsg(lang);
     const pool = loadPool();
-    const masterName =
-      pool.bots.find((b) => b.role === "master")?.username ?? "master";
+    const masterName = getMasterName(pool);
     const jobs = loadCron();
     if (jobs.length === 0) return m.noTasks(masterName);
     return (

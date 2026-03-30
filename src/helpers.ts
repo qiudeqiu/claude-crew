@@ -51,6 +51,10 @@ export function formatCost(usd: number): string {
   return `$${usd.toFixed(4)}`;
 }
 
+export function shortModelName(model: string): string {
+  return model.replace("claude-", "").replace(/\[.*$/, "");
+}
+
 export function formatDuration(ms: number): string {
   const s = Math.round(ms / 1000);
   if (s < 60) return `${s}s`;

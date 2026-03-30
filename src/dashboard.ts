@@ -1,11 +1,17 @@
 import { readFileSync, writeFileSync } from "fs";
-import { loadPool, DASHBOARD_FILE, CONTEXT_BAR_LENGTH } from "./config.js";
+import {
+  loadPool,
+  getMasterName,
+  DASHBOARD_FILE,
+  CONTEXT_BAR_LENGTH,
+} from "./config.js";
 import { log } from "./logger.js";
 import {
   gitInfo,
   formatTokens,
   formatCost,
   formatDuration,
+  shortModelName,
 } from "./helpers.js";
 import { daemon, botByUsername, sessionStats } from "./state.js";
 import { getLang, dashMsg } from "./interactive/i18n.js";
@@ -29,8 +35,7 @@ export async function updateDashboard(): Promise<void> {
   const locale = lang === "zh" ? "zh-CN" : "en-US";
   const timeStr = now.toLocaleString(locale, { hour12: false });
 
-  const masterName =
-    pool.bots.find((b) => b.role === "master")?.username ?? "master";
+  const masterName = getMasterName(pool);
 
   let text = `${d.title(timeStr)}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n`;
 
@@ -56,9 +61,7 @@ export async function updateDashboard(): Promise<void> {
       const barLen = CONTEXT_BAR_LENGTH;
       const filled = Math.round((pct / 100) * barLen);
       const bar = "\u2588".repeat(filled) + "\u2591".repeat(barLen - filled);
-      const modelShort = managed.lastModel
-        .replace("claude-", "")
-        .replace(/\[.*$/, "");
+      const modelShort = shortModelName(managed.lastModel);
       text += `   \ud83d\udcca [${modelShort}] ${bar} ${pct}%`;
       if (managed.lastCostUSD > 0)
         text += ` \u00b7 ${formatCost(managed.lastCostUSD)}`;
@@ -71,7 +74,7 @@ export async function updateDashboard(): Promise<void> {
   if (sessionStats.totalInvocations > 0) {
     const tokenLines = Object.entries(sessionStats.tokensByModel)
       .map(([model, count]) => {
-        const short = model.replace("claude-", "").replace(/\[.*$/, "");
+        const short = shortModelName(model);
         return `${short}: ${formatTokens(count)}`;
       })
       .join(" | ");

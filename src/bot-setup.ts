@@ -4,6 +4,7 @@ import {
   canUseBot,
   isAdmin,
   loadPool,
+  getMasterName,
   WRITE_TOOLS,
   MAX_QUEUE_SIZE,
 } from "./config.js";
@@ -541,8 +542,7 @@ export function setupBot(managed: ManagedBot): void {
         /^(help|setup|bots|config|users|restart|search\s)$/i.test(stripped)
       ) {
         const pool = loadPool();
-        const masterName =
-          pool.bots.find((b) => b.role === "master")?.username ?? "master";
+        const masterName = getMasterName(pool);
         await ctx
           .reply(setupMsg(getLang()).masterOnly(masterName))
           .catch(() => {});

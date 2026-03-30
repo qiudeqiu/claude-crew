@@ -218,12 +218,9 @@ export async function showGlobalConfig(
     ...menuButton(lang),
   ];
 
-  const opts = { reply_markup: { inline_keyboard: buttons } };
-  if (messageId) {
-    await api.editMessageText(chatId, messageId, text, opts).catch(() => {});
-  } else {
-    await api.sendMessage(chatId, text, opts).catch(() => {});
-  }
+  await sendOrEdit(api, chatId, text, messageId, {
+    reply_markup: { inline_keyboard: buttons },
+  });
 }
 
 // ── Per-bot config view ──
@@ -276,12 +273,9 @@ export async function showBotConfig(
     [{ text: `\u25c0\ufe0f ${c.back}`, callback_data: `b:d:${username}` }],
   ];
 
-  const opts = { reply_markup: { inline_keyboard: buttons } };
-  if (messageId) {
-    await api.editMessageText(chatId, messageId, text, opts).catch(() => {});
-  } else {
-    await api.sendMessage(chatId, text, opts).catch(() => {});
-  }
+  await sendOrEdit(api, chatId, text, messageId, {
+    reply_markup: { inline_keyboard: buttons },
+  });
 }
 
 // ── Callback handler ──

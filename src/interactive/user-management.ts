@@ -71,13 +71,9 @@ export async function showUserManagement(
   }
   buttons.push(...menuButton(lang));
 
-  const opts = { reply_markup: { inline_keyboard: buttons } };
-  const text = lines.join("\n");
-  if (messageId) {
-    await api.editMessageText(chatId, messageId, text, opts).catch(() => {});
-  } else {
-    await api.sendMessage(chatId, text, opts).catch(() => {});
-  }
+  await sendOrEdit(api, chatId, lines.join("\n"), messageId, {
+    reply_markup: { inline_keyboard: buttons },
+  });
 }
 
 // ── Bot users view ──
@@ -119,12 +115,7 @@ async function showBotUsers(
   buttons.push([{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }]);
 
   const opts = { reply_markup: { inline_keyboard: buttons } };
-  const text = lines.join("\n");
-  if (messageId) {
-    await api.editMessageText(chatId, messageId, text, opts).catch(() => {});
-  } else {
-    await api.sendMessage(chatId, text, opts).catch(() => {});
-  }
+  await sendOrEdit(api, chatId, lines.join("\n"), messageId, opts);
 }
 
 // ── Callback handler ──

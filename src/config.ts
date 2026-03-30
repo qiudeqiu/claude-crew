@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, statSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import type { BotPool, CronJob, PoolBot } from "./types.js";
@@ -47,7 +47,6 @@ let poolCache: { data: BotPool; mtimeMs: number } | null = null;
 
 export function loadPool(): BotPool {
   try {
-    const { statSync } = require("fs") as typeof import("fs");
     const stat = statSync(POOL_FILE);
     if (poolCache && poolCache.mtimeMs === stat.mtimeMs) {
       return poolCache.data;

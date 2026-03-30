@@ -1,5 +1,11 @@
 import type { ManagedBot } from "../types.js";
-import { isAdmin, loadPool, loadCron, savePool } from "../config.js";
+import {
+  isAdmin,
+  loadPool,
+  loadCron,
+  savePool,
+  getMasterName,
+} from "../config.js";
 import { getConversation, clearConversation } from "./state.js";
 import { handleOnboardCallback, handleOnboardText } from "./onboarding.js";
 import { handleBotCallback, handleBotText } from "./bot-management.js";
@@ -40,8 +46,7 @@ export async function showMainMenu(
           .join("\n")
       : m.none;
 
-  const masterName =
-    pool.bots.find((b) => b.role === "master")?.username ?? "master";
+  const masterName = getMasterName(pool);
 
   const text =
     `${m.title}\n${SEPARATOR}\n\n` +
@@ -140,8 +145,7 @@ async function handleMenuCallback(
 
     case "cron": {
       const jobs = loadCron();
-      const masterName =
-        loadPool().bots.find((b) => b.role === "master")?.username ?? "master";
+      const masterName = getMasterName();
       const text =
         jobs.length === 0
           ? m.noTasks(masterName)
