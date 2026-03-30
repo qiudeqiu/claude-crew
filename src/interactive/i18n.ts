@@ -336,6 +336,9 @@ export function fieldDesc(lang: Lang) {
         ap: "此机器人管理的项目显示名称",
         ph: "项目目录在磁盘上的绝对路径",
         md: "Claude 模型选择。不同模型在速度、能力和成本之间有不同取舍。",
+        ve: "写操作结果自动带投票按钮，团队确认后才算完成",
+        vc: "投票需要多少人确认才算通过",
+        ar: "approve 模式下需要多少人同时批准才能执行写操作",
       }
     : {
         pm: "How write operations (file edits, shell commands) are authorized",
@@ -350,6 +353,9 @@ export function fieldDesc(lang: Lang) {
         ap: "Display name for the project this bot manages",
         ph: "Absolute path to the project directory on disk",
         md: "Claude model selection. Different models trade off speed, capability, and cost.",
+        ve: "Write-op results automatically get voting buttons for team confirmation",
+        vc: "How many people must confirm a vote for it to pass",
+        ar: "How many people must approve in approve mode before writes execute",
       };
 }
 
@@ -372,6 +378,9 @@ export function optDesc(lang: Lang) {
         md_opus: "最强推理 — 复杂架构和深度分析",
         md_haiku: "最快最便宜 — 简单查询和轻量任务",
         md_inherit: "使用全局 model 设置",
+        ve_true: "开启 — 修改文件的结果带 [调整] [确认] 按钮",
+        ve_false: "关闭 — 结果直接发送，无投票按钮",
+        ve_inherit: "使用全局 voting 设置",
       }
     : {
         pm_allowAll:
@@ -393,6 +402,9 @@ export function optDesc(lang: Lang) {
         md_haiku:
           "Fastest and cheapest \u2014 simple queries and lightweight tasks",
         md_inherit: "Use the global model setting",
+        ve_true: "Enabled — write-op results get [Adjust] [Confirm] buttons",
+        ve_false: "Disabled — results sent directly, no voting",
+        ve_inherit: "Use the global voting setting",
       };
 }
 
@@ -409,6 +421,8 @@ export function fieldHint(lang: Lang) {
         wl: '如 "en"、"zh"、"ja"、"ko"，或留空自动检测',
         ap: '如 "my-api"、"frontend"',
         ph: "如 /home/user/projects/my-api",
+        vc: "1 = 一人确认即通过, 2 = 需要两人确认",
+        ar: "1 = 默认（单人审批）, 2+ = 多签",
       }
     : {
         mc: "Recommended: 2-3 for Pro plan, 3-5 for Max plan",
@@ -419,6 +433,8 @@ export function fieldHint(lang: Lang) {
         wl: 'e.g. "en", "zh", "ja", "ko", or empty for auto',
         ap: 'e.g. "my-api", "frontend"',
         ph: "e.g. /home/user/projects/my-api",
+        vc: "1 = one person confirms, 2 = requires two confirmations",
+        ar: "1 = default (single approval), 2+ = multi-sig",
       };
 }
 

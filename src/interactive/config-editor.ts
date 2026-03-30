@@ -105,6 +105,28 @@ const GLOBAL_FIELDS: Record<string, FieldDef> = {
     options: ["sonnet", "opus", "haiku"],
     optionDescKeys: ["md_sonnet", "md_opus", "md_haiku"],
   },
+  ve: {
+    key: "votingEnabled",
+    descKey: "ve",
+    options: ["true", "false"],
+    optionDescKeys: ["ve_true", "ve_false"],
+  },
+  vc: {
+    key: "votingRequiredCount",
+    descKey: "vc",
+    type: "number",
+    min: 1,
+    max: 10,
+    hintKey: "vc",
+  },
+  ar: {
+    key: "approvalRequired",
+    descKey: "ar",
+    type: "number",
+    min: 1,
+    max: 10,
+    hintKey: "ar",
+  },
 };
 
 const BOT_FIELDS: Record<string, FieldDef> = {
@@ -128,6 +150,28 @@ const BOT_FIELDS: Record<string, FieldDef> = {
     options: ["inherit", "sonnet", "opus", "haiku"],
     optionDescKeys: ["md_inherit", "md_sonnet", "md_opus", "md_haiku"],
   },
+  ve: {
+    key: "votingEnabled",
+    descKey: "ve",
+    options: ["inherit", "true", "false"],
+    optionDescKeys: ["ve_inherit", "ve_true", "ve_false"],
+  },
+  vc: {
+    key: "votingRequiredCount",
+    descKey: "vc",
+    type: "number",
+    min: 1,
+    max: 10,
+    hintKey: "vc",
+  },
+  ar: {
+    key: "approvalRequired",
+    descKey: "ar",
+    type: "number",
+    min: 1,
+    max: 10,
+    hintKey: "ar",
+  },
 };
 
 function getFieldLabel(key: string): string {
@@ -144,6 +188,9 @@ function getFieldLabel(key: string): string {
     whisperLanguage: "whisperLanguage",
     assignedProject: "project",
     assignedPath: "path",
+    votingEnabled: "voting",
+    votingRequiredCount: "votingCount",
+    approvalRequired: "approvalRequired",
   };
   return labels[key] ?? key;
 }
@@ -177,7 +224,10 @@ export async function showGlobalConfig(
     `\ud83d\udcca dashboardInterval: ${pool.dashboardIntervalMinutes ?? 30} min \u26a1\n   ${fd.di}\n\n` +
     `\ud83e\udde0 memoryInterval: ${pool.memoryIntervalMinutes ?? 120} min\n   ${fd.mi}\n\n` +
     `\ud83c\udfa4 whisperLanguage: ${pool.whisperLanguage || "(auto)"}\n   ${fd.wl}\n\n` +
-    `\ud83e\udd16 model: ${pool.model || "(default)"}\n   ${fd.md}`;
+    `\ud83e\udd16 model: ${pool.model || "(default)"}\n   ${fd.md}\n\n` +
+    `\ud83d\uddf3\ufe0f voting: ${(pool as Record<string, unknown>).votingEnabled ?? false}\n   ${fd.ve}\n\n` +
+    `\ud83d\udd22 votingCount: ${(pool as Record<string, unknown>).votingRequiredCount ?? 1}\n   ${fd.vc}\n\n` +
+    `\ud83d\udd10 approvalRequired: ${pool.approvalRequired ?? 1}\n   ${fd.ar}`;
 
   const buttons: InlineKeyboardButton[][] = [
     [
@@ -200,6 +250,11 @@ export async function showGlobalConfig(
       { text: "whisperLanguage", callback_data: "c:ge:wl" },
       { text: "model", callback_data: "c:ge:md" },
     ],
+    [
+      { text: "voting", callback_data: "c:ge:ve" },
+      { text: "votingCount", callback_data: "c:ge:vc" },
+    ],
+    [{ text: "approvalRequired", callback_data: "c:ge:ar" }],
     ...menuButton(lang),
   ];
 
@@ -468,8 +523,25 @@ async function setGlobalValue(
   const label = getFieldLabel(field.key);
   const pool = loadPool();
 
-  const parsedValue = field.key === "masterExecute" ? value === "true" : value;
-  savePool({ ...pool, [field.key]: parsedValue });
+  let updatedPool;
+  if (field.key === "votingEnabled") {
+    const voting = {
+      ...(pool.voting ?? { enabled: false }),
+      enabled: value === "true",
+    };
+    updatedPool = { ...pool, voting };
+  } else if (field.key === "votingRequiredCount") {
+    const voting = {
+      ...(pool.voting ?? { enabled: false }),
+      requiredCount: parseInt(value, 10),
+    };
+    updatedPool = { ...pool, voting };
+  } else {
+    const parsedValue =
+      field.key === "masterExecute" ? value === "true" : value;
+    updatedPool = { ...pool, [field.key]: parsedValue };
+  }
+  savePool(updatedPool);
   log(`CONFIG: global.${field.key} = ${value} by ${userId}`);
 
   const projectBots = pool.bots.filter((b) => b.role !== "master");
