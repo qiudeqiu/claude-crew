@@ -4,6 +4,7 @@ import { loadPool, loadCron, saveCron, STATE_DIR } from "./config.js";
 import { log } from "./logger.js";
 import { updateDashboard } from "./dashboard.js";
 import { getLang, menuMsg } from "./interactive/i18n.js";
+import { delegatedApprovers } from "./state.js";
 
 export function handleMasterCommand(
   stripped: string,
@@ -85,6 +86,30 @@ export function handleMasterCommand(
       return `\u26a0\ufe0f Task not found: ${cronDelMatch[1]}`;
     saveCron(filtered);
     return `\u2705 Task deleted: ${cronDelMatch[1]}`;
+  }
+
+  // delegate @user 2h — temporary approval delegation
+  const delegateMatch = stripped.match(
+    /^delegate\s+@?(\w+)\s+(\d+)\s*(h|m|min|hour|hours|小时|分钟)?$/i,
+  );
+  if (delegateMatch) {
+    const targetUser = delegateMatch[1]!;
+    const amount = parseInt(delegateMatch[2]!, 10);
+    const unit = delegateMatch[3]?.toLowerCase() ?? "h";
+    const ms =
+      unit === "m" || unit === "min" || unit === "分钟"
+        ? amount * 60_000
+        : amount * 3_600_000;
+    const expiresAt = Date.now() + ms;
+    delegatedApprovers.set(targetUser, expiresAt);
+    const expireTime = new Date(expiresAt).toLocaleTimeString("zh-CN", {
+      hour12: false,
+    });
+    const lang = getLang();
+    log(`DELEGATE: ${targetUser} until ${expireTime}`);
+    return lang === "zh"
+      ? `✅ ${targetUser} 已获得审批权限，到 ${expireTime} 自动回收`
+      : `✅ ${targetUser} can now approve until ${expireTime}`;
   }
 
   const searchMatch = stripped.match(/^search\s+(.+)$/i);

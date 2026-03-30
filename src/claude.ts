@@ -5,6 +5,8 @@ import { join } from "path";
 import type { ClaudeResult, ManagedBot } from "./types.js";
 import {
   getConfig,
+  loadPool,
+  getAdmins,
   getBotAccessLevel,
   getBotPermissionMode,
   getBotModel,
@@ -20,7 +22,12 @@ import {
 } from "./config.js";
 import { log } from "./logger.js";
 import { getSafeEnv, formatToolLabel, splitMessage } from "./helpers.js";
-import { daemon, sessionStats, pendingApprovals } from "./state.js";
+import {
+  daemon,
+  sessionStats,
+  pendingApprovals,
+  pendingVotes,
+} from "./state.js";
 import { getLang, setupMsg } from "./interactive/i18n.js";
 
 // ══════════════════════════════════════
@@ -88,6 +95,8 @@ export async function runClaude(
   let tokensByModel: Record<string, number> = {};
   let buffer = "";
   let gotResultEvent = false;
+  let hasWriteOps = false;
+  const WRITE_TOOL_NAMES = new Set(["Edit", "Write", "NotebookEdit"]);
   const decoder = new TextDecoder();
   const reader = (proc.stdout as ReadableStream<Uint8Array>).getReader();
 
@@ -157,13 +166,22 @@ export async function runClaude(
         if (block.type === "text" && typeof block.text === "string") {
           assistantText += (assistantText ? "\n" : "") + block.text;
         }
-        if (opts.onProgress && block.type === "tool_use") {
-          opts.onProgress(
-            formatToolLabel(
-              (block.name as string) ?? "",
-              (block.input as Record<string, unknown>) ?? {},
-            ),
-          );
+        if (block.type === "tool_use") {
+          const toolName = (block.name as string) ?? "";
+          if (
+            WRITE_TOOL_NAMES.has(toolName) ||
+            (toolName === "Bash" && block.input)
+          ) {
+            hasWriteOps = true;
+          }
+          if (opts.onProgress) {
+            opts.onProgress(
+              formatToolLabel(
+                toolName,
+                (block.input as Record<string, unknown>) ?? {},
+              ),
+            );
+          }
         }
       }
     }
@@ -237,6 +255,7 @@ export async function runClaude(
     contextUsed,
     contextWindow,
     model,
+    hasWriteOps,
   };
 }
 
@@ -317,24 +336,40 @@ async function requestApproval(
   tgBot: ManagedBot["bot"],
   chatId: string,
   denied: string[],
+  config: ManagedBot["config"],
 ): Promise<string | null> {
   const approvalId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const toolList = denied.map((t) => `  \u2022 ${t}`).join("\n");
+
+  const pool = loadPool();
+  const required = config.approvalRequired ?? pool.approvalRequired ?? 1;
+  const voters = config.approvalVoters ?? pool.approvalVoters ?? getAdmins();
+  const lang = getLang();
+
+  const allowLabel =
+    required > 1
+      ? lang === "zh"
+        ? `✅ 允许 (0/${required})`
+        : `✅ Allow (0/${required})`
+      : "\u2705 Allow & retry";
   const keyboard = new InlineKeyboard()
-    .text("\u2705 Allow & retry", `approve:yes:${approvalId}`)
+    .text(allowLabel, `approve:yes:${approvalId}`)
     .text("\u274c Skip", `approve:no:${approvalId}`);
 
   const timeoutMin = Math.round(APPROVAL_TIMEOUT_MS / 60000);
   await tgBot.api
-    .sendMessage(
-      chatId,
-      setupMsg(getLang()).approvalPrompt(toolList, timeoutMin),
-      { reply_markup: keyboard },
-    )
+    .sendMessage(chatId, setupMsg(lang).approvalPrompt(toolList, timeoutMin), {
+      reply_markup: keyboard,
+    })
     .catch(() => {});
 
   return new Promise<string | null>((resolve) => {
-    pendingApprovals.set(approvalId, { resolve });
+    pendingApprovals.set(approvalId, {
+      resolve,
+      approvedBy: new Set(),
+      required,
+      voters,
+    });
     setTimeout(() => {
       if (pendingApprovals.has(approvalId)) {
         pendingApprovals.delete(approvalId);
@@ -456,7 +491,7 @@ export async function invokeClaudeAndReply(
         log(`APPROVE: denied tools: ${denied.join(", ")}`);
         const firstResultText = result.text;
 
-        const approved = await requestApproval(tgBot, chatId, denied);
+        const approved = await requestApproval(tgBot, chatId, denied, config);
         if (approved) {
           log(`APPROVE: retrying with tools: ${approved}`);
           progress.resetSteps();
@@ -512,10 +547,49 @@ export async function invokeClaudeAndReply(
 
     const projectTag = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff_]/g, "_");
     const chunks = splitMessage(result.text);
+
+    // Determine if voting buttons needed
+    const pool = loadPool();
+    const votingCfg = config.voting ?? pool.voting ?? { enabled: false };
+    const showVoting = result.hasWriteOps && votingCfg.enabled;
+
     for (let i = 0; i < chunks.length; i++) {
-      const text =
-        i === chunks.length - 1 ? `${chunks[i]}\n\n#${projectTag}` : chunks[i];
-      await tgBot.api.sendMessage(chatId, text);
+      const isLast = i === chunks.length - 1;
+      const text = isLast ? `${chunks[i]}\n\n#${projectTag}` : chunks[i];
+
+      if (isLast && showVoting) {
+        const voteId = `vote-${Date.now()}`;
+        const required = votingCfg.requiredCount ?? 1;
+        const voters = votingCfg.requiredVoters ?? getAdmins();
+        const lang = getLang();
+        const confirmLabel =
+          lang === "zh"
+            ? `✅ 确认 (0/${required})`
+            : `✅ Confirm (0/${required})`;
+        const adjustLabel = lang === "zh" ? "🔄 调整" : "🔄 Adjust";
+
+        const sent = await tgBot.api.sendMessage(chatId, text, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: adjustLabel, callback_data: `vote:adjust:${voteId}` },
+                { text: confirmLabel, callback_data: `vote:confirm:${voteId}` },
+              ],
+            ],
+          },
+        });
+
+        pendingVotes.set(voteId, {
+          botToken: config.token,
+          chatId,
+          messageId: sent.message_id,
+          approvedBy: new Set(),
+          required,
+          voters,
+        });
+      } else {
+        await tgBot.api.sendMessage(chatId, text);
+      }
     }
 
     accumulateStats(managed, result);

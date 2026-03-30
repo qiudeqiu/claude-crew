@@ -23,5 +23,26 @@ export const sessionStats: SessionStats = {
 
 export const pendingApprovals = new Map<
   string,
-  { resolve: (tools: string | null) => void }
+  {
+    resolve: (tools: string | null) => void;
+    approvedBy: Set<string>;
+    required: number;
+    voters: string[];
+  }
+>();
+
+/** Delegated approval: userId → expiresAt timestamp */
+export const delegatedApprovers = new Map<string, number>();
+
+/** Pending vote results: messageId → vote state */
+export const pendingVotes = new Map<
+  string,
+  {
+    botToken: string;
+    chatId: string;
+    messageId: number;
+    approvedBy: Set<string>;
+    required: number;
+    voters: string[];
+  }
 >();

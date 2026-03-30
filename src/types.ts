@@ -10,6 +10,9 @@ export type PoolBot = {
   permissionMode?: "allowAll" | "approve" | "auto";
   allowedUsers?: string[];
   model?: string;
+  voting?: VotingConfig;
+  approvalRequired?: number;
+  approvalVoters?: string[];
 };
 
 export type BotPool = {
@@ -27,6 +30,9 @@ export type BotPool = {
   whisperLanguage?: string;
   language?: string;
   model?: string;
+  voting?: VotingConfig;
+  approvalRequired?: number;
+  approvalVoters?: string[];
 };
 
 export type ManagedBot = {
@@ -77,6 +83,14 @@ export type ClaudeResult = {
   contextUsed: number;
   contextWindow: number;
   model: string;
+  hasWriteOps: boolean;
+};
+
+export type VotingConfig = {
+  enabled: boolean;
+  requiredVoters?: string[];
+  requiredCount?: number;
+  mode?: "any" | "all";
 };
 
 // ── Interactive setup ──

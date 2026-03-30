@@ -9,7 +9,7 @@ import {
 } from "./config.js";
 import { log } from "./logger.js";
 import { splitMessage, downloadPhoto, transcribeVoice } from "./helpers.js";
-import { pendingApprovals } from "./state.js";
+import { pendingApprovals, pendingVotes, delegatedApprovers } from "./state.js";
 import { invokeClaudeAndReply } from "./claude.js";
 import { handleMasterCommand } from "./commands.js";
 import { handleBotSlashCommand } from "./bot-commands.js";
@@ -161,8 +161,98 @@ export function setupBot(managed: ManagedBot): void {
       }
     }
 
-    // Approval callbacks
-    if (!isAdmin(userId)) {
+    // Vote callbacks (vote:confirm:id / vote:adjust:id)
+    if (data.startsWith("vote:")) {
+      const [, action, voteId] = data.split(":");
+      const vote = pendingVotes.get(voteId!);
+      if (!vote) {
+        await ctx.answerCallbackQuery({ text: "Expired" });
+        return;
+      }
+
+      if (action === "adjust") {
+        const lang = getLang();
+        await ctx.answerCallbackQuery({
+          text:
+            lang === "zh"
+              ? "请回复说明要调整什么"
+              : "Reply with what to adjust",
+        });
+        return;
+      }
+
+      if (action === "confirm") {
+        if (!vote.voters.includes(userId) && !isAdmin(userId)) {
+          await ctx.answerCallbackQuery({ text: "Not authorized to vote" });
+          return;
+        }
+        if (vote.approvedBy.has(userId)) {
+          await ctx.answerCallbackQuery({ text: "Already voted" });
+          return;
+        }
+        vote.approvedBy.add(userId);
+        const count = vote.approvedBy.size;
+        const lang = getLang();
+
+        if (count >= vote.required) {
+          pendingVotes.delete(voteId!);
+          const doneLabel =
+            lang === "zh"
+              ? `✅ 已确认 (${count}/${vote.required})`
+              : `✅ Confirmed (${count}/${vote.required})`;
+          await ctx.answerCallbackQuery({ text: doneLabel });
+          const msg = ctx.callbackQuery.message;
+          if (msg && "text" in msg && msg.text) {
+            await ctx
+              .editMessageText(`${msg.text}\n\n${doneLabel}`, {
+                reply_markup: { inline_keyboard: [] },
+              })
+              .catch(() => {});
+          }
+        } else {
+          const confirmLabel =
+            lang === "zh"
+              ? `✅ 确认 (${count}/${vote.required})`
+              : `✅ Confirm (${count}/${vote.required})`;
+          const adjustLabel = lang === "zh" ? "🔄 调整" : "🔄 Adjust";
+          await ctx.answerCallbackQuery({ text: `${count}/${vote.required}` });
+          await ctx
+            .editMessageReplyMarkup({
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: adjustLabel,
+                      callback_data: `vote:adjust:${voteId}`,
+                    },
+                    {
+                      text: confirmLabel,
+                      callback_data: `vote:confirm:${voteId}`,
+                    },
+                  ],
+                ],
+              },
+            })
+            .catch(() => {});
+        }
+        return;
+      }
+      return;
+    }
+
+    // Approval callbacks (approve:yes:id / approve:no:id)
+    // Check: admin OR delegated approver
+    const isDelegated = (() => {
+      const expires = delegatedApprovers.get(userId);
+      if (!expires) return false;
+      if (Date.now() > expires) {
+        delegatedApprovers.delete(userId);
+        return false;
+      }
+      return true;
+    })();
+
+    if (!isAdmin(userId) && !isDelegated) {
       const s = setupMsg(getLang());
       await ctx.answerCallbackQuery({ text: s.adminOnly });
       return;
@@ -177,18 +267,74 @@ export function setupBot(managed: ManagedBot): void {
       return;
     }
 
-    pendingApprovals.delete(approvalId!);
-    const approved = action === "yes";
-    pending.resolve(approved ? WRITE_TOOLS : null);
+    if (action === "no") {
+      pendingApprovals.delete(approvalId!);
+      pending.resolve(null);
+      const s = setupMsg(getLang());
+      await ctx.answerCallbackQuery({ text: s.skipped });
+      const msg = ctx.callbackQuery.message;
+      if (msg && "text" in msg && msg.text) {
+        await ctx
+          .editMessageText(`${msg.text}\n\n${s.skipped}`, {
+            reply_markup: { inline_keyboard: [] },
+          })
+          .catch(() => {});
+      }
+      return;
+    }
 
-    const s = setupMsg(getLang());
-    const label = approved ? s.authorized : s.skipped;
-    await ctx.answerCallbackQuery({ text: label });
-    const msg = ctx.callbackQuery.message;
-    if (msg && "text" in msg && msg.text) {
+    // Multi-sig: check if user is in voters list
+    if (
+      pending.voters.length > 0 &&
+      !pending.voters.includes(userId) &&
+      !isAdmin(userId)
+    ) {
+      await ctx.answerCallbackQuery({ text: "Not authorized to approve" });
+      return;
+    }
+
+    if (pending.approvedBy.has(userId)) {
+      await ctx.answerCallbackQuery({ text: "Already approved" });
+      return;
+    }
+
+    pending.approvedBy.add(userId);
+    const count = pending.approvedBy.size;
+
+    if (count >= pending.required) {
+      pendingApprovals.delete(approvalId!);
+      pending.resolve(WRITE_TOOLS);
+      const s = setupMsg(getLang());
+      const label = `${s.authorized} (${count}/${pending.required})`;
+      await ctx.answerCallbackQuery({ text: label });
+      const msg = ctx.callbackQuery.message;
+      if (msg && "text" in msg && msg.text) {
+        await ctx
+          .editMessageText(`${msg.text}\n\n${label}`, {
+            reply_markup: { inline_keyboard: [] },
+          })
+          .catch(() => {});
+      }
+    } else {
+      const lang = getLang();
+      const label =
+        lang === "zh"
+          ? `✅ 允许 (${count}/${pending.required})`
+          : `✅ Allow (${count}/${pending.required})`;
+      await ctx.answerCallbackQuery({ text: `${count}/${pending.required}` });
       await ctx
-        .editMessageText(`${msg.text}\n\n${label}`, {
-          reply_markup: { inline_keyboard: [] },
+        .editMessageReplyMarkup({
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: label, callback_data: `approve:yes:${approvalId}` },
+                {
+                  text: lang === "zh" ? "❌ 跳过" : "❌ Skip",
+                  callback_data: `approve:no:${approvalId}`,
+                },
+              ],
+            ],
+          },
         })
         .catch(() => {});
     }
