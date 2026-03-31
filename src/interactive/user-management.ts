@@ -1,5 +1,5 @@
-import type { Api } from "grammy";
-import type { InlineKeyboardButton } from "grammy/types";
+import type { Platform } from "../platform/types.js";
+import type { Button } from "../platform/types.js";
 import type { ManagedBot } from "../types.js";
 import { loadPool, savePool } from "../config.js";
 import { log } from "../logger.js";
@@ -14,6 +14,8 @@ import {
   sendOrEdit,
   chunkRows,
   SEPARATOR,
+  send,
+  edit,
 } from "./keyboards.js";
 import { getLang, usersMsg, common } from "./i18n.js";
 
@@ -26,7 +28,7 @@ export async function showUserManagement(
 ): Promise<void> {
   const lang = getLang();
   const m = usersMsg(lang);
-  const api = managed.bot.api;
+  const api = managed.platform;
   const pool = loadPool();
   const admins = pool.admins ?? [];
   const projectBots = pool.bots.filter((b) => b.role !== "master");
@@ -47,8 +49,8 @@ export async function showUserManagement(
     }
   }
 
-  const buttons: InlineKeyboardButton[][] = [
-    [{ text: m.addAdmin, callback_data: "u:aa" }],
+  const buttons: Button[][] = [
+    [{ text: m.addAdmin, data: "u:aa" }],
   ];
 
   if (admins.length > 0) {
@@ -56,7 +58,7 @@ export async function showUserManagement(
       ...chunkRows(
         admins.map((a) => ({
           text: `\u274c ${a}`,
-          callback_data: `u:ra:${a}`,
+          data: `u:ra:${a}`,
         })),
       ),
     );
@@ -65,7 +67,7 @@ export async function showUserManagement(
   for (const b of projectBots) {
     if (b.username) {
       buttons.push([
-        { text: m.botUsers(b.username), callback_data: `u:b:${b.username}` },
+        { text: m.botUsers(b.username), data: `u:b:${b.username}` },
       ]);
     }
   }
@@ -79,7 +81,7 @@ export async function showUserManagement(
 // ── Bot users view ──
 
 async function showBotUsers(
-  api: Api,
+  api: Platform,
   chatId: string,
   username: string,
   messageId?: number,
@@ -98,8 +100,8 @@ async function showBotUsers(
     users.length > 0 ? users.map((u) => `  \u2022 ${u}`).join("\n") : m.noUsers,
   ];
 
-  const buttons: InlineKeyboardButton[][] = [
-    [{ text: m.addUser, callback_data: `u:au:${username}` }],
+  const buttons: Button[][] = [
+    [{ text: m.addUser, data: `u:au:${username}` }],
   ];
 
   if (users.length > 0) {
@@ -107,12 +109,12 @@ async function showBotUsers(
       ...chunkRows(
         users.map((u) => ({
           text: `\u274c ${u}`,
-          callback_data: `u:ru:${username}:${u}`,
+          data: `u:ru:${username}:${u}`,
         })),
       ),
     );
   }
-  buttons.push([{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }]);
+  buttons.push([{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]);
 
   const opts = { reply_markup: { inline_keyboard: buttons } };
   await sendOrEdit(api, chatId, lines.join("\n"), messageId, opts);
@@ -127,7 +129,7 @@ export async function handleUserCallback(
   data: string,
   messageId: number,
 ): Promise<boolean> {
-  const api = managed.bot.api;
+  const api = managed.platform;
   const lang = getLang();
   const m = usersMsg(lang);
   const c = common(lang);
@@ -157,7 +159,7 @@ export async function handleUserCallback(
         .editMessageText(chatId, messageId, m.cantRemoveLast, {
           reply_markup: {
             inline_keyboard: [
-              [{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }],
+              [{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }],
             ],
           },
         })
@@ -172,7 +174,7 @@ export async function handleUserCallback(
       .editMessageText(chatId, messageId, m.adminRemoved(adminId), {
         reply_markup: {
           inline_keyboard: [
-            [{ text: `\u25c0\ufe0f ${c.back}`, callback_data: "u:l" }],
+            [{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }],
           ],
         },
       })
@@ -240,7 +242,7 @@ export async function handleUserText(
   const state = getConversation(userId, chatId);
   if (!state) return false;
 
-  const api = managed.bot.api;
+  const api = managed.platform;
   const lang = getLang();
   const m = usersMsg(lang);
   const input = text.trim();
@@ -258,7 +260,7 @@ export async function handleUserText(
     const pool = loadPool();
     const admins = pool.admins ?? [];
     if (admins.includes(input)) {
-      await api.sendMessage(chatId, m.alreadyAdmin(input)).catch(() => {});
+      await send(api, chatId, m.alreadyAdmin(input)).catch(() => {});
       clearConversation(userId, chatId);
       return true;
     }
@@ -271,7 +273,7 @@ export async function handleUserText(
       .sendMessage(chatId, m.adminAdded(input), {
         reply_markup: {
           inline_keyboard: [
-            [{ text: `\u25c0\ufe0f ${m.userMgmt}`, callback_data: "u:l" }],
+            [{ text: `\u25c0\ufe0f ${m.userMgmt}`, data: "u:l" }],
           ],
         },
       })
@@ -324,7 +326,7 @@ export async function handleUserText(
             [
               {
                 text: `\u25c0\ufe0f @${username}`,
-                callback_data: `u:b:${username}`,
+                data: `u:b:${username}`,
               },
             ],
           ],

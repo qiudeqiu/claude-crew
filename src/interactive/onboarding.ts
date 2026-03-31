@@ -1,4 +1,4 @@
-import type { Api } from "grammy";
+import type { Platform } from "../platform/types.js";
 import type { ManagedBot } from "../types.js";
 import { loadPool, savePool, createProjectBot } from "../config.js";
 import { log } from "../logger.js";
@@ -13,6 +13,8 @@ import {
   restartRow,
   cancelButton,
   SEPARATOR,
+  send,
+  edit,
 } from "./keyboards.js";
 import { getLang, onboardMsg, common } from "./i18n.js";
 
@@ -26,22 +28,22 @@ export async function startOnboarding(
   const lang = getLang();
   const m = onboardMsg(lang);
   const c = common(lang);
-  const api = managed.bot.api;
+  const api = managed.platform;
   const pool = loadPool();
   const chatType = await getChatType(api, chatId);
 
   if (chatType === "private") {
-    await api.sendMessage(chatId, m.dmOnly).catch(() => {});
+    await send(api, chatId, m.dmOnly).catch(() => {});
     return;
   }
 
   if (pool.sharedGroupId && pool.sharedGroupId === chatId) {
-    await api.sendMessage(chatId, m.alreadySet).catch(() => {});
+    await send(api, chatId, m.alreadySet).catch(() => {});
     return;
   }
 
   if (pool.sharedGroupId && pool.sharedGroupId !== chatId) {
-    await api.sendMessage(chatId, m.otherGroup).catch(() => {});
+    await send(api, chatId, m.otherGroup).catch(() => {});
     return;
   }
 
@@ -71,7 +73,7 @@ export async function handleOnboardCallback(
 ): Promise<boolean> {
   const lang = getLang();
   const m = onboardMsg(lang);
-  const api = managed.bot.api;
+  const api = managed.platform;
 
   if (data === "o:setgroup") {
     const pool = loadPool();
@@ -111,7 +113,9 @@ export async function handleOnboardCallback(
 
   if (data === "o:cancel") {
     const c = common(lang);
-    await api.editMessageText(chatId, messageId, c.cancelled).catch(() => {});
+    await api
+      .editMessage(chatId, String(messageId), c.cancelled)
+      .catch(() => {});
     clearConversation(userId, chatId);
     return true;
   }
@@ -127,7 +131,9 @@ export async function handleOnboardCallback(
     const { menuMsg } = await import("./i18n.js");
     const mm = menuMsg(lang);
 
-    await api.editMessageText(chatId, messageId, mm.restarting).catch(() => {});
+    await api
+      .editMessage(chatId, String(messageId), mm.restarting)
+      .catch(() => {});
     clearConversation(userId, chatId);
 
     setTimeout(() => {
@@ -153,7 +159,7 @@ export async function handleOnboardText(
   const state = getConversation(userId, chatId);
   if (!state) return false;
 
-  const api = managed.bot.api;
+  const api = managed.platform;
 
   switch (state.step) {
     case "onboard:awaitToken":
@@ -170,7 +176,7 @@ export async function handleOnboardText(
 // ── Step handlers ──
 
 async function handleTokenInput(
-  api: Api,
+  api: Platform,
   chatId: string,
   userId: string,
   text: string,
@@ -199,7 +205,7 @@ async function handleTokenInput(
 }
 
 async function handleProjectInput(
-  api: Api,
+  api: Platform,
   chatId: string,
   userId: string,
   text: string,
@@ -212,17 +218,17 @@ async function handleProjectInput(
   const project = text.trim();
 
   if (!project || project.length > 50) {
-    await api.sendMessage(chatId, m.invalidProject, cancelKb).catch(() => {});
+    await send(api, chatId, m.invalidProject, cancelKb).catch(() => {});
     return true;
   }
 
   setConversation(userId, chatId, "onboard:awaitPath", { project });
-  await api.sendMessage(chatId, m.askPath(project), cancelKb).catch(() => {});
+  await send(api, chatId, m.askPath(project), cancelKb).catch(() => {});
   return true;
 }
 
 async function handlePathInput(
-  api: Api,
+  api: Platform,
   chatId: string,
   userId: string,
   text: string,
@@ -278,7 +284,7 @@ async function finalizeOnboarding(
 ): Promise<boolean> {
   const lang = getLang();
   const m = onboardMsg(lang);
-  const api = managed.bot.api;
+  const api = managed.platform;
   const state = getConversation(userId, chatId);
   if (!state) return false;
 
@@ -303,11 +309,9 @@ async function finalizeOnboarding(
 
 // ── Helpers ──
 
-async function getChatType(api: Api, chatId: string): Promise<string> {
-  try {
-    const chat = await api.getChat(chatId);
-    return chat.type;
-  } catch {
-    return "unknown";
-  }
+async function getChatType(_api: Platform, chatId: string): Promise<string> {
+  // Telegram group IDs are negative; private chats are positive
+  const id = Number(chatId);
+  if (isNaN(id)) return "unknown";
+  return id < 0 ? "group" : "private";
 }

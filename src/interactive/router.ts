@@ -54,7 +54,7 @@ export async function showMainMenu(
     `${m.projects}\n${projects}\n\n` +
     m.textCmds(masterName);
 
-  await sendOrEdit(managed.bot.api, chatId, text, messageId, {
+  await sendOrEdit(managed.platform, chatId, text, messageId, {
     reply_markup: { inline_keyboard: mainMenuKeyboard(lang) },
   });
 }
@@ -114,7 +114,7 @@ async function handleMenuCallback(
   data: string,
   messageId: number,
 ): Promise<boolean> {
-  const api = managed.bot.api;
+  const api = managed.platform;
   const action = data.slice(2);
   const lang = getLang();
   const m = menuMsg(lang);
@@ -254,7 +254,7 @@ export async function routeText(
     if (state && state.step !== "idle") {
       clearConversation(userId, chatId);
       const c = common(getLang());
-      await managed.bot.api.sendMessage(chatId, c.cancelled).catch(() => {});
+      await managed.platform.sendMessage(chatId, c.cancelled).catch(() => {});
       return true;
     }
     return false;

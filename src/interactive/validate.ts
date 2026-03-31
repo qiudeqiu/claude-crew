@@ -1,8 +1,8 @@
 import { existsSync, statSync } from "fs";
 import { resolve } from "path";
 import { homedir } from "os";
-import type { Api } from "grammy";
-import type { InlineKeyboardButton } from "grammy/types";
+import type { Platform } from "../platform/types.js";
+import type { Button } from "../platform/types.js";
 import type { ConversationStep } from "../types.js";
 import { loadPool } from "../config.js";
 import { setConversation } from "./state.js";
@@ -67,12 +67,12 @@ export function validatePath(path: string): boolean {
 // Used by both onboarding and bot-management flows to deduplicate
 // the regex check → duplicate check → API validate → setConversation flow.
 export async function handleTokenValidation(
-  api: Api,
+  api: Platform,
   chatId: string,
   userId: string,
   text: string,
   nextStep: ConversationStep,
-  cancelKb: { reply_markup: { inline_keyboard: InlineKeyboardButton[][] } },
+  cancelKb: { reply_markup: { inline_keyboard: Button[][] } },
   msgs: {
     invalidToken: string;
     duplicateToken: string;
@@ -84,7 +84,7 @@ export async function handleTokenValidation(
   const token = text.trim();
 
   if (!/^\d+:[A-Za-z0-9_-]+$/.test(token)) {
-    await api.sendMessage(chatId, msgs.invalidToken, cancelKb).catch(() => {});
+    await send(api, chatId, msgs.invalidToken, cancelKb).catch(() => {});
     return true;
   }
 

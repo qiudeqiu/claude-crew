@@ -1,4 +1,4 @@
-import type { Api } from "grammy";
+import type { Platform } from "../platform/types.js";
 import type { ManagedBot } from "../types.js";
 import { mkdirSync } from "fs";
 import { loadPool, savePool, createProjectBot } from "../config.js";
@@ -18,6 +18,8 @@ import {
   sendOrEdit,
   chunkRows,
   SEPARATOR,
+  send,
+  edit,
 } from "./keyboards.js";
 import { getLang, botsMsg, common } from "./i18n.js";
 
@@ -30,7 +32,7 @@ export async function showBotList(
 ): Promise<void> {
   const lang = getLang();
   const m = botsMsg(lang);
-  const api = managed.bot.api;
+  const api = managed.platform;
   const pool = loadPool();
   const bots = pool.bots;
 
@@ -53,12 +55,12 @@ export async function showBotList(
   const projectBots = bots.filter((b) => b.role !== "master");
   const botButtons = projectBots.map((b) => ({
     text: `@${b.username ?? "?"}`,
-    callback_data: `b:d:${b.username}`,
+    data: `b:d:${b.username}`,
   }));
 
   const rows = [
     ...chunkRows(botButtons),
-    [{ text: m.addBot, callback_data: "b:a" }],
+    [{ text: m.addBot, data: "b:a" }],
     ...menuButton(lang),
   ];
 
@@ -70,7 +72,7 @@ export async function showBotList(
 // ── Bot detail ──
 
 export async function showBotDetail(
-  api: Api,
+  api: Platform,
   chatId: string,
   username: string,
   messageId?: number,
@@ -106,12 +108,12 @@ export async function showBotDetail(
 
   const keyboard = [
     [
-      { text: m.config, callback_data: `c:b:${username}` },
-      { text: m.users, callback_data: `u:b:${username}` },
+      { text: m.config, data: `c:b:${username}` },
+      { text: m.users, data: `u:b:${username}` },
     ],
     [
-      { text: m.remove, callback_data: `b:r:${username}` },
-      { text: `\u25c0\ufe0f ${c.back}`, callback_data: "b:l" },
+      { text: m.remove, data: `b:r:${username}` },
+      { text: `\u25c0\ufe0f ${c.back}`, data: "b:l" },
     ],
   ];
 
@@ -129,7 +131,7 @@ export async function handleBotCallback(
   data: string,
   messageId: number,
 ): Promise<boolean> {
-  const api = managed.bot.api;
+  const api = managed.platform;
   const lang = getLang();
   const m = botsMsg(lang);
   const c = common(lang);
@@ -262,7 +264,7 @@ export async function handleBotText(
   const state = getConversation(userId, chatId);
   if (!state) return false;
 
-  const api = managed.bot.api;
+  const api = managed.platform;
   const lang = getLang();
   const m = botsMsg(lang);
   const cancelKb = {
@@ -290,7 +292,7 @@ export async function handleBotText(
   if (state.step === "bot:awaitProject") {
     const project = text.trim();
     if (!project || project.length > 50) {
-      await api.sendMessage(chatId, m.invalidProject, cancelKb).catch(() => {});
+      await send(api, chatId, m.invalidProject, cancelKb).catch(() => {});
       return true;
     }
     setConversation(userId, chatId, "bot:awaitPath", { project });
@@ -374,7 +376,7 @@ async function finalizeAddBot(
   userId: string,
   messageId: number,
 ): Promise<boolean> {
-  const api = managed.bot.api;
+  const api = managed.platform;
   const state = getConversation(userId, chatId);
   if (!state) return false;
 

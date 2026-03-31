@@ -1,5 +1,5 @@
-import type { Api } from "grammy";
-import type { InlineKeyboardButton } from "grammy/types";
+import type { Platform } from "../platform/types.js";
+import type { Button } from "../platform/types.js";
 import type { ManagedBot } from "../types.js";
 import { loadPool, savePool } from "../config.js";
 import { log } from "../logger.js";
@@ -172,7 +172,7 @@ export async function showGlobalConfig(
   const cm = configMsg(lang);
   const fd = fieldDesc(lang);
   const od = optDesc(lang);
-  const api = managed.bot.api;
+  const api = managed.platform;
   const pool = loadPool();
 
   const pm = pool.permissionMode ?? "allowAll";
@@ -193,28 +193,28 @@ export async function showGlobalConfig(
     `\ud83e\udd16 model: ${pool.model || "(default)"}\n   ${fd.md}\n\n` +
     `\ud83d\udd10 approvers: ${pool.approvers?.length ? pool.approvers.join(", ") : "(any admin)"}\n   ${fd.ap_list}`;
 
-  const buttons: InlineKeyboardButton[][] = [
+  const buttons: Button[][] = [
     [
-      { text: "permissionMode", callback_data: "c:ge:pm" },
-      { text: "accessLevel", callback_data: "c:ge:al" },
+      { text: "permissionMode", data: "c:ge:pm" },
+      { text: "accessLevel", data: "c:ge:al" },
     ],
     [
-      { text: "masterExecute", callback_data: "c:ge:me" },
-      { text: "maxConcurrent", callback_data: "c:ge:mc" },
+      { text: "masterExecute", data: "c:ge:me" },
+      { text: "maxConcurrent", data: "c:ge:mc" },
     ],
     [
-      { text: "rateLimitSeconds", callback_data: "c:ge:rl" },
-      { text: "sessionTimeout", callback_data: "c:ge:st" },
+      { text: "rateLimitSeconds", data: "c:ge:rl" },
+      { text: "sessionTimeout", data: "c:ge:st" },
     ],
     [
-      { text: "dashboardInterval \u26a1", callback_data: "c:ge:di" },
-      { text: "memoryInterval", callback_data: "c:ge:mi" },
+      { text: "dashboardInterval \u26a1", data: "c:ge:di" },
+      { text: "memoryInterval", data: "c:ge:mi" },
     ],
     [
-      { text: "whisperLanguage", callback_data: "c:ge:wl" },
-      { text: "model", callback_data: "c:ge:md" },
+      { text: "whisperLanguage", data: "c:ge:wl" },
+      { text: "model", data: "c:ge:md" },
     ],
-    [{ text: "approvers", callback_data: "c:ge:ap_list" }],
+    [{ text: "approvers", data: "c:ge:ap_list" }],
     ...menuButton(lang),
   ];
 
@@ -226,7 +226,7 @@ export async function showGlobalConfig(
 // ── Per-bot config view ──
 
 export async function showBotConfig(
-  api: Api,
+  api: Platform,
   chatId: string,
   username: string,
   messageId?: number,
@@ -259,18 +259,18 @@ export async function showBotConfig(
     `\ud83d\udccd path: ${bot.assignedPath ?? "(none)"}\n   ${fd.ph}\n\n` +
     `\ud83d\udd10 approvers: ${bot.approvers?.length ? bot.approvers.join(", ") : "(inherit)"}\n   ${fd.ap_list}`;
 
-  const buttons: InlineKeyboardButton[][] = [
+  const buttons: Button[][] = [
     [
-      { text: "permissionMode", callback_data: `c:be:${username}:pm` },
-      { text: "accessLevel", callback_data: `c:be:${username}:al` },
+      { text: "permissionMode", data: `c:be:${username}:pm` },
+      { text: "accessLevel", data: `c:be:${username}:al` },
     ],
     [
-      { text: "project", callback_data: `c:be:${username}:ap` },
-      { text: "path", callback_data: `c:be:${username}:ph` },
+      { text: "project", data: `c:be:${username}:ap` },
+      { text: "path", data: `c:be:${username}:ph` },
     ],
-    [{ text: "model", callback_data: `c:be:${username}:md` }],
-    [{ text: "approvers", callback_data: `c:be:${username}:ap_list` }],
-    [{ text: `\u25c0\ufe0f ${c.back}`, callback_data: `b:d:${username}` }],
+    [{ text: "model", data: `c:be:${username}:md` }],
+    [{ text: "approvers", data: `c:be:${username}:ap_list` }],
+    [{ text: `\u25c0\ufe0f ${c.back}`, data: `b:d:${username}` }],
   ];
 
   await sendOrEdit(api, chatId, text, messageId, {
@@ -287,7 +287,7 @@ export async function handleConfigCallback(
   data: string,
   messageId: number,
 ): Promise<boolean> {
-  const api = managed.bot.api;
+  const api = managed.platform;
 
   if (data === "c:g") {
     await showGlobalConfig(managed, chatId, messageId);
@@ -368,7 +368,7 @@ export async function handleConfigCallback(
 // ── Show field editor ──
 
 async function showFieldEditor(
-  api: Api,
+  api: Platform,
   chatId: string,
   userId: string,
   field: FieldDef,
@@ -406,14 +406,14 @@ async function showFieldEditor(
       })
       .join("\n");
 
-    const buttons: InlineKeyboardButton[][] = [];
-    const row: InlineKeyboardButton[] = [];
+    const buttons: Button[][] = [];
+    const row: Button[] = [];
     for (const opt of field.options) {
       const marker = opt === currentValue ? "\u2705 " : "";
       const cbData = isGlobal
         ? `c:gv:${fieldKey}:${opt}`
         : `c:bv:${scope}:${fieldKey}:${opt}`;
-      row.push({ text: `${marker}${opt}`, callback_data: cbData });
+      row.push({ text: `${marker}${opt}`, data: cbData });
       if (row.length === 2) {
         buttons.push([...row]);
         row.length = 0;
@@ -423,7 +423,7 @@ async function showFieldEditor(
 
     const backData = isGlobal ? "c:g" : `c:b:${scope}`;
     buttons.push([
-      { text: `\u25c0\ufe0f ${common(lang).back}`, callback_data: backData },
+      { text: `\u25c0\ufe0f ${common(lang).back}`, data: backData },
     ]);
 
     await api
@@ -467,7 +467,7 @@ async function showFieldEditor(
 // ── Set global value ──
 
 async function setGlobalValue(
-  api: Api,
+  api: Platform,
   chatId: string,
   userId: string,
   field: FieldDef,
@@ -526,7 +526,7 @@ async function setGlobalValue(
       {
         reply_markup: {
           inline_keyboard: [
-            [{ text: `\u25c0\ufe0f ${cm.backConfig}`, callback_data: "c:g" }],
+            [{ text: `\u25c0\ufe0f ${cm.backConfig}`, data: "c:g" }],
           ],
         },
       },
@@ -538,7 +538,7 @@ async function setGlobalValue(
 // ── Set bot value ──
 
 async function setBotValue(
-  api: Api,
+  api: Platform,
   chatId: string,
   userId: string,
   username: string,
@@ -578,7 +578,7 @@ async function setBotValue(
             [
               {
                 text: `\u25c0\ufe0f ${cm.backBotConfig}`,
-                callback_data: `c:b:${username}`,
+                data: `c:b:${username}`,
               },
             ],
           ],
@@ -600,7 +600,7 @@ export async function handleConfigText(
   const state = getConversation(userId, chatId);
   if (!state || state.step !== "config:awaitValue") return false;
 
-  const api = managed.bot.api;
+  const api = managed.platform;
   const { editField, editScope } = state.data;
   if (!editField || !editScope) return false;
 
@@ -652,7 +652,7 @@ export async function handleConfigText(
             [
               {
                 text: `\u25c0\ufe0f ${common(lang).back}`,
-                callback_data: backData,
+                data: backData,
               },
             ],
           ],
@@ -706,7 +706,7 @@ export async function handleConfigText(
           [
             {
               text: `\u25c0\ufe0f ${common(lang).back}`,
-              callback_data: backData,
+              data: backData,
             },
           ],
         ],
