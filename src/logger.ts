@@ -20,7 +20,9 @@ export function log(msg: string): void {
           const tail = readFileSync(LOG_FILE, "utf8").slice(-LOG_RETAIN_BYTES);
           writeFileSync(LOG_FILE, tail, { mode: 0o600 });
         }
-      } catch {}
+      } catch {
+        // best-effort rotation — ignore if file is locked or inaccessible
+      }
     }
   } catch {
     process.stderr.write(line);

@@ -428,11 +428,13 @@ async function showFieldEditor(
       { text: `\u25c0\ufe0f ${common(lang).back}`, data: backData },
     ]);
 
-    await edit(api, chatId, messageId,
-        `${cm.editTitle(label)}\n${desc}${restartNote}\n\n${cm.current}: ${currentValue}\n\n${optLines}`,
-        { reply_markup: { inline_keyboard: buttons } },
-      )
-      .catch(() => {});
+    await edit(
+      api,
+      chatId,
+      messageId,
+      `${cm.editTitle(label)}\n${desc}${restartNote}\n\n${cm.current}: ${currentValue}\n\n${optLines}`,
+      { reply_markup: { inline_keyboard: buttons } },
+    ).catch(() => {});
     return true;
   }
 
@@ -447,11 +449,13 @@ async function showFieldEditor(
   const restartNote = field.restart ? `\n${cm.requiresRestart}` : "";
   const backData = isGlobal ? "c:g" : `c:b:${scope}`;
 
-  await edit(api, chatId, messageId,
-      `${cm.editTitle(label)}\n${desc}\n\n${cm.current}: ${currentValue}${rangeHint}${tipHint}${restartNote}\n\n${cm.sendValue}`,
-      { reply_markup: { inline_keyboard: cancelButton(backData, lang) } },
-    )
-    .catch(() => {});
+  await edit(
+    api,
+    chatId,
+    messageId,
+    `${cm.editTitle(label)}\n${desc}\n\n${cm.current}: ${currentValue}${rangeHint}${tipHint}${restartNote}\n\n${cm.sendValue}`,
+    { reply_markup: { inline_keyboard: cancelButton(backData, lang) } },
+  ).catch(() => {});
 
   setConversation(userId, chatId, "config:awaitValue", {
     editField: fieldKey,
@@ -485,12 +489,13 @@ async function setGlobalValue(
     const invalid = ids.filter((id) => !/^\d+$/.test(id));
     if (invalid.length > 0) {
       const lang = getLang();
-      await send(api, chatId,
-          lang === "zh"
-            ? `⚠️ 无效 ID: ${invalid.join(", ")}。请输入数字 Telegram User ID`
-            : `⚠️ Invalid ID: ${invalid.join(", ")}. Please enter numeric Telegram User IDs`,
-        )
-        .catch(() => {});
+      await send(
+        api,
+        chatId,
+        lang === "zh"
+          ? `⚠️ 无效 ID: ${invalid.join(", ")}。请输入数字 Telegram User ID`
+          : `⚠️ Invalid ID: ${invalid.join(", ")}. Please enter numeric Telegram User IDs`,
+      ).catch(() => {});
       return true;
     }
     parsedValue = ids;
@@ -512,17 +517,19 @@ async function setGlobalValue(
 
   const restartNote = field.restart ? `\n${cm.restartNeeded}` : "";
 
-  await edit(api, chatId, messageId,
-      `${cm.saved(label, value)}${impact}${restartNote}`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: `\u25c0\ufe0f ${cm.backConfig}`, data: "c:g" }],
-          ],
-        },
+  await edit(
+    api,
+    chatId,
+    messageId,
+    `${cm.saved(label, value)}${impact}${restartNote}`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: `\u25c0\ufe0f ${cm.backConfig}`, data: "c:g" }],
+        ],
       },
-    )
-    .catch(() => {});
+    },
+  ).catch(() => {});
   return true;
 }
 
@@ -558,22 +565,24 @@ async function setBotValue(
   savePool({ ...pool, bots: updatedBots as typeof pool.bots });
   log(`CONFIG: @${username}.${field.key} = ${value} by ${userId}`);
 
-  await edit(api, chatId, messageId,
-      `${cm.saved(`@${username} ${label}`, value)}`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: `\u25c0\ufe0f ${cm.backBotConfig}`,
-                data: `c:b:${username}`,
-              },
-            ],
+  await edit(
+    api,
+    chatId,
+    messageId,
+    `${cm.saved(`@${username} ${label}`, value)}`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: `\u25c0\ufe0f ${cm.backBotConfig}`,
+              data: `c:b:${username}`,
+            },
           ],
-        },
+        ],
       },
-    )
-    .catch(() => {});
+    },
+  ).catch(() => {});
   return true;
 }
 
@@ -612,8 +621,12 @@ export async function handleConfigText(
       (field.min !== undefined && num < field.min) ||
       (field.max !== undefined && num > field.max)
     ) {
-      await send(api, chatId, cm.invalidNumber(field.min!, field.max!), cancelKb)
-        .catch(() => {});
+      await send(
+        api,
+        chatId,
+        cm.invalidNumber(field.min!, field.max!),
+        cancelKb,
+      ).catch(() => {});
       return true;
     }
 
@@ -633,18 +646,17 @@ export async function handleConfigText(
 
     const restartNote = field.restart ? `\n${cm.restartNeeded}` : "";
     await send(api, chatId, `${cm.saved(label, String(num))}${restartNote}`, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: `\u25c0\ufe0f ${common(lang).back}`,
-                data: backData,
-              },
-            ],
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: `\u25c0\ufe0f ${common(lang).back}`,
+              data: backData,
+            },
           ],
-        },
-      })
-      .catch(() => {});
+        ],
+      },
+    }).catch(() => {});
     return true;
   }
 
@@ -652,8 +664,7 @@ export async function handleConfigText(
   const value = input === "none" || input === "" ? "" : input;
 
   if (field.key === "assignedPath" && value && !validatePath(value)) {
-    await send(api, chatId, cm.invalidPath(value), cancelKb)
-      .catch(() => {});
+    await send(api, chatId, cm.invalidPath(value), cancelKb).catch(() => {});
     return true;
   }
 
@@ -663,8 +674,15 @@ export async function handleConfigText(
     value &&
     !/^[a-z]{2,10}$/i.test(value)
   ) {
-    await send(api, chatId, cm.invalidNumber(2, 10), cancelKb)
-      .catch(() => {});
+    const lang = getLang();
+    await send(
+      api,
+      chatId,
+      lang === "zh"
+        ? '⚠️ 无效语言代码。请输入 2-10 位字母，如 "en"、"zh"、"ja"'
+        : '⚠️ Invalid language code. Enter 2-10 letters, e.g. "en", "zh", "ja"',
+      cancelKb,
+    ).catch(() => {});
     return true;
   }
 
@@ -684,17 +702,16 @@ export async function handleConfigText(
 
   const display = value || `(${lang === "zh" ? "已清除" : "cleared"})`;
   await send(api, chatId, cm.saved(label, display), {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: `\u25c0\ufe0f ${common(lang).back}`,
-              data: backData,
-            },
-          ],
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: `\u25c0\ufe0f ${common(lang).back}`,
+            data: backData,
+          },
         ],
-      },
-    })
-    .catch(() => {});
+      ],
+    },
+  }).catch(() => {});
   return true;
 }

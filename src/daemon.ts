@@ -138,51 +138,71 @@ async function main(): Promise<void> {
     if (config.username) botByUsername.set(config.username, managed);
     if (config.role === "master") daemon.masterBot = managed;
 
-    setupBot(managed);
+    // Telegram: register grammY handlers + start polling
+    // Discord: start via Platform interface (no grammY handlers)
+    if (platformType === "telegram" && tgBot) {
+      setupBot(managed);
 
-    setTimeout(async () => {
-      try {
-        // Register command menu for master bot
-        if (config.role === "master" && "setCommandMenu" in adapter) {
-          await (
-            adapter as import("./platform/telegram/adapter.js").TelegramAdapter
-          )
-            .setCommandMenu([
-              { command: "menu", description: "Main menu" },
-              { command: "bots", description: "Manage project bots" },
-              { command: "config", description: "Edit global settings" },
-              { command: "users", description: "Manage admins & users" },
-              { command: "setup", description: "First-time setup wizard" },
-              { command: "status", description: "Refresh dashboard" },
-              { command: "restart", description: "Restart daemon" },
-            ])
-            .catch(() => {});
+      setTimeout(async () => {
+        try {
+          if (config.role === "master" && "setCommandMenu" in adapter) {
+            await (
+              adapter as import("./platform/telegram/adapter.js").TelegramAdapter
+            )
+              .setCommandMenu([
+                { command: "menu", description: "Main menu" },
+                { command: "bots", description: "Manage project bots" },
+                { command: "config", description: "Edit global settings" },
+                { command: "users", description: "Manage admins & users" },
+                { command: "setup", description: "First-time setup wizard" },
+                { command: "status", description: "Refresh dashboard" },
+                { command: "restart", description: "Restart daemon" },
+              ])
+              .catch(() => {});
+          }
+
+          await tgBot.start({
+            drop_pending_updates: true,
+            onStart: (info) => {
+              log(
+                `ONLINE: @${info.username} → ${config.assignedProject ?? config.role ?? "?"}`,
+              );
+              if (!config.username) {
+                config.username = info.username;
+                botByUsername.set(info.username, managed);
+              }
+            },
+          });
+        } catch (err) {
+          if (err instanceof GrammyError && err.error_code === 409) {
+            log(`409: ${config.username ?? "?"} — retry in 15s`);
+            setTimeout(
+              () => tgBot.start({ drop_pending_updates: true }).catch(() => {}),
+              POLL_RETRY_DELAY_MS,
+            );
+          } else {
+            log(`POLL_FAIL: ${config.username ?? "?"} — ${err}`);
+          }
         }
-
-        await tgBot.start({
-          drop_pending_updates: true,
-          onStart: (info) => {
+      }, i * BOT_START_STAGGER_MS);
+    } else if (platformType === "discord") {
+      // Discord: start via Platform interface
+      setTimeout(async () => {
+        try {
+          await adapter.start((info) => {
             log(
-              `ONLINE: @${info.username} → ${config.assignedProject ?? config.role ?? "?"}`,
+              `ONLINE: ${info.username} → ${config.assignedProject ?? config.role ?? "?"}`,
             );
             if (!config.username) {
               config.username = info.username;
               botByUsername.set(info.username, managed);
             }
-          },
-        });
-      } catch (err) {
-        if (err instanceof GrammyError && err.error_code === 409) {
-          log(`409: ${config.username ?? "?"} — retry in 15s`);
-          setTimeout(
-            () => tgBot.start({ drop_pending_updates: true }).catch(() => {}),
-            POLL_RETRY_DELAY_MS,
-          );
-        } else {
-          log(`POLL_FAIL: ${config.username ?? "?"} — ${err}`);
+          });
+        } catch (err) {
+          log(`DISCORD_FAIL: ${config.username ?? "?"} — ${err}`);
         }
-      }
-    }, i * BOT_START_STAGGER_MS);
+      }, i * BOT_START_STAGGER_MS);
+    }
   }
 
   // On startup: send main menu to group

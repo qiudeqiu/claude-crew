@@ -188,7 +188,7 @@ export function setupBot(managed: ManagedBot): void {
         !pending.requiredApprovers.includes(userId) &&
         !isAdmin(userId)
       ) {
-        await platform.answerCallback(cbId, "Not authorized");
+        const s2 = setupMsg(getLang()); await platform.answerCallback(cbId, s2.adminOnly);
         return;
       }
       pendingApprovals.delete(approvalId!);
@@ -218,12 +218,12 @@ export function setupBot(managed: ManagedBot): void {
       !pending.requiredApprovers.includes(userId) &&
       !isAdmin(userId)
     ) {
-      await platform.answerCallback(cbId, "Not authorized to approve");
+      await platform.answerCallback(cbId, setupMsg(getLang()).adminOnly);
       return;
     }
 
     if (pending.approvedBy.has(userId)) {
-      await platform.answerCallback(cbId, "Already approved");
+      await platform.answerCallback(cbId, getLang() === "zh" ? "已投票" : "Already voted");
       return;
     }
 
@@ -556,7 +556,8 @@ export function setupBot(managed: ManagedBot): void {
       const stripped = text.replace(/@\w+/g, "").trim();
       if (
         /^cron\s/i.test(stripped) ||
-        /^(help|setup|bots|config|users|restart|search\s)$/i.test(stripped)
+        /^(help|setup|bots|config|users|restart)$/i.test(stripped) ||
+        /^search\s/i.test(stripped)
       ) {
         const pool = loadPool();
         const masterName = getMasterName(pool);
