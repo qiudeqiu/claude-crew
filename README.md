@@ -121,6 +121,8 @@ The master bot is your management backend on Telegram. Send `menu` to open the i
 
 Add project bots, configure permissions, manage team access — all through inline button menus. Every setting includes a description of what it does, so you can customize the entire system without reading docs. No terminal needed after initial setup.
 
+![Menu & Config](docs/feat-menu.png)
+
 ### Live project dashboard
 
 A pinned message that auto-refreshes with all your projects at a glance — git branch, last commit, context usage, cost, and rate limit countdown. Your team's mission control.
