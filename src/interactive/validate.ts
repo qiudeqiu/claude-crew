@@ -90,22 +90,24 @@ export async function handleTokenValidation(
 
   const pool = loadPool();
   if (pool.bots.some((b) => b.token === token)) {
-    await send(api, chatId, msgs.duplicateToken, cancelKb)
-      .catch(() => {});
+    await send(api, chatId, msgs.duplicateToken, cancelKb).catch(() => {});
     return true;
   }
 
-  const statusMsg = await send(api, chatId, msgs.validating)
+  const statusMsg = await api
+    .sendMessage(chatId, msgs.validating)
     .catch(() => null);
   const result = await validateBotToken(token);
 
   if (!result.ok) {
     if (statusMsg) {
-      await edit(api, chatId, statusMsg.message_id,
-          msgs.invalidTokenApi,
-          cancelKb,
-        )
-        .catch(() => {});
+      await edit(
+        api,
+        chatId,
+        statusMsg.id,
+        msgs.invalidTokenApi,
+        cancelKb,
+      ).catch(() => {});
     }
     return true;
   }
@@ -113,11 +115,13 @@ export async function handleTokenValidation(
   const suffix =
     nextStep === "bot:awaitProject" ? common(getLang()).replyHint : "";
   if (statusMsg) {
-    await edit(api, chatId, statusMsg.message_id,
-        msgs.foundBot(result.username!) + suffix,
-        cancelKb,
-      )
-      .catch(() => {});
+    await edit(
+      api,
+      chatId,
+      statusMsg.id,
+      msgs.foundBot(result.username!) + suffix,
+      cancelKb,
+    ).catch(() => {});
   }
 
   setConversation(userId, chatId, nextStep, {

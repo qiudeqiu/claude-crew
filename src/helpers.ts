@@ -112,7 +112,9 @@ export async function transcribeVoice(
     const oggPath = await downloadFile(fileId);
     if (!oggPath) return undefined;
 
-    const wavPath = oggPath.replace(".ogg", ".wav");
+    // Strip extension and force .wav — voice files may be .ogg, .oga, etc.
+    const basePath = oggPath.replace(/\.[^.]+$/, "");
+    const wavPath = `${basePath}.wav`;
     try {
       execFileSync(
         "ffmpeg",
@@ -141,7 +143,7 @@ export async function transcribeVoice(
         timeout: 60000,
         stdio: ["pipe", "pipe", "pipe"],
       });
-      const txtPath = wavPath.replace(".wav", ".txt");
+      const txtPath = `${basePath}.txt`;
       const text = existsSync(txtPath)
         ? readFileSync(txtPath, "utf8").trim()
         : "";
@@ -228,12 +230,18 @@ export function getSafeEnv(): Record<string, string> {
   return Object.fromEntries(
     Object.entries(process.env).filter(([k]) => {
       const upper = k.toUpperCase();
-      // Always allow exact matches
+      // Block sensitive patterns first — even if prefix matches
+      const isSensitive = SENSITIVE_PATTERNS.some((pat) => upper.includes(pat));
+      if (isSensitive) {
+        // Exception: explicitly safe exact matches override
+        return SAFE_EXACT.has(upper);
+      }
+      // Allow exact matches
       if (SAFE_EXACT.has(upper)) return true;
-      // Always allow safe prefixes
+      // Allow safe prefixes
       if (SAFE_PREFIXES.some((p) => upper.startsWith(p))) return true;
-      // Block anything matching sensitive patterns
-      return !SENSITIVE_PATTERNS.some((pat) => upper.includes(pat));
+      // Default: allow (non-sensitive, non-prefixed vars like EDITOR, DISPLAY, etc.)
+      return true;
     }),
   ) as Record<string, string>;
 }

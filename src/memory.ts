@@ -63,7 +63,7 @@ export async function checkMemory(): Promise<void> {
 
   // Notify via master bot
   if (saving.length > 0 && daemon.masterBot && chatId) {
-    await daemon.masterBot.bot.api
+    await daemon.masterBot.platform
       .sendMessage(chatId, `\ud83e\udde0 Periodic memory: ${saving.join(", ")}`)
       .catch(() => {});
   }

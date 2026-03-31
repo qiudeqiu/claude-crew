@@ -182,6 +182,15 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (action === "no") {
+      // Multi-sig: only approvers (or admins) can skip
+      if (
+        pending.requiredApprovers.length > 0 &&
+        !pending.requiredApprovers.includes(userId) &&
+        !isAdmin(userId)
+      ) {
+        await platform.answerCallback(cbId, "Not authorized");
+        return;
+      }
       pendingApprovals.delete(approvalId!);
       pending.resolve(null);
       const s = setupMsg(getLang());
@@ -272,20 +281,16 @@ export function setupBot(managed: ManagedBot): void {
           ? `✅ 允许 (${count}/${total})`
           : `✅ Allow (${count}/${total})`;
       await platform.answerCallback(cbId, `${count}/${total}`);
-      await ctx
-        .editMessageReplyMarkup({
-          reply_markup: {
-            inline_keyboard: [
-              [
-                { text: label, data: `approve:yes:${approvalId}` },
-                {
-                  text: lang === "zh" ? "❌ 跳过" : "❌ Skip",
-                  data: `approve:no:${approvalId}`,
-                },
-              ],
-            ],
-          },
-        })
+      await platform
+        .editButtonsOnly(chatId, String(messageId), [
+          [
+            { text: label, data: `approve:yes:${approvalId}` },
+            {
+              text: lang === "zh" ? "❌ 跳过" : "❌ Skip",
+              data: `approve:no:${approvalId}`,
+            },
+          ],
+        ])
         .catch(() => {});
     }
   });

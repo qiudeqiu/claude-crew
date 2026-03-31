@@ -195,7 +195,7 @@ async function main(): Promise<void> {
       const { showMainMenu } = await import("./interactive/index.js");
       const lang = getLang();
       const m = menuMsg(lang);
-      await daemon.masterBot!.bot.api.sendMessage(
+      await daemon.masterBot!.platform.sendMessage(
         pool.sharedGroupId,
         m.started,
       );

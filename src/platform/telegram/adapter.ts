@@ -53,8 +53,7 @@ export class TelegramAdapter implements Platform {
         messageId: String(ctx.callbackQuery.message?.message_id ?? 0),
         data: ctx.callbackQuery.data,
         messageText:
-          ctx.callbackQuery.message &&
-          "text" in ctx.callbackQuery.message
+          ctx.callbackQuery.message && "text" in ctx.callbackQuery.message
             ? ctx.callbackQuery.message.text
             : undefined,
       };
@@ -189,7 +188,8 @@ export class TelegramAdapter implements Platform {
       const res = await fetch(url);
       if (!res.ok) return undefined;
       const buf = Buffer.from(await res.arrayBuffer());
-      const ext = file.file_path.split(".").pop() ?? "jpg";
+      const rawExt = file.file_path.split(".").pop() ?? "jpg";
+      const ext = rawExt.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10) || "bin";
       const path = join(INBOX_DIR, `${Date.now()}.${ext}`);
       writeFileSync(path, buf);
       return path;
@@ -279,7 +279,8 @@ export class TelegramAdapter implements Platform {
       caption: (msg?.caption as string) ?? undefined,
       photoFileId,
       voiceFileId: voice?.file_id,
-      entities: (msg?.entities as PlatformMessage["entities"]) ??
+      entities:
+        (msg?.entities as PlatformMessage["entities"]) ??
         (msg?.caption_entities as PlatformMessage["entities"]),
       replyTo,
       raw: msg,

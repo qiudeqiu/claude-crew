@@ -204,7 +204,7 @@ async function handleMenuCallback(
 // ── Language selector ──
 
 async function showLanguageSelector(
-  api: import("grammy").Api,
+  api: import("../platform/types.js").Platform,
   chatId: string,
   lang: Lang,
   messageId: number,
