@@ -70,9 +70,9 @@ export class TelegramAdapter implements Platform {
 
     this.bot.catch((err) => {
       const username = err.ctx?.me?.username ?? "?";
-      // Suppress expected errors, log unexpected ones
+      // Suppress expected grammY errors, log unexpected ones
       if (!(err.error instanceof GrammyError)) {
-        console.error(`BOT_ERROR: ${username} — ${err.error}`);
+        process.stderr.write(`BOT_ERROR: ${username} — ${err.error}\n`);
       }
     });
 

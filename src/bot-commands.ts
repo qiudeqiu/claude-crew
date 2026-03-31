@@ -8,7 +8,7 @@ import {
   CONTEXT_BAR_LENGTH,
 } from "./config.js";
 import { log } from "./logger.js";
-import { formatCost, formatTokens, splitMessage } from "./helpers.js";
+import { formatCost, splitMessage } from "./helpers.js";
 import { sessionStats } from "./state.js";
 import { getLang } from "./interactive/i18n.js";
 import { invokeClaudeAndReply } from "./claude.js";

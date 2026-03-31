@@ -151,7 +151,9 @@ export async function transcribeVoice(
         unlinkSync(oggPath);
         unlinkSync(wavPath);
         unlinkSync(txtPath);
-      } catch {}
+      } catch {
+        // best-effort cleanup — ignore if files already deleted
+      }
       return { path: wavPath, text };
     } catch (err) {
       log(`WHISPER_ERROR: ${err}`);

@@ -55,6 +55,7 @@ export function loadPool(): BotPool {
     poolCache = { data, mtimeMs: stat.mtimeMs };
     return data;
   } catch {
+    // File missing (first run) or corrupted — return empty pool
     return { bots: [] };
   }
 }
@@ -71,6 +72,7 @@ export function loadCron(): CronJob[] {
   try {
     return JSON.parse(readFileSync(CRON_FILE, "utf8")) as CronJob[];
   } catch {
+    // File missing or corrupted — return empty list
     return [];
   }
 }

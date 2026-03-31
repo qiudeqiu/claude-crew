@@ -104,7 +104,9 @@ export async function updateDashboard(): Promise<void> {
     let dashMsgData: { messageId: number; chatId: string } | null = null;
     try {
       dashMsgData = JSON.parse(readFileSync(DASHBOARD_FILE, "utf8"));
-    } catch {}
+    } catch {
+      // File missing or corrupted — proceed as if no previous dashboard
+    }
 
     const p = daemon.masterBot.platform;
 
