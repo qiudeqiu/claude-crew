@@ -8,6 +8,7 @@
  */
 
 import { Bot, GrammyError } from "grammy";
+import { TelegramAdapter } from "./platform/telegram/adapter.js";
 import {
   mkdirSync,
   existsSync,
@@ -105,10 +106,12 @@ async function main(): Promise<void> {
 
   for (let i = 0; i < pool.bots.length; i++) {
     const config = pool.bots[i];
-    const tgBot = new Bot(config.token);
+    const tgAdapter = new TelegramAdapter(config.token);
+    const tgBot = tgAdapter.raw; // grammY Bot for migration period
     const managed: ManagedBot = {
       config,
       bot: tgBot,
+      platform: tgAdapter,
       busy: false,
       lastInvoke: 0,
       lastActivity: 0,

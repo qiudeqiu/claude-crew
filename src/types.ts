@@ -1,4 +1,5 @@
 import type { Bot } from "grammy";
+import type { Platform } from "./platform/types.js";
 
 export type PoolBot = {
   token: string;
@@ -35,6 +36,7 @@ export type BotPool = {
 export type ManagedBot = {
   config: PoolBot;
   bot: Bot;
+  platform: Platform;
   busy: boolean;
   lastInvoke: number;
   lastActivity: number;
@@ -59,6 +61,8 @@ export type QueuedTask = {
   message: string;
   imagePath?: string;
   queuedAt: number;
+  /** Display name for @mention in results */
+  requesterName?: string;
 };
 
 export type CronJob = {

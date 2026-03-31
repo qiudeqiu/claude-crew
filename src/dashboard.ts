@@ -106,29 +106,24 @@ export async function updateDashboard(): Promise<void> {
       dashMsgData = JSON.parse(readFileSync(DASHBOARD_FILE, "utf8"));
     } catch {}
 
+    const p = daemon.masterBot.platform;
+
     if (dashMsgData && dashMsgData.chatId === pool.sharedGroupId) {
-      await daemon.masterBot.bot.api
-        .deleteMessage(pool.sharedGroupId, dashMsgData.messageId)
+      await p
+        .deleteMessage(pool.sharedGroupId, String(dashMsgData.messageId))
         .catch(() => {});
     }
 
-    const sent = await daemon.masterBot.bot.api.sendMessage(
-      pool.sharedGroupId,
-      text,
-    );
+    const sent = await p.sendMessage(pool.sharedGroupId, text);
     writeFileSync(
       DASHBOARD_FILE,
       JSON.stringify({
-        messageId: sent.message_id,
+        messageId: sent.id,
         chatId: pool.sharedGroupId,
       }),
       { mode: 0o600 },
     );
-    await daemon.masterBot.bot.api
-      .pinChatMessage(pool.sharedGroupId, sent.message_id, {
-        disable_notification: true,
-      })
-      .catch(() => {});
+    await p.pinMessage(pool.sharedGroupId, sent.id).catch(() => {});
     log(`DASHBOARD: posted and pinned`);
   } catch (err) {
     log(`DASHBOARD_ERROR: ${err}`);

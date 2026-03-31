@@ -1,4 +1,3 @@
-import { InlineKeyboard } from "grammy";
 import { existsSync } from "fs";
 import { randomBytes } from "crypto";
 import { homedir } from "os";
@@ -255,10 +254,10 @@ type ProgressTracker = {
 };
 
 function createProgressTracker(
-  tgBot: ManagedBot["bot"],
+  tgBot: ManagedBot["platform"],
   chatId: string,
 ): ProgressTracker {
-  let statusMsgId: number | null = null;
+  let statusMsgId: string | null = null;
   const steps: string[] = [];
   const startTime = Date.now();
   let lastProgressUpdate = 0;
@@ -271,12 +270,12 @@ function createProgressTracker(
       `\u2699\ufe0f working... (${elapsed}s)\n` +
       recent.map((s) => `  \u2192 \ud83d\udd27 ${s}`).join("\n");
     if (statusMsgId) {
-      void tgBot.api.editMessageText(chatId, statusMsgId, text).catch(() => {});
+      void tgBot.editMessage(chatId, statusMsgId, text).catch(() => {});
     } else {
-      tgBot.api
+      tgBot
         .sendMessage(chatId, text)
         .then((sent) => {
-          statusMsgId = sent.message_id;
+          statusMsgId = sent.id;
         })
         .catch(() => {});
     }
@@ -305,7 +304,7 @@ function createProgressTracker(
     },
     async deleteStatusMsg(): Promise<void> {
       if (statusMsgId) {
-        await tgBot.api.deleteMessage(chatId, statusMsgId).catch(() => {});
+        await tgBot.deleteMessage(chatId, statusMsgId).catch(() => {});
       }
     },
     resetSteps(): void {
@@ -318,7 +317,7 @@ function createProgressTracker(
 // ── Approval flow ──
 // ══════════════════════════════════════
 async function requestApproval(
-  tgBot: ManagedBot["bot"],
+  tgBot: ManagedBot["platform"],
   chatId: string,
   denied: string[],
   config: ManagedBot["config"],
@@ -336,15 +335,15 @@ async function requestApproval(
         ? `✅ 允许 (0/${approvers.length})`
         : `✅ Allow (0/${approvers.length})`
       : "\u2705 Allow & retry";
-  const keyboard = new InlineKeyboard()
-    .text(allowLabel, `approve:yes:${approvalId}`)
-    .text("\u274c Skip", `approve:no:${approvalId}`);
 
   const timeoutMin = Math.round(APPROVAL_TIMEOUT_MS / 60000);
-  await tgBot.api
-    .sendMessage(chatId, setupMsg(lang).approvalPrompt(toolList, timeoutMin), {
-      reply_markup: keyboard,
-    })
+  await tgBot
+    .sendButtons(chatId, setupMsg(lang).approvalPrompt(toolList, timeoutMin), [
+      [
+        { text: allowLabel, data: `approve:yes:${approvalId}` },
+        { text: "\u274c Skip", data: `approve:no:${approvalId}` },
+      ],
+    ])
     .catch(() => {});
 
   return new Promise<string | null>((resolve) => {
@@ -400,8 +399,9 @@ export async function invokeClaudeAndReply(
   chatId: string,
   userMessage: string,
   imagePath?: string,
+  requesterName?: string,
 ): Promise<void> {
-  const { config, bot: tgBot } = managed;
+  const { config, platform } = managed;
   const project = config.assignedProject ?? config.username ?? "?";
   const dir = config.assignedPath ?? homedir();
   const mode = getBotPermissionMode(config);
@@ -413,11 +413,11 @@ export async function invokeClaudeAndReply(
 
   const s = setupMsg(getLang());
   if (Date.now() - managed.lastInvoke < cfg.rateLimitMs) {
-    await tgBot.api.sendMessage(chatId, s.rateLimited).catch(() => {});
+    await platform.sendMessage(chatId, s.rateLimited).catch(() => {});
     return;
   }
   if (daemon.activeInvocations >= cfg.maxConcurrent) {
-    await tgBot.api
+    await platform
       .sendMessage(
         chatId,
         s.queueFull(daemon.activeInvocations, cfg.maxConcurrent),
@@ -430,14 +430,14 @@ export async function invokeClaudeAndReply(
   managed.lastInvoke = Date.now();
   daemon.activeInvocations++;
 
-  void tgBot.api.sendChatAction(chatId, "typing").catch(() => {});
+  void platform.sendTyping(chatId).catch(() => {});
   const typingInterval = setInterval(() => {
-    void tgBot.api.sendChatAction(chatId, "typing").catch(() => {});
+    void platform.sendTyping(chatId).catch(() => {});
   }, TYPING_INTERVAL_MS);
 
   log(`INVOKE: ${project} [${mode}] — "${userMessage.slice(0, 80)}"`);
 
-  const progress = createProgressTracker(tgBot, chatId);
+  const progress = createProgressTracker(platform, chatId);
 
   try {
     const cleanMsg = userMessage.replace(/@\w+/g, "").trim();
@@ -474,7 +474,12 @@ export async function invokeClaudeAndReply(
         log(`APPROVE: denied tools: ${denied.join(", ")}`);
         const firstResultText = result.text;
 
-        const approved = await requestApproval(tgBot, chatId, denied, config);
+        const approved = await requestApproval(
+          platform,
+          chatId,
+          denied,
+          config,
+        );
         if (approved) {
           log(`APPROVE: retrying with tools: ${approved}`);
           progress.resetSteps();
@@ -522,18 +527,21 @@ export async function invokeClaudeAndReply(
     await progress.deleteStatusMsg();
 
     if (!result.text) {
-      await tgBot.api
+      await platform
         .sendMessage(chatId, setupMsg(getLang()).noOutput)
         .catch(() => {});
       return;
     }
 
     const projectTag = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff_]/g, "_");
+    const mention = requesterName ? ` @${requesterName}` : "";
     const chunks = splitMessage(result.text);
     for (let i = 0; i < chunks.length; i++) {
       const text =
-        i === chunks.length - 1 ? `${chunks[i]}\n\n#${projectTag}` : chunks[i];
-      await tgBot.api.sendMessage(chatId, text);
+        i === chunks.length - 1
+          ? `${chunks[i]}\n\n#${projectTag}${mention}`
+          : chunks[i];
+      await platform.sendMessage(chatId, text);
     }
 
     accumulateStats(managed, result);
@@ -556,7 +564,7 @@ export async function invokeClaudeAndReply(
           lang === "zh"
             ? `🔄 @${config.username} 上下文已用 ${Math.round(pct * 100)}%，正在自动压缩...`
             : `🔄 @${config.username} context at ${Math.round(pct * 100)}%, auto-compacting...`;
-        await tgBot.api.sendMessage(chatId, msg).catch(() => {});
+        await platform.sendMessage(chatId, msg).catch(() => {});
         void invokeClaudeAndReply(
           managed,
           chatId,
@@ -569,13 +577,13 @@ export async function invokeClaudeAndReply(
           lang === "zh"
             ? `⚠️ @${config.username} 上下文已用 ${Math.round(pct * 100)}%，建议 /new 重置或 /compact 压缩`
             : `⚠️ @${config.username} context at ${Math.round(pct * 100)}% — consider /new to reset or /compact to compress`;
-        await tgBot.api.sendMessage(chatId, msg).catch(() => {});
+        await platform.sendMessage(chatId, msg).catch(() => {});
       }
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log(`FAIL: ${project} — ${msg}`);
-    await tgBot.api
+    await platform
       .sendMessage(chatId, `\u26a0\ufe0f Failed: ${msg.slice(0, 200)}`)
       .catch(() => {});
   } finally {
@@ -599,6 +607,7 @@ export async function invokeClaudeAndReply(
         next.chatId,
         next.message,
         next.imagePath,
+        next.requesterName,
       );
       break;
     }
