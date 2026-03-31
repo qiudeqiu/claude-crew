@@ -19,6 +19,8 @@ import {
   menuButton,
   sendOrEdit,
   SEPARATOR,
+  send,
+  edit,
 } from "./keyboards.js";
 import { getLang, menuMsg, langMsg, common, type Lang } from "./i18n.js";
 import { updateDashboard } from "../dashboard.js";
@@ -138,9 +140,7 @@ async function handleMenuCallback(
 
     case "status":
       void updateDashboard();
-      await api
-        .editMessageText(chatId, messageId, m.refreshing)
-        .catch(() => {});
+      await edit(api, chatId, messageId, m.refreshing).catch(() => {});
       return true;
 
     case "cron": {
@@ -157,11 +157,9 @@ async function handleMenuCallback(
                 return `${status} [${j.id}] @${j.botUsername} ${j.schedule}\n   ${j.prompt.slice(0, 60)}\n   ${m.last}: ${last}`;
               })
               .join("\n\n");
-      await api
-        .editMessageText(chatId, messageId, text, {
-          reply_markup: { inline_keyboard: menuButton(lang) },
-        })
-        .catch(() => {});
+      await edit(api, chatId, messageId, text, {
+        reply_markup: { inline_keyboard: menuButton(lang) },
+      }).catch(() => {});
       return true;
     }
 
@@ -173,9 +171,7 @@ async function handleMenuCallback(
       const { spawn } = await import("child_process");
       const { join } = await import("path");
       const { STATE_DIR } = await import("../config.js");
-      await api
-        .editMessageText(chatId, messageId, m.restarting)
-        .catch(() => {});
+      await edit(api, chatId, messageId, m.restarting).catch(() => {});
       setTimeout(() => {
         spawn(join(STATE_DIR, "daemon.sh"), ["restart"], {
           detached: true,
@@ -196,11 +192,9 @@ async function handleMenuCallback(
     savePool({ ...pool, language: newLang });
     const lm = langMsg(newLang);
     const name = newLang === "zh" ? "中文" : "English";
-    await api
-      .editMessageText(chatId, messageId, lm.changed(name), {
-        reply_markup: { inline_keyboard: menuButton(newLang) },
-      })
-      .catch(() => {});
+    await edit(api, chatId, messageId, lm.changed(name), {
+      reply_markup: { inline_keyboard: menuButton(newLang) },
+    }).catch(() => {});
     return true;
   }
 
@@ -219,24 +213,22 @@ async function showLanguageSelector(
   const enMark = lang === "en" ? "\u2705 " : "";
   const zhMark = lang === "zh" ? "\u2705 " : "";
 
-  await api
-    .editMessageText(chatId, messageId, `${lm.title}\n\n${lm.desc}`, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: `${enMark}English`, callback_data: "m:lang:en" },
-            { text: `${zhMark}中文`, callback_data: "m:lang:zh" },
-          ],
-          [
-            {
-              text: `\u25c0\ufe0f ${common(lang).menu}`,
-              callback_data: "m:menu",
-            },
-          ],
+  await edit(api, chatId, messageId, `${lm.title}\n\n${lm.desc}`, {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: `${enMark}English`, data: "m:lang:en" },
+          { text: `${zhMark}中文`, data: "m:lang:zh" },
         ],
-      },
-    })
-    .catch(() => {});
+        [
+          {
+            text: `\u25c0\ufe0f ${common(lang).menu}`,
+            data: "m:menu",
+          },
+        ],
+      ],
+    },
+  }).catch(() => {});
 }
 
 // ── Text router ──

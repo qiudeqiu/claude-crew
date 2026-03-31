@@ -47,19 +47,17 @@ export async function startOnboarding(
     return;
   }
 
-  await api
-    .sendMessage(chatId, m.welcome, {
-      reply_markup: {
-        inline_keyboard: confirmRow(
-          "o:setgroup",
-          "o:cancel",
-          m.yesUseGroup,
-          c.cancel,
-          lang,
-        ),
-      },
-    })
-    .catch(() => {});
+  await send(api, chatId, m.welcome, {
+    reply_markup: {
+      inline_keyboard: confirmRow(
+        "o:setgroup",
+        "o:cancel",
+        m.yesUseGroup,
+        c.cancel,
+        lang,
+      ),
+    },
+  }).catch(() => {});
 }
 
 // ── Callback handlers ──
@@ -82,11 +80,9 @@ export async function handleOnboardCallback(
 
     const projectBots = pool.bots.filter((b) => b.role !== "master");
     if (projectBots.length > 0) {
-      await api
-        .editMessageText(chatId, messageId, m.groupDone(projectBots.length), {
-          reply_markup: { inline_keyboard: restartRow(lang) },
-        })
-        .catch(() => {});
+      await edit(api, chatId, messageId, m.groupDone(projectBots.length), {
+        reply_markup: { inline_keyboard: restartRow(lang) },
+      }).catch(() => {});
       clearConversation(userId, chatId);
       return true;
     }
@@ -96,16 +92,14 @@ export async function handleOnboardCallback(
     const { botsMsg } = await import("./i18n.js");
     const bm = botsMsg(lang);
 
-    await api
-      .editMessageText(chatId, messageId, m.welcomeGuide, {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: bm.addBot, callback_data: "b:a" }],
-            ...menuButton(lang),
-          ],
-        },
-      })
-      .catch(() => {});
+    await edit(api, chatId, messageId, m.welcomeGuide, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: bm.addBot, data: "b:a" }],
+          ...menuButton(lang),
+        ],
+      },
+    }).catch(() => {});
 
     clearConversation(userId, chatId);
     return true;
@@ -242,9 +236,7 @@ async function handlePathInput(
   const path = text.trim();
 
   if (!validatePath(path)) {
-    await api
-      .sendMessage(chatId, m.invalidPath(path), cancelKb)
-      .catch(() => {});
+    await send(api, chatId, m.invalidPath(path), cancelKb).catch(() => {});
     return true;
   }
 
@@ -252,25 +244,24 @@ async function handlePathInput(
   const state = getConversation(userId, chatId)!;
   const { username, project } = state.data;
 
-  await api
-    .sendMessage(
-      chatId,
-      `${m.summary}\n${SEPARATOR}\n\n` +
-        `Bot: @${username}\nProject: ${project}\nPath: ${path}\n` +
-        `Access: readWrite\nPermission: allowAll\n\n${m.saveConfig}`,
-      {
-        reply_markup: {
-          inline_keyboard: confirmRow(
-            "o:confirm",
-            "o:cancel",
-            undefined,
-            undefined,
-            lang,
-          ),
-        },
+  await send(
+    api,
+    chatId,
+    `${m.summary}\n${SEPARATOR}\n\n` +
+      `Bot: @${username}\nProject: ${project}\nPath: ${path}\n` +
+      `Access: readWrite\nPermission: allowAll\n\n${m.saveConfig}`,
+    {
+      reply_markup: {
+        inline_keyboard: confirmRow(
+          "o:confirm",
+          "o:cancel",
+          undefined,
+          undefined,
+          lang,
+        ),
       },
-    )
-    .catch(() => {});
+    },
+  ).catch(() => {});
   return true;
 }
 
@@ -298,11 +289,9 @@ async function finalizeOnboarding(
   log(`ONBOARD: added @${username} → ${project} (${path}) by ${userId}`);
   clearConversation(userId, chatId);
 
-  await api
-    .editMessageText(chatId, messageId, m.added(username, project, path), {
-      reply_markup: { inline_keyboard: restartRow(lang) },
-    })
-    .catch(() => {});
+  await edit(api, chatId, messageId, m.added(username, project, path), {
+    reply_markup: { inline_keyboard: restartRow(lang) },
+  }).catch(() => {});
 
   return true;
 }

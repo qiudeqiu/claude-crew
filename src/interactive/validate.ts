@@ -90,23 +90,18 @@ export async function handleTokenValidation(
 
   const pool = loadPool();
   if (pool.bots.some((b) => b.token === token)) {
-    await api
-      .sendMessage(chatId, msgs.duplicateToken, cancelKb)
+    await send(api, chatId, msgs.duplicateToken, cancelKb)
       .catch(() => {});
     return true;
   }
 
-  const statusMsg = await api
-    .sendMessage(chatId, msgs.validating)
+  const statusMsg = await send(api, chatId, msgs.validating)
     .catch(() => null);
   const result = await validateBotToken(token);
 
   if (!result.ok) {
     if (statusMsg) {
-      await api
-        .editMessageText(
-          chatId,
-          statusMsg.message_id,
+      await edit(api, chatId, statusMsg.message_id,
           msgs.invalidTokenApi,
           cancelKb,
         )
@@ -118,10 +113,7 @@ export async function handleTokenValidation(
   const suffix =
     nextStep === "bot:awaitProject" ? common(getLang()).replyHint : "";
   if (statusMsg) {
-    await api
-      .editMessageText(
-        chatId,
-        statusMsg.message_id,
+    await edit(api, chatId, statusMsg.message_id,
         msgs.foundBot(result.username!) + suffix,
         cancelKb,
       )

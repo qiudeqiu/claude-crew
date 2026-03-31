@@ -14,6 +14,8 @@ import {
   menuButton,
   sendOrEdit,
   SEPARATOR,
+  send,
+  edit,
 } from "./keyboards.js";
 import {
   getLang,
@@ -426,10 +428,7 @@ async function showFieldEditor(
       { text: `\u25c0\ufe0f ${common(lang).back}`, data: backData },
     ]);
 
-    await api
-      .editMessageText(
-        chatId,
-        messageId,
+    await edit(api, chatId, messageId,
         `${cm.editTitle(label)}\n${desc}${restartNote}\n\n${cm.current}: ${currentValue}\n\n${optLines}`,
         { reply_markup: { inline_keyboard: buttons } },
       )
@@ -448,10 +447,7 @@ async function showFieldEditor(
   const restartNote = field.restart ? `\n${cm.requiresRestart}` : "";
   const backData = isGlobal ? "c:g" : `c:b:${scope}`;
 
-  await api
-    .editMessageText(
-      chatId,
-      messageId,
+  await edit(api, chatId, messageId,
       `${cm.editTitle(label)}\n${desc}\n\n${cm.current}: ${currentValue}${rangeHint}${tipHint}${restartNote}\n\n${cm.sendValue}`,
       { reply_markup: { inline_keyboard: cancelButton(backData, lang) } },
     )
@@ -489,9 +485,7 @@ async function setGlobalValue(
     const invalid = ids.filter((id) => !/^\d+$/.test(id));
     if (invalid.length > 0) {
       const lang = getLang();
-      await api
-        .sendMessage(
-          chatId,
+      await send(api, chatId,
           lang === "zh"
             ? `⚠️ 无效 ID: ${invalid.join(", ")}。请输入数字 Telegram User ID`
             : `⚠️ Invalid ID: ${invalid.join(", ")}. Please enter numeric Telegram User IDs`,
@@ -518,10 +512,7 @@ async function setGlobalValue(
 
   const restartNote = field.restart ? `\n${cm.restartNeeded}` : "";
 
-  await api
-    .editMessageText(
-      chatId,
-      messageId,
+  await edit(api, chatId, messageId,
       `${cm.saved(label, value)}${impact}${restartNote}`,
       {
         reply_markup: {
@@ -567,10 +558,7 @@ async function setBotValue(
   savePool({ ...pool, bots: updatedBots as typeof pool.bots });
   log(`CONFIG: @${username}.${field.key} = ${value} by ${userId}`);
 
-  await api
-    .editMessageText(
-      chatId,
-      messageId,
+  await edit(api, chatId, messageId,
       `${cm.saved(`@${username} ${label}`, value)}`,
       {
         reply_markup: {
@@ -624,8 +612,7 @@ export async function handleConfigText(
       (field.min !== undefined && num < field.min) ||
       (field.max !== undefined && num > field.max)
     ) {
-      await api
-        .sendMessage(chatId, cm.invalidNumber(field.min!, field.max!), cancelKb)
+      await send(api, chatId, cm.invalidNumber(field.min!, field.max!), cancelKb)
         .catch(() => {});
       return true;
     }
@@ -645,8 +632,7 @@ export async function handleConfigText(
     clearConversation(userId, chatId);
 
     const restartNote = field.restart ? `\n${cm.restartNeeded}` : "";
-    await api
-      .sendMessage(chatId, `${cm.saved(label, String(num))}${restartNote}`, {
+    await send(api, chatId, `${cm.saved(label, String(num))}${restartNote}`, {
         reply_markup: {
           inline_keyboard: [
             [
@@ -666,8 +652,7 @@ export async function handleConfigText(
   const value = input === "none" || input === "" ? "" : input;
 
   if (field.key === "assignedPath" && value && !validatePath(value)) {
-    await api
-      .sendMessage(chatId, cm.invalidPath(value), cancelKb)
+    await send(api, chatId, cm.invalidPath(value), cancelKb)
       .catch(() => {});
     return true;
   }
@@ -678,8 +663,7 @@ export async function handleConfigText(
     value &&
     !/^[a-z]{2,10}$/i.test(value)
   ) {
-    await api
-      .sendMessage(chatId, cm.invalidNumber(2, 10), cancelKb)
+    await send(api, chatId, cm.invalidNumber(2, 10), cancelKb)
       .catch(() => {});
     return true;
   }
@@ -699,8 +683,7 @@ export async function handleConfigText(
   clearConversation(userId, chatId);
 
   const display = value || `(${lang === "zh" ? "已清除" : "cleared"})`;
-  await api
-    .sendMessage(chatId, cm.saved(label, display), {
+  await send(api, chatId, cm.saved(label, display), {
       reply_markup: {
         inline_keyboard: [
           [

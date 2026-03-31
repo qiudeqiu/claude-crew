@@ -142,8 +142,7 @@ export async function handleBotCallback(
   }
 
   if (data === "b:a") {
-    await api
-      .editMessageText(chatId, messageId, m.addTitle + c.replyHint, {
+    await edit(api, chatId, messageId, m.addTitle + c.replyHint, {
         reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
       })
       .catch(() => {});
@@ -159,8 +158,7 @@ export async function handleBotCallback(
 
   if (data.startsWith("b:r:")) {
     const username = data.slice(4);
-    await api
-      .editMessageText(chatId, messageId, m.confirmRemove(username), {
+    await edit(api, chatId, messageId, m.confirmRemove(username), {
         reply_markup: {
           inline_keyboard: confirmRow(
             `b:xr:${username}`,
@@ -180,8 +178,7 @@ export async function handleBotCallback(
     const pool = loadPool();
     const filtered = pool.bots.filter((b) => b.username !== username);
     if (filtered.length === pool.bots.length) {
-      await api
-        .editMessageText(chatId, messageId, m.notFound(username))
+      await edit(api, chatId, messageId, m.notFound(username))
         .catch(() => {});
       return true;
     }
@@ -190,8 +187,7 @@ export async function handleBotCallback(
     botByUsername.delete(username);
     log(`BOT_MGMT: removed @${username} by ${userId}`);
 
-    await api
-      .editMessageText(chatId, messageId, m.removed(username), {
+    await edit(api, chatId, messageId, m.removed(username), {
         reply_markup: { inline_keyboard: restartRow(lang) },
       })
       .catch(() => {});
@@ -210,10 +206,7 @@ export async function handleBotCallback(
       mkdirSync(dirPath, { recursive: true });
       setConversation(userId, chatId, "idle", { path: dirPath });
       const s = getConversation(userId, chatId)!;
-      await api
-        .editMessageText(
-          chatId,
-          messageId,
+      await edit(api, chatId, messageId,
           `${m.created(dirPath)}\n\n${m.summaryTitle}\n${SEPARATOR}\n\n` +
             `${m.bot}: @${s.data.username}\n` +
             `${m.project}: ${s.data.project}\n` +
@@ -233,8 +226,7 @@ export async function handleBotCallback(
         .catch(() => {});
       return true;
     } catch {
-      await api
-        .editMessageText(chatId, messageId, m.invalidPath(dirPath))
+      await edit(api, chatId, messageId, m.invalidPath(dirPath))
         .catch(() => {});
       return true;
     }
@@ -242,8 +234,7 @@ export async function handleBotCallback(
 
   if (data === "b:reenter") {
     const c = common(lang);
-    await api
-      .editMessageText(chatId, messageId, m.askPath("") + c.replyHint, {
+    await edit(api, chatId, messageId, m.askPath("") + c.replyHint, {
         reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
       })
       .catch(() => {});
@@ -296,9 +287,7 @@ export async function handleBotText(
       return true;
     }
     setConversation(userId, chatId, "bot:awaitPath", { project });
-    await api
-      .sendMessage(
-        chatId,
+    await send(api, chatId,
         m.askPath(project) + common(lang).replyHint,
         cancelKb,
       )
@@ -313,9 +302,7 @@ export async function handleBotText(
       if (path.startsWith("/")) {
         // Absolute path but doesn't exist — offer to create
         setConversation(userId, chatId, "bot:awaitPath", { pendingPath: path });
-        await api
-          .sendMessage(
-            chatId,
+        await send(api, chatId,
             `${m.invalidPath(path)}\n\n${m.createDir(path)}`,
             {
               reply_markup: {
@@ -332,8 +319,7 @@ export async function handleBotText(
           .catch(() => {});
       } else {
         // Not absolute path
-        await api
-          .sendMessage(chatId, m.invalidPath(path) + c.replyHint, cancelKb)
+        await send(api, chatId, m.invalidPath(path) + c.replyHint, cancelKb)
           .catch(() => {});
       }
       return true;
@@ -341,9 +327,7 @@ export async function handleBotText(
 
     setConversation(userId, chatId, "idle", { path });
     const s = getConversation(userId, chatId)!;
-    await api
-      .sendMessage(
-        chatId,
+    await send(api, chatId,
         `${m.summaryTitle}\n${SEPARATOR}\n\n` +
           `${m.bot}: @${s.data.username}\n` +
           `${m.project}: ${s.data.project}\n` +
@@ -392,8 +376,7 @@ async function finalizeAddBot(
   log(`BOT_MGMT: added @${username} → ${project} (${path}) by ${userId}`);
   clearConversation(userId, chatId);
 
-  await api
-    .editMessageText(chatId, messageId, m.added(username, project, path), {
+  await edit(api, chatId, messageId, m.added(username, project, path), {
       reply_markup: { inline_keyboard: restartRow(lang) },
     })
     .catch(() => {});

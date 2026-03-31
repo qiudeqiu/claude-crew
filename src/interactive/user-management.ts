@@ -140,8 +140,7 @@ export async function handleUserCallback(
   }
 
   if (data === "u:aa") {
-    await api
-      .editMessageText(chatId, messageId, m.addAdminPrompt, {
+    await edit(api, chatId, messageId, m.addAdminPrompt, {
         reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
       })
       .catch(() => {});
@@ -155,8 +154,7 @@ export async function handleUserCallback(
     const admins = pool.admins ?? [];
 
     if (admins.length <= 1) {
-      await api
-        .editMessageText(chatId, messageId, m.cantRemoveLast, {
+      await edit(api, chatId, messageId, m.cantRemoveLast, {
           reply_markup: {
             inline_keyboard: [
               [{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }],
@@ -170,8 +168,7 @@ export async function handleUserCallback(
     savePool({ ...pool, admins: admins.filter((a) => a !== adminId) });
     log(`USERS: removed admin ${adminId} by ${userId}`);
 
-    await api
-      .editMessageText(chatId, messageId, m.adminRemoved(adminId), {
+    await edit(api, chatId, messageId, m.adminRemoved(adminId), {
         reply_markup: {
           inline_keyboard: [
             [{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }],
@@ -190,8 +187,7 @@ export async function handleUserCallback(
 
   if (data.startsWith("u:au:")) {
     const username = data.slice(5);
-    await api
-      .editMessageText(chatId, messageId, m.addUserPrompt(username), {
+    await edit(api, chatId, messageId, m.addUserPrompt(username), {
         reply_markup: {
           inline_keyboard: cancelButton(`u:b:${username}`, lang),
         },
@@ -249,8 +245,7 @@ export async function handleUserText(
 
   if (state.step === "user:awaitAdmin") {
     if (!/^\d+$/.test(input)) {
-      await api
-        .sendMessage(chatId, m.invalidId, {
+      await send(api, chatId, m.invalidId, {
           reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
         })
         .catch(() => {});
@@ -269,8 +264,7 @@ export async function handleUserText(
     log(`USERS: added admin ${input} by ${userId}`);
     clearConversation(userId, chatId);
 
-    await api
-      .sendMessage(chatId, m.adminAdded(input), {
+    await send(api, chatId, m.adminAdded(input), {
         reply_markup: {
           inline_keyboard: [
             [{ text: `\u25c0\ufe0f ${m.userMgmt}`, data: "u:l" }],
@@ -284,8 +278,7 @@ export async function handleUserText(
   if (state.step === "user:awaitUser") {
     const targetBot = state.data.targetBot;
     if (!/^\d+$/.test(input)) {
-      await api
-        .sendMessage(chatId, m.invalidId, {
+      await send(api, chatId, m.invalidId, {
           reply_markup: {
             inline_keyboard: cancelButton(`u:b:${targetBot}`, lang),
           },
@@ -303,8 +296,7 @@ export async function handleUserText(
 
     const users = bot.allowedUsers ?? [];
     if (users.includes(input)) {
-      await api
-        .sendMessage(chatId, m.alreadyUser(input, username))
+      await send(api, chatId, m.alreadyUser(input, username))
         .catch(() => {});
       clearConversation(userId, chatId);
       return true;
@@ -319,8 +311,7 @@ export async function handleUserText(
     log(`USERS: added ${input} to @${username} by ${userId}`);
     clearConversation(userId, chatId);
 
-    await api
-      .sendMessage(chatId, m.userAdded(input, username), {
+    await send(api, chatId, m.userAdded(input, username), {
         reply_markup: {
           inline_keyboard: [
             [
