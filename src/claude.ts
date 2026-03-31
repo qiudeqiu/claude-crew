@@ -565,11 +565,16 @@ export async function invokeClaudeAndReply(
             ? `🔄 @${config.username} 上下文已用 ${Math.round(pct * 100)}%，正在自动压缩...`
             : `🔄 @${config.username} context at ${Math.round(pct * 100)}%, auto-compacting...`;
         await platform.sendMessage(chatId, msg).catch(() => {});
-        void invokeClaudeAndReply(
-          managed,
+        // Queue the compact task — can't call invokeClaudeAndReply here
+        // because managed.busy is still true. The finally block will
+        // pick this up and execute it after the current task completes.
+        managed.queue.unshift({
           chatId,
-          "Please compact your conversation context — keep key information, remove unimportant details",
-        );
+          userId: "system",
+          message:
+            "Please compact your conversation context — keep key information, remove unimportant details",
+          queuedAt: Date.now(),
+        });
       } else if (pct >= CONTEXT_WARN_THRESHOLD && cooledDown) {
         managed.lastContextWarning = now;
         const lang = getLang();
@@ -592,10 +597,10 @@ export async function invokeClaudeAndReply(
     managed.busy = false;
     daemon.activeInvocations = Math.max(0, daemon.activeInvocations - 1);
 
-    // Process next queued task — re-validate user access
+    // Process next queued task — re-validate user access (skip for system tasks)
     while (managed.queue.length > 0) {
       const next = managed.queue.shift()!;
-      if (!canUseBot(next.userId, config)) {
+      if (next.userId !== "system" && !canUseBot(next.userId, config)) {
         log(`QUEUE: ${project} — skipped revoked user ${next.userId}`);
         continue;
       }
