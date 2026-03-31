@@ -560,21 +560,27 @@ export async function invokeClaudeAndReply(
       if (pct >= CONTEXT_COMPACT_THRESHOLD && cooledDown) {
         managed.lastContextWarning = now;
         const lang = getLang();
-        const msg =
-          lang === "zh"
-            ? `🔄 @${config.username} 上下文已用 ${Math.round(pct * 100)}%，正在自动压缩...`
-            : `🔄 @${config.username} context at ${Math.round(pct * 100)}%, auto-compacting...`;
-        await platform.sendMessage(chatId, msg).catch(() => {});
-        // Queue the compact task — can't call invokeClaudeAndReply here
-        // because managed.busy is still true. The finally block will
-        // pick this up and execute it after the current task completes.
-        managed.queue.unshift({
-          chatId,
-          userId: "system",
-          message:
-            "Please compact your conversation context — keep key information, remove unimportant details. After compacting, reply with a brief summary of what was kept and what was removed, starting with '✅ Context compacted:'",
-          queuedAt: Date.now(),
-        });
+        await platform
+          .sendMessage(
+            chatId,
+            lang === "zh"
+              ? `🔄 @${config.username} 上下文已用 ${Math.round(pct * 100)}%，正在自动压缩...`
+              : `🔄 @${config.username} context at ${Math.round(pct * 100)}%, auto-compacting...`,
+          )
+          .catch(() => {});
+        // Silent compact — run Claude directly, don't send result to group
+        runClaude(dir, "/compact", { resume: true })
+          .then(async () => {
+            await platform
+              .sendMessage(
+                chatId,
+                lang === "zh"
+                  ? `✅ @${config.username} 上下文已压缩`
+                  : `✅ @${config.username} context compacted`,
+              )
+              .catch(() => {});
+          })
+          .catch(() => {});
       } else if (pct >= CONTEXT_WARN_THRESHOLD && cooledDown) {
         managed.lastContextWarning = now;
         const lang = getLang();

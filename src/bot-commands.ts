@@ -11,7 +11,7 @@ import { log } from "./logger.js";
 import { formatCost, splitMessage } from "./helpers.js";
 import { sessionStats } from "./state.js";
 import { getLang } from "./interactive/i18n.js";
-import { invokeClaudeAndReply } from "./claude.js";
+import { runClaude } from "./claude.js";
 
 /**
  * Handle project bot slash commands.
@@ -51,13 +51,22 @@ export async function handleBotSlashCommand(
         .catch(() => {});
       return true;
     }
-    void invokeClaudeAndReply(
-      managed,
-      chatId,
-      zh
-        ? "请压缩你的对话上下文，保留关键信息，删除不重要的细节。压缩后请回复确认，以'✅ 上下文已压缩：'开头，简要说明保留了什么、删除了什么"
-        : "Please compact your conversation context — keep key information, remove unimportant details. After compacting, reply with a brief summary starting with '✅ Context compacted:'",
-    );
+    // Silent compact — run Claude directly, just notify when done
+    const dir = config.assignedPath ?? "";
+    await p
+      .sendMessage(chatId, zh ? "🔄 正在压缩..." : "🔄 Compacting...")
+      .catch(() => {});
+    runClaude(dir, "/compact", { resume: true })
+      .then(async () => {
+        await p
+          .sendMessage(chatId, zh ? "✅ 上下文已压缩" : "✅ Context compacted")
+          .catch(() => {});
+      })
+      .catch(async () => {
+        await p
+          .sendMessage(chatId, zh ? "⚠️ 压缩失败" : "⚠️ Compact failed")
+          .catch(() => {});
+      });
     return true;
   }
 
