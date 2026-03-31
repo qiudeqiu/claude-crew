@@ -217,7 +217,7 @@ async function main(): Promise<void> {
 // ── Shutdown ──
 function shutdown(): void {
   log("Shutting down...");
-  for (const [, m] of managedBots) m.bot.stop().catch(() => {});
+  for (const [, m] of managedBots) m.platform.stop().catch(() => {});
   setTimeout(() => process.exit(0), 2000);
 }
 process.on("SIGTERM", shutdown);
