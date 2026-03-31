@@ -143,9 +143,9 @@ async function main(): Promise<void> {
     setTimeout(async () => {
       try {
         // Register command menu for master bot
-        if (config.role === "master" && "setCommandMenu" in tgAdapter) {
+        if (config.role === "master" && "setCommandMenu" in adapter) {
           await (
-            tgAdapter as import("./platform/telegram/adapter.js").TelegramAdapter
+            adapter as import("./platform/telegram/adapter.js").TelegramAdapter
           )
             .setCommandMenu([
               { command: "menu", description: "Main menu" },
