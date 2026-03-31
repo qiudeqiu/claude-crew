@@ -16,6 +16,7 @@ export type PoolBot = {
 };
 
 export type BotPool = {
+  platform?: "telegram" | "discord";
   bots: PoolBot[];
   sharedGroupId?: string;
   admins?: string[];

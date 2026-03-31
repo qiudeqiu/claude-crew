@@ -9,6 +9,7 @@
 
 import { Bot, GrammyError } from "grammy";
 import { TelegramAdapter } from "./platform/telegram/adapter.js";
+import { DiscordAdapter } from "./platform/discord/adapter.js";
 import {
   mkdirSync,
   existsSync,
@@ -99,19 +100,29 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  log(`Starting daemon v3 with ${pool.bots.length} bot(s)`);
+  const platformType = pool.platform ?? "telegram";
+  log(`Starting daemon v3 with ${pool.bots.length} bot(s) [${platformType}]`);
   log(
     `Admins: ${getAdmins().join(", ")} | Max concurrent: ${getConfig().maxConcurrent}`,
   );
 
   for (let i = 0; i < pool.bots.length; i++) {
     const config = pool.bots[i];
-    const tgAdapter = new TelegramAdapter(config.token);
-    const tgBot = tgAdapter.raw; // grammY Bot for migration period
+
+    // Create platform adapter based on config
+    const adapter =
+      platformType === "discord"
+        ? new DiscordAdapter(config.token)
+        : new TelegramAdapter(config.token);
+    const tgBot =
+      platformType === "telegram"
+        ? (adapter as TelegramAdapter).raw
+        : (null as unknown as Bot); // Discord has no grammY Bot
+
     const managed: ManagedBot = {
       config,
       bot: tgBot,
-      platform: tgAdapter,
+      platform: adapter,
       busy: false,
       lastInvoke: 0,
       lastActivity: 0,
