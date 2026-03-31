@@ -13,9 +13,12 @@
 
 **Claude Code — Every Project, Anywhere.**
 
-Bring the full power of Claude Code to multi-project remote management and team collaboration — from one group chat.
+Built on Claude Code CLI, this project focuses on two things:
 
-Manage all your projects solo, or collaborate with your team — each project gets a dedicated bot, @mention to dispatch, everything happens in a single shared timeline. Your **master bot** is the control center: add project bots, configure settings, manage team access, and monitor everything from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code on @mention. One group, all projects, everyone in their lane.
+- **Remote multi-project management for individuals** — manage all your projects from your phone
+- **Remote multi-project collaboration for teams** — your whole team works in one shared space
+
+All from one group chat. Each project gets a dedicated bot. @mention to dispatch. Everyone sees everything in a single shared timeline. Your **master bot** is the control center: add project bots, configure settings, manage team access, and monitor everything from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code on @mention.
 
 <p align="center">
   <img src="docs/concept.png" alt="claude-crew concept" width="100%">
