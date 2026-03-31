@@ -1,4 +1,3 @@
-import type { ReactionTypeEmoji } from "grammy/types";
 import type { ManagedBot } from "./types.js";
 import {
   canUseBot,
@@ -80,7 +79,7 @@ async function buildQuotedContext(
 }
 
 export function setupBot(managed: ManagedBot): void {
-  const { bot: tgBot, config } = managed;
+  const { bot: tgBot, config, platform } = managed;
   const botName = config.username ?? "";
 
   tgBot.use((ctx, next) => {
@@ -117,23 +116,16 @@ export function setupBot(managed: ManagedBot): void {
 
       if (newStatus === "member") {
         // Added as regular member → ask for admin rights
-        await tgBot.api.sendMessage(chatId, m.needAdmin).catch(() => {});
+        await platform.sendMessage(chatId, m.needAdmin).catch(() => {});
       } else if (newStatus === "administrator") {
         // Promoted to admin → offer to bind group
-        await tgBot.api
-          .sendMessage(chatId, m.groupDetected, {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: `\u2705 ${m.yesUseGroup}`,
-                    callback_data: "o:setgroup",
-                  },
-                  { text: `\u274c ${c.cancel}`, callback_data: "o:cancel" },
-                ],
-              ],
-            },
-          })
+        await platform
+          .sendButtons(chatId, m.groupDetected, [
+            [
+              { text: `\u2705 ${m.yesUseGroup}`, data: "o:setgroup" },
+              { text: `\u274c ${c.cancel}`, data: "o:cancel" },
+            ],
+          ])
           .catch(() => {});
       }
     });
@@ -143,6 +135,7 @@ export function setupBot(managed: ManagedBot): void {
   tgBot.on("callback_query:data", async (ctx) => {
     if (!ctx.from) return;
     const data = ctx.callbackQuery.data;
+    const cbId = ctx.callbackQuery.id;
     const userId = String(ctx.from.id);
     const chatId = String(ctx.chat?.id ?? ctx.from.id);
     const messageId = ctx.callbackQuery.message?.message_id ?? 0;
@@ -157,7 +150,7 @@ export function setupBot(managed: ManagedBot): void {
         messageId,
       );
       if (handled) {
-        await ctx.answerCallbackQuery().catch(() => {});
+        await platform.answerCallback(cbId).catch(() => {});
         return;
       }
     }
@@ -176,7 +169,7 @@ export function setupBot(managed: ManagedBot): void {
 
     if (!isAdmin(userId) && !isDelegated) {
       const s = setupMsg(getLang());
-      await ctx.answerCallbackQuery({ text: s.adminOnly });
+      await platform.answerCallback(cbId, s.adminOnly);
       return;
     }
     if (!data.startsWith("approve:")) return;
@@ -185,7 +178,7 @@ export function setupBot(managed: ManagedBot): void {
     const pending = pendingApprovals.get(approvalId!);
     if (!pending) {
       const s = setupMsg(getLang());
-      await ctx.answerCallbackQuery({ text: s.expired });
+      await platform.answerCallback(cbId, s.expired);
       return;
     }
 
@@ -193,7 +186,7 @@ export function setupBot(managed: ManagedBot): void {
       pendingApprovals.delete(approvalId!);
       pending.resolve(null);
       const s = setupMsg(getLang());
-      await ctx.answerCallbackQuery({ text: s.skipped });
+      await platform.answerCallback(cbId, s.skipped);
       const msg = ctx.callbackQuery.message;
       if (msg && "text" in msg && msg.text) {
         await ctx
@@ -211,12 +204,12 @@ export function setupBot(managed: ManagedBot): void {
       !pending.requiredApprovers.includes(userId) &&
       !isAdmin(userId)
     ) {
-      await ctx.answerCallbackQuery({ text: "Not authorized to approve" });
+      await platform.answerCallback(cbId, "Not authorized to approve");
       return;
     }
 
     if (pending.approvedBy.has(userId)) {
-      await ctx.answerCallbackQuery({ text: "Already approved" });
+      await platform.answerCallback(cbId, "Already approved");
       return;
     }
 
@@ -227,7 +220,7 @@ export function setupBot(managed: ManagedBot): void {
       pendingApprovals.delete(approvalId!);
       pending.resolve(WRITE_TOOLS);
       const s = setupMsg(getLang());
-      await ctx.answerCallbackQuery({ text: s.authorized });
+      await platform.answerCallback(cbId, s.authorized);
       const msg = ctx.callbackQuery.message;
       if (msg && "text" in msg && msg.text) {
         await ctx
@@ -249,7 +242,7 @@ export function setupBot(managed: ManagedBot): void {
         pending.resolve(WRITE_TOOLS);
         const s = setupMsg(getLang());
         const label = `${s.authorized} (${count}/${total})`;
-        await ctx.answerCallbackQuery({ text: label });
+        await platform.answerCallback(cbId, label);
         const msg = ctx.callbackQuery.message;
         if (msg && "text" in msg && msg.text) {
           await ctx
@@ -266,7 +259,7 @@ export function setupBot(managed: ManagedBot): void {
         lang === "zh"
           ? `✅ 允许 (${count}/${total})`
           : `✅ Allow (${count}/${total})`;
-      await ctx.answerCallbackQuery({ text: `${count}/${total}` });
+      await platform.answerCallback(cbId, `${count}/${total}`);
       await ctx
         .editMessageReplyMarkup({
           reply_markup: {
@@ -306,17 +299,15 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (!canUseBot(String(ctx.from.id), config)) {
-      await ctx.reply(setupMsg(getLang()).noPermission).catch(() => {});
+      await platform
+        .sendMessage(chatId, setupMsg(getLang()).noPermission)
+        .catch(() => {});
       return;
     }
 
     const photos = ctx.message.photo;
     const best = photos[photos.length - 1];
-    const imagePath = await downloadPhoto(
-      tgBot.api,
-      config.token,
-      best.file_id,
-    );
+    const imagePath = await platform.downloadFile(best.file_id);
 
     if (managed.busy) {
       if (managed.queue.length >= MAX_QUEUE_SIZE) {
@@ -336,6 +327,7 @@ export function setupBot(managed: ManagedBot): void {
         message: text,
         imagePath,
         queuedAt: Date.now(),
+        requesterName: ctx.from.username ?? ctx.from.first_name,
       });
       const pos = managed.queue.length;
       const lang = getLang();
@@ -343,17 +335,21 @@ export function setupBot(managed: ManagedBot): void {
         lang === "zh"
           ? `⏳ 你是第 ${pos + 1} 个，前面还有 ${pos} 个任务`
           : `⏳ You're #${pos + 1} in queue, ${pos} task(s) ahead`;
-      await tgBot.api.sendMessage(chatId, hint).catch(() => {});
+      await platform.sendMessage(chatId, hint).catch(() => {});
       return;
     }
 
-    void tgBot.api
-      .setMessageReaction(chatId, ctx.message.message_id, [
-        { type: "emoji", emoji: "\ud83d\udc40" as ReactionTypeEmoji["emoji"] },
-      ])
+    void platform
+      .setReaction(chatId, String(ctx.message.message_id), "\ud83d\udc40")
       .catch(() => {});
 
-    void invokeClaudeAndReply(managed, chatId, text, imagePath);
+    void invokeClaudeAndReply(
+      managed,
+      chatId,
+      text,
+      imagePath,
+      ctx.from.username ?? ctx.from.first_name,
+    );
   });
 
   // Voice handler
@@ -372,18 +368,18 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (!canUseBot(String(ctx.from.id), config)) {
-      await ctx.reply(setupMsg(getLang()).noPermission).catch(() => {});
+      await platform
+        .sendMessage(chatId, setupMsg(getLang()).noPermission)
+        .catch(() => {});
       return;
     }
 
-    void tgBot.api
-      .setMessageReaction(chatId, ctx.message.message_id, [
-        { type: "emoji", emoji: "\ud83c\udfa7" as ReactionTypeEmoji["emoji"] },
-      ])
+    void platform
+      .setReaction(chatId, String(ctx.message.message_id), "\ud83c\udfa7")
       .catch(() => {});
 
     const sv = setupMsg(getLang());
-    const statusMsg = await tgBot.api
+    const statusMsg = await platform
       .sendMessage(chatId, sv.transcribing)
       .catch(() => null);
 
@@ -394,20 +390,16 @@ export function setupBot(managed: ManagedBot): void {
     );
     if (!result || !result.text) {
       if (statusMsg) {
-        await tgBot.api
-          .editMessageText(chatId, statusMsg.message_id, sv.transcribeFailed)
+        await platform
+          .editMessage(chatId, statusMsg.id, sv.transcribeFailed)
           .catch(() => {});
       }
       return;
     }
 
     if (statusMsg) {
-      await tgBot.api
-        .editMessageText(
-          chatId,
-          statusMsg.message_id,
-          sv.transcription(result.text),
-        )
+      await platform
+        .editMessage(chatId, statusMsg.id, sv.transcription(result.text))
         .catch(() => {});
     }
 
@@ -418,6 +410,7 @@ export function setupBot(managed: ManagedBot): void {
           userId: String(ctx.from.id),
           message: result.text,
           queuedAt: Date.now(),
+          requesterName: ctx.from.username ?? ctx.from.first_name,
         });
         const pos = managed.queue.length;
         const lang = getLang();
@@ -425,14 +418,20 @@ export function setupBot(managed: ManagedBot): void {
           lang === "zh"
             ? `⏳ 语音已转写，排队中（第 ${pos + 1} 个）`
             : `⏳ Voice transcribed, queued (#${pos + 1})`;
-        await tgBot.api.sendMessage(chatId, hint).catch(() => {});
+        await platform.sendMessage(chatId, hint).catch(() => {});
       } else {
-        await tgBot.api.sendMessage(chatId, sv.busy).catch(() => {});
+        await platform.sendMessage(chatId, sv.busy).catch(() => {});
       }
       return;
     }
 
-    void invokeClaudeAndReply(managed, chatId, result.text);
+    void invokeClaudeAndReply(
+      managed,
+      chatId,
+      result.text,
+      undefined,
+      ctx.from.username ?? ctx.from.first_name,
+    );
   });
 
   // Text handler
@@ -460,7 +459,9 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (!canUseBot(String(ctx.from.id), config)) {
-      await ctx.reply(setupMsg(getLang()).noPermission).catch(() => {});
+      await platform
+        .sendMessage(chatId, setupMsg(getLang()).noPermission)
+        .catch(() => {});
       return;
     }
 
@@ -473,7 +474,7 @@ export function setupBot(managed: ManagedBot): void {
         if (chatType === "private") {
           // DM: tell user to add bot to group
           const { onboardMsg: ob } = await import("./interactive/i18n.js");
-          await tgBot.api
+          await platform
             .sendMessage(chatId, ob(getLang()).dmOnly)
             .catch(() => {});
           return;
@@ -521,7 +522,7 @@ export function setupBot(managed: ManagedBot): void {
       if (directReply !== undefined) {
         if (directReply !== null) {
           for (const chunk of splitMessage(directReply)) {
-            await tgBot.api.sendMessage(chatId, chunk).catch(() => {});
+            await platform.sendMessage(chatId, chunk).catch(() => {});
           }
         }
         return;
@@ -558,7 +559,9 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     if (!config.assignedPath && config.role !== "master") {
-      await ctx.reply(setupMsg(getLang()).noProject(botName)).catch(() => {});
+      await platform
+        .sendMessage(chatId, setupMsg(getLang()).noProject(botName))
+        .catch(() => {});
       return;
     }
 
@@ -580,7 +583,7 @@ export function setupBot(managed: ManagedBot): void {
     if (managed.busy) {
       if (managed.queue.length >= MAX_QUEUE_SIZE) {
         const s = setupMsg(getLang());
-        await tgBot.api
+        await platform
           .sendMessage(
             chatId,
             s.queueFull(managed.queue.length + 1, MAX_QUEUE_SIZE),
@@ -594,6 +597,7 @@ export function setupBot(managed: ManagedBot): void {
         message: fullText,
         imagePath: quotedImagePath,
         queuedAt: Date.now(),
+        requesterName: ctx.from.username ?? ctx.from.first_name,
       });
       const pos = managed.queue.length;
       const lang = getLang();
@@ -601,18 +605,22 @@ export function setupBot(managed: ManagedBot): void {
         lang === "zh"
           ? `⏳ 你是第 ${pos + 1} 个，前面还有 ${pos} 个任务\n💡 并发上限可在 menu → 配置 → maxConcurrent 中调整`
           : `⏳ You're #${pos + 1} in queue, ${pos} task(s) ahead\n💡 Adjust limit in menu → Config → maxConcurrent`;
-      await tgBot.api.sendMessage(chatId, hint).catch(() => {});
+      await platform.sendMessage(chatId, hint).catch(() => {});
       return;
     }
 
     // Ack
-    void tgBot.api
-      .setMessageReaction(chatId, msgId, [
-        { type: "emoji", emoji: "\ud83d\udc40" as ReactionTypeEmoji["emoji"] },
-      ])
+    void platform
+      .setReaction(chatId, String(msgId), "\ud83d\udc40")
       .catch(() => {});
 
-    void invokeClaudeAndReply(managed, chatId, fullText, quotedImagePath);
+    void invokeClaudeAndReply(
+      managed,
+      chatId,
+      fullText,
+      quotedImagePath,
+      ctx.from.username ?? ctx.from.first_name,
+    );
   });
 
   tgBot.catch((err) => {

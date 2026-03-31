@@ -22,14 +22,14 @@ export async function handleBotSlashCommand(
   chatId: string,
   stripped: string,
 ): Promise<boolean> {
-  const { config, bot: tgBot } = managed;
+  const { config, platform: p } = managed;
   const lang = getLang();
   const zh = lang === "zh";
 
   // ── /new — reset session ──
   if (/^new$/i.test(stripped)) {
     managed.skipContinue = true;
-    await tgBot.api
+    await p
       .sendMessage(
         chatId,
         zh
@@ -43,7 +43,7 @@ export async function handleBotSlashCommand(
   // ── /compact — compress context ──
   if (/^compact$/i.test(stripped)) {
     if (managed.busy) {
-      await tgBot.api
+      await p
         .sendMessage(
           chatId,
           zh ? "⏳ 正在处理中，请稍后再试" : "⏳ Bot is busy, try again later",
@@ -68,7 +68,7 @@ export async function handleBotSlashCommand(
     const newModel = modelMatch[1];
     if (!newModel) {
       const current = getBotModel(config) || (zh ? "(默认)" : "(default)");
-      await tgBot.api
+      await p
         .sendMessage(
           chatId,
           zh ? `🤖 当前模型：${current}` : `🤖 Current model: ${current}`,
@@ -77,7 +77,7 @@ export async function handleBotSlashCommand(
       return true;
     }
     if (!ALLOWED_MODELS.test(newModel)) {
-      await tgBot.api
+      await p
         .sendMessage(
           chatId,
           zh
@@ -93,7 +93,7 @@ export async function handleBotSlashCommand(
     );
     savePool({ ...pool, bots: updatedBots });
     log(`CMD: @${config.username} model → ${newModel} via chat`);
-    await tgBot.api
+    await p
       .sendMessage(
         chatId,
         zh
@@ -110,7 +110,7 @@ export async function handleBotSlashCommand(
     const level = effortMatch[1];
     if (!level) {
       const current = managed.effort || "medium";
-      await tgBot.api
+      await p
         .sendMessage(
           chatId,
           zh ? `🧠 当前思考深度：${current}` : `🧠 Current effort: ${current}`,
@@ -120,7 +120,7 @@ export async function handleBotSlashCommand(
     }
     managed.effort = level.toLowerCase();
     log(`CMD: @${config.username} effort → ${managed.effort} via chat`);
-    await tgBot.api
+    await p
       .sendMessage(
         chatId,
         zh
@@ -139,7 +139,7 @@ export async function handleBotSlashCommand(
     const text = zh
       ? `💰 @${config.username} 费用统计\n━━━━━━━━━━━━━━━\n本 bot 累计: ${botCost}\n全局累计: ${totalCost} (${totalInvokes} 次调用)`
       : `💰 @${config.username} Cost\n━━━━━━━━━━━━━━━\nThis bot: ${botCost}\nAll bots: ${totalCost} (${totalInvokes} invocations)`;
-    await tgBot.api.sendMessage(chatId, text).catch(() => {});
+    await p.sendMessage(chatId, text).catch(() => {});
     return true;
   }
 
@@ -147,7 +147,7 @@ export async function handleBotSlashCommand(
   if (/^memory$/i.test(stripped)) {
     const dir = config.assignedPath;
     if (!dir) {
-      await tgBot.api
+      await p
         .sendMessage(
           chatId,
           zh ? "⚠️ 未分配项目目录" : "⚠️ No project directory assigned",
@@ -157,7 +157,7 @@ export async function handleBotSlashCommand(
     }
     const claudeMd = join(dir, "CLAUDE.md");
     if (!existsSync(claudeMd)) {
-      await tgBot.api
+      await p
         .sendMessage(
           chatId,
           zh
@@ -172,7 +172,7 @@ export async function handleBotSlashCommand(
       ? `📝 @${config.username} 项目记忆 (CLAUDE.md)\n━━━━━━━━━━━━━━━\n\n`
       : `📝 @${config.username} Project memory (CLAUDE.md)\n━━━━━━━━━━━━━━━\n\n`;
     for (const chunk of splitMessage(header + content)) {
-      await tgBot.api.sendMessage(chatId, chunk).catch(() => {});
+      await p.sendMessage(chatId, chunk).catch(() => {});
     }
     return true;
   }
@@ -223,7 +223,7 @@ export async function handleBotSlashCommand(
       ? `🤖 @${config.username} 状态\n━━━━━━━━━━━━━━━\n项目: ${project}\n路径: ${path}\n模型: ${model}\n思考: ${effort}\n${contextLine}\n状态: ${busyLabel}\n上次活动: ${lastActive}\n累计花费: ${cost}`
       : `🤖 @${config.username} Status\n━━━━━━━━━━━━━━━\nProject: ${project}\nPath: ${path}\nModel: ${model}\nEffort: ${effort}\n${contextLine}\nState: ${busyLabel}\nLast active: ${lastActive}\nCost: ${cost}`;
 
-    await tgBot.api.sendMessage(chatId, text).catch(() => {});
+    await p.sendMessage(chatId, text).catch(() => {});
     return true;
   }
 
