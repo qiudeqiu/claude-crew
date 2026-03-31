@@ -8,7 +8,7 @@ import {
   MAX_QUEUE_SIZE,
 } from "./config.js";
 import { log } from "./logger.js";
-import { splitMessage, downloadPhoto, transcribeVoice } from "./helpers.js";
+import { splitMessage, transcribeVoice } from "./helpers.js";
 import { pendingApprovals, delegatedApprovers } from "./state.js";
 import { invokeClaudeAndReply } from "./claude.js";
 import { handleMasterCommand } from "./commands.js";
@@ -28,7 +28,7 @@ import { setupMsg } from "./interactive/i18n.js";
 // ── Build context from a quoted/replied message ──
 async function buildQuotedContext(
   replyMsg: Record<string, unknown>,
-  tgBot: ManagedBot["bot"],
+  platform: ManagedBot["platform"],
   config: ManagedBot["config"],
 ): Promise<{ text: string; imagePath?: string }> {
   const quotedText =
@@ -42,7 +42,7 @@ async function buildQuotedContext(
   const replyPhotos = replyMsg.photo as Array<{ file_id: string }> | undefined;
   if (replyPhotos?.length) {
     const best = replyPhotos[replyPhotos.length - 1];
-    imagePath = await downloadPhoto(tgBot.api, config.token, best.file_id);
+    imagePath = await platform.downloadFile(best.file_id);
     if (imagePath) parts.push(`Image: ${imagePath}`);
   }
 
@@ -60,8 +60,7 @@ async function buildQuotedContext(
   const replyVoice = replyMsg.voice as { file_id: string } | undefined;
   if (replyVoice) {
     const voiceResult = await transcribeVoice(
-      tgBot.api,
-      config.token,
+      (fid) => platform.downloadFile(fid),
       replyVoice.file_id,
     );
     if (voiceResult?.text) parts.push(`Voice: ${voiceResult.text}`);
@@ -265,10 +264,10 @@ export function setupBot(managed: ManagedBot): void {
           reply_markup: {
             inline_keyboard: [
               [
-                { text: label, callback_data: `approve:yes:${approvalId}` },
+                { text: label, data: `approve:yes:${approvalId}` },
                 {
                   text: lang === "zh" ? "❌ 跳过" : "❌ Skip",
-                  callback_data: `approve:no:${approvalId}`,
+                  data: `approve:no:${approvalId}`,
                 },
               ],
             ],
@@ -384,8 +383,7 @@ export function setupBot(managed: ManagedBot): void {
       .catch(() => null);
 
     const result = await transcribeVoice(
-      tgBot.api,
-      config.token,
+      (fid) => platform.downloadFile(fid),
       ctx.message.voice.file_id,
     );
     if (!result || !result.text) {
@@ -572,7 +570,7 @@ export function setupBot(managed: ManagedBot): void {
       | Record<string, unknown>
       | undefined;
     if (replyMsg) {
-      const quoted = await buildQuotedContext(replyMsg, tgBot, config);
+      const quoted = await buildQuotedContext(replyMsg, platform, config);
       quotedImagePath = quoted.imagePath;
       if (quoted.text) {
         fullText = `${quoted.text}\n\n${text}`;

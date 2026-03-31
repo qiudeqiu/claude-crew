@@ -1,4 +1,3 @@
-import type { Bot } from "grammy";
 import {
   readFileSync,
   writeFileSync,
@@ -129,20 +128,12 @@ export async function downloadPhoto(
 
 // ── Download and transcribe voice ──
 export async function transcribeVoice(
-  botApi: Bot["api"],
-  token: string,
+  downloadFile: (fileId: string) => Promise<string | undefined>,
   fileId: string,
 ): Promise<{ path: string; text: string } | undefined> {
   try {
-    mkdirSync(INBOX_DIR, { recursive: true });
-    const file = await botApi.getFile(fileId);
-    if (!file.file_path) return undefined;
-    const url = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
-    const res = await fetch(url);
-    if (!res.ok) return undefined;
-    const buf = Buffer.from(await res.arrayBuffer());
-    const oggPath = join(INBOX_DIR, `${Date.now()}.ogg`);
-    writeFileSync(oggPath, buf);
+    const oggPath = await downloadFile(fileId);
+    if (!oggPath) return undefined;
 
     const wavPath = oggPath.replace(".ogg", ".wav");
     try {

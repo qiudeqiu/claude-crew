@@ -132,9 +132,11 @@ async function main(): Promise<void> {
     setTimeout(async () => {
       try {
         // Register command menu for master bot
-        if (config.role === "master") {
-          await tgBot.api
-            .setMyCommands([
+        if (config.role === "master" && "setCommandMenu" in tgAdapter) {
+          await (
+            tgAdapter as import("./platform/telegram/adapter.js").TelegramAdapter
+          )
+            .setCommandMenu([
               { command: "menu", description: "Main menu" },
               { command: "bots", description: "Manage project bots" },
               { command: "config", description: "Edit global settings" },
