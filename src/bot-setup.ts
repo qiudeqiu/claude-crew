@@ -186,12 +186,18 @@ export function setupBot(managed: ManagedBot): void {
       pending.resolve(null);
       const s = setupMsg(getLang());
       await platform.answerCallback(cbId, s.skipped);
-      const msg = ctx.callbackQuery.message;
-      if (msg && "text" in msg && msg.text) {
-        await ctx
-          .editMessageText(`${msg.text}\n\n${s.skipped}`, {
-            reply_markup: { inline_keyboard: [] },
-          })
+      const msgText =
+        ctx.callbackQuery.message && "text" in ctx.callbackQuery.message
+          ? ctx.callbackQuery.message.text
+          : "";
+      if (msgText) {
+        await platform
+          .editButtons(
+            chatId,
+            String(messageId),
+            `${msgText}\n\n${s.skipped}`,
+            [],
+          )
           .catch(() => {});
       }
       return;
@@ -220,12 +226,18 @@ export function setupBot(managed: ManagedBot): void {
       pending.resolve(WRITE_TOOLS);
       const s = setupMsg(getLang());
       await platform.answerCallback(cbId, s.authorized);
-      const msg = ctx.callbackQuery.message;
-      if (msg && "text" in msg && msg.text) {
-        await ctx
-          .editMessageText(`${msg.text}\n\n${s.authorized}`, {
-            reply_markup: { inline_keyboard: [] },
-          })
+      const msgText2 =
+        ctx.callbackQuery.message && "text" in ctx.callbackQuery.message
+          ? ctx.callbackQuery.message.text
+          : "";
+      if (msgText2) {
+        await platform
+          .editButtons(
+            chatId,
+            String(messageId),
+            `${msgText2}\n\n${s.authorized}`,
+            [],
+          )
           .catch(() => {});
       }
     } else {
@@ -242,12 +254,13 @@ export function setupBot(managed: ManagedBot): void {
         const s = setupMsg(getLang());
         const label = `${s.authorized} (${count}/${total})`;
         await platform.answerCallback(cbId, label);
-        const msg = ctx.callbackQuery.message;
-        if (msg && "text" in msg && msg.text) {
-          await ctx
-            .editMessageText(`${msg.text}\n\n${label}`, {
-              reply_markup: { inline_keyboard: [] },
-            })
+        const mt =
+          ctx.callbackQuery.message && "text" in ctx.callbackQuery.message
+            ? ctx.callbackQuery.message.text
+            : "";
+        if (mt) {
+          await platform
+            .editButtons(chatId, String(messageId), `${mt}\n\n${label}`, [])
             .catch(() => {});
         }
         return;

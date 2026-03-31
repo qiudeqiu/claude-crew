@@ -103,29 +103,6 @@ export function splitMessage(text: string, limit = 4096): string[] {
   return chunks;
 }
 
-// ── Download photo ──
-export async function downloadPhoto(
-  botApi: Bot["api"],
-  token: string,
-  fileId: string,
-): Promise<string | undefined> {
-  try {
-    mkdirSync(INBOX_DIR, { recursive: true });
-    const file = await botApi.getFile(fileId);
-    if (!file.file_path) return undefined;
-    const url = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
-    const res = await fetch(url);
-    if (!res.ok) return undefined;
-    const buf = Buffer.from(await res.arrayBuffer());
-    const ext = file.file_path.split(".").pop() ?? "jpg";
-    const path = join(INBOX_DIR, `${Date.now()}.${ext}`);
-    writeFileSync(path, buf);
-    return path;
-  } catch {
-    return undefined;
-  }
-}
-
 // ── Download and transcribe voice ──
 export async function transcribeVoice(
   downloadFile: (fileId: string) => Promise<string | undefined>,
