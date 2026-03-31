@@ -63,6 +63,30 @@ export function menuMsg(lang: Lang) {
         btnCron: "\ud83d\udccb 定时",
         btnRestart: "\ud83d\udd04 重启",
         btnLang: "\ud83c\udf10 语言",
+        btnHelp: "\ud83d\udcd6 指南",
+        helpText:
+          "\ud83d\udcd6 命令指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "\ud83d\udc51 主控 Bot（@master）\n" +
+          "  menu \u2014 打开管理菜单\n" +
+          "  bots \u2014 管理项目 Bot\n" +
+          "  config \u2014 全局配置\n" +
+          "  users \u2014 管理管理员和用户\n" +
+          "  status \u2014 刷新仪表盘\n" +
+          "  restart \u2014 重启 daemon\n" +
+          "  search 关键词 \u2014 搜索所有项目\n" +
+          "  cron list \u2014 查看定时任务\n" +
+          "  cron add @bot HH:MM 任务\n" +
+          "  cron del ID \u2014 删除定时任务\n" +
+          "  delegate 用户ID 2h \u2014 临时委托审批\n\n" +
+          "\ud83e\udd16 项目 Bot（@项目bot）\n" +
+          "  /new \u2014 重置会话\n" +
+          "  /compact \u2014 压缩上下文\n" +
+          "  /model sonnet|opus|haiku \u2014 切换模型\n" +
+          "  /effort low|medium|high|max \u2014 思考深度\n" +
+          "  /cost \u2014 查看花费\n" +
+          "  /memory \u2014 查看项目记忆\n" +
+          "  /status \u2014 Bot 状态\n\n" +
+          "\ud83d\udca1 所有命令通过 @mention 使用：@master 或 @项目bot 后跟命令",
         refreshing: "\ud83d\udcca 正在刷新看板...",
         restarting: "\ud83d\udd04 正在重启...",
         started: "\u2705 主控机器人已上线",
@@ -101,6 +125,30 @@ export function menuMsg(lang: Lang) {
         btnCron: "\ud83d\udccb Cron",
         btnRestart: "\ud83d\udd04 Restart",
         btnLang: "\ud83c\udf10 Lang",
+        btnHelp: "\ud83d\udcd6 Guide",
+        helpText:
+          "\ud83d\udcd6 Command Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "\ud83d\udc51 Master Bot (@master)\n" +
+          "  menu \u2014 Open management menu\n" +
+          "  bots \u2014 Manage project bots\n" +
+          "  config \u2014 Global settings\n" +
+          "  users \u2014 Manage admins & users\n" +
+          "  status \u2014 Refresh dashboard\n" +
+          "  restart \u2014 Restart daemon\n" +
+          "  search keyword \u2014 Search all projects\n" +
+          "  cron list \u2014 View scheduled tasks\n" +
+          "  cron add @bot HH:MM task\n" +
+          "  cron del ID \u2014 Delete task\n" +
+          "  delegate userId 2h \u2014 Temp approval rights\n\n" +
+          "\ud83e\udd16 Project Bot (@projectbot)\n" +
+          "  /new \u2014 Reset session\n" +
+          "  /compact \u2014 Compress context\n" +
+          "  /model sonnet|opus|haiku \u2014 Switch model\n" +
+          "  /effort low|medium|high|max \u2014 Thinking depth\n" +
+          "  /cost \u2014 View spend\n" +
+          "  /memory \u2014 View project memory\n" +
+          "  /status \u2014 Bot status\n\n" +
+          "\ud83d\udca1 All commands via @mention: @master or @projectbot followed by command",
         refreshing: "\ud83d\udcca Refreshing dashboard...",
         restarting: "\ud83d\udd04 Restarting daemon...",
         started: "\u2705 Master bot is online",

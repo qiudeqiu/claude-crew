@@ -133,6 +133,9 @@ export function mainMenuKeyboard(lang: Lang = "en"): Row[] {
       { text: m.btnCron, data: "m:cron" },
       { text: m.btnRestart, data: "m:restart" },
     ],
-    [{ text: m.btnLang, data: "m:lang" }],
+    [
+      { text: m.btnLang, data: "m:lang" },
+      { text: m.btnHelp, data: "m:help" },
+    ],
   ];
 }

@@ -167,6 +167,12 @@ async function handleMenuCallback(
       await showLanguageSelector(api, chatId, lang, messageId);
       return true;
 
+    case "help":
+      await edit(api, chatId, messageId, m.helpText, {
+        reply_markup: { inline_keyboard: menuButton(lang) },
+      }).catch(() => {});
+      return true;
+
     case "restart": {
       const { spawn } = await import("child_process");
       const { join } = await import("path");
