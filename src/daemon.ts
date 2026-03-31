@@ -23,8 +23,11 @@ import {
   loadPool,
   getAdmins,
   getConfig,
+  canUseBot,
+  isAdmin,
   validateConfig,
   migrateConfig,
+  MAX_QUEUE_SIZE,
   INBOX_DIR,
   PID_FILE,
   RESTART_NOTE_FILE,
@@ -44,6 +47,7 @@ import { updateDashboard } from "./dashboard.js";
 import { checkCron } from "./cron.js";
 import { checkMemory } from "./memory.js";
 import { cleanupExpired } from "./interactive/index.js";
+import { setupMsg, getLang } from "./interactive/i18n.js";
 
 // ── Singleton: kill any other daemon.ts processes + write PID file ──
 {
@@ -186,7 +190,114 @@ async function main(): Promise<void> {
         }
       }, i * BOT_START_STAGGER_MS);
     } else if (platformType === "discord") {
-      // Discord: start via Platform interface
+      // Discord: register message handlers via Platform interface
+      adapter.onMessage(async (msg) => {
+        if (!msg.userId || !msg.text) return;
+        const authorized = canUseBot(msg.userId, config);
+        log(
+          `RAW: ${config.username ?? "?"} ← ${msg.username ?? "?"}(${msg.userId}) auth=${authorized}: ${(msg.text ?? "").slice(0, 60)}`,
+        );
+        if (!authorized) {
+          await adapter
+            .sendMessage(msg.chatId, setupMsg(getLang()).noPermission)
+            .catch(() => {});
+          return;
+        }
+        // Check for bot mention in Discord (<@botId> format)
+        const botMention = `<@${(adapter as import("./platform/discord/adapter.js").DiscordAdapter).botId ?? ""}>`;
+        const isMentioned = msg.text.includes(botMention);
+        if (!isMentioned && !msg.replyTo) return;
+
+        const text = msg.text.replace(/<@\d+>/g, "").trim();
+        if (!text) return;
+
+        // Slash commands
+        const cmdText = text.replace(/^\//, "");
+        const { handleBotSlashCommand } = await import("./bot-commands.js");
+        const handled = await handleBotSlashCommand(
+          managed,
+          msg.chatId,
+          cmdText,
+        );
+        if (handled) return;
+
+        // Master bot commands
+        if (config.role === "master") {
+          const stripped = text.replace(/^\//, "");
+          const { handleMasterCommand } = await import("./commands.js");
+          const directReply = handleMasterCommand(stripped);
+          if (directReply !== undefined) {
+            if (directReply !== null) {
+              const { splitMessage } = await import("./helpers.js");
+              for (const chunk of splitMessage(directReply)) {
+                await adapter.sendMessage(msg.chatId, chunk).catch(() => {});
+              }
+            }
+            return;
+          }
+          // Show menu for unrecognized master input
+          if (!loadPool().masterExecute) {
+            const { showMainMenu } = await import("./interactive/index.js");
+            await showMainMenu(managed, msg.chatId);
+            return;
+          }
+        }
+
+        if (!config.assignedPath && config.role !== "master") return;
+        if (managed.busy) {
+          if (managed.queue.length < MAX_QUEUE_SIZE) {
+            managed.queue.push({
+              chatId: msg.chatId,
+              userId: msg.userId,
+              message: text,
+              queuedAt: Date.now(),
+              requesterName: msg.username,
+            });
+            const pos = managed.queue.length;
+            await adapter
+              .sendMessage(
+                msg.chatId,
+                getLang() === "zh"
+                  ? `⏳ 你是第 ${pos + 1} 个，前面还有 ${pos} 个任务`
+                  : `⏳ You're #${pos + 1} in queue, ${pos} task(s) ahead`,
+              )
+              .catch(() => {});
+          }
+          return;
+        }
+
+        await adapter.setReaction(msg.chatId, msg.id, "👀").catch(() => {});
+        const { invokeClaudeAndReply } = await import("./claude.js");
+        void invokeClaudeAndReply(
+          managed,
+          msg.chatId,
+          text,
+          undefined,
+          msg.username,
+        );
+      });
+
+      adapter.onCallback(async (event) => {
+        // Route interactive callbacks
+        if (!isAdmin(event.userId)) {
+          await adapter
+            .answerCallback(event.id, setupMsg(getLang()).adminOnly)
+            .catch(() => {});
+          return;
+        }
+        if (config.role === "master") {
+          const { routeCallback } = await import("./interactive/index.js");
+          await routeCallback(
+            managed,
+            event.chatId,
+            event.userId,
+            event.data,
+            Number(event.messageId),
+          );
+        }
+      });
+
+      // Start Discord bot
       setTimeout(async () => {
         try {
           await adapter.start((info) => {

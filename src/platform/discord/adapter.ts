@@ -29,6 +29,7 @@ export class DiscordAdapter implements Platform, ThreadCapable {
   private token: string;
   private messageHandlers: Array<(msg: PlatformMessage) => void> = [];
   private callbackHandlers: Array<(event: CallbackEvent) => void> = [];
+  public botId: string = "";
 
   constructor(token: string) {
     this.token = token;
@@ -70,6 +71,7 @@ export class DiscordAdapter implements Platform, ThreadCapable {
     await this.client.login(this.token);
 
     this.client.once("ready", (c) => {
+      this.botId = c.user.id;
       onReady({ username: c.user.username });
     });
   }
@@ -83,7 +85,9 @@ export class DiscordAdapter implements Platform, ThreadCapable {
   async sendMessage(chatId: string, text: string): Promise<SentMessage> {
     const channel = await this.client.channels.fetch(chatId);
     if (!channel || !channel.isTextBased()) throw new Error("Invalid channel");
-    const sent = await (channel as { send: (t: string) => Promise<Message> }).send(text);
+    const sent = await (
+      channel as { send: (t: string) => Promise<Message> }
+    ).send(text);
     return { id: sent.id, chatId };
   }
 
@@ -94,14 +98,18 @@ export class DiscordAdapter implements Platform, ThreadCapable {
   ): Promise<void> {
     const channel = await this.client.channels.fetch(chatId);
     if (!channel || !channel.isTextBased()) return;
-    const msg = await (channel as { messages: { fetch: (id: string) => Promise<Message> } }).messages.fetch(msgId);
+    const msg = await (
+      channel as { messages: { fetch: (id: string) => Promise<Message> } }
+    ).messages.fetch(msgId);
     await msg.edit(text).catch(() => {});
   }
 
   async deleteMessage(chatId: string, msgId: string): Promise<void> {
     const channel = await this.client.channels.fetch(chatId);
     if (!channel || !channel.isTextBased()) return;
-    const msg = await (channel as { messages: { fetch: (id: string) => Promise<Message> } }).messages.fetch(msgId);
+    const msg = await (
+      channel as { messages: { fetch: (id: string) => Promise<Message> } }
+    ).messages.fetch(msgId);
     await msg.delete().catch(() => {});
   }
 
@@ -115,7 +123,9 @@ export class DiscordAdapter implements Platform, ThreadCapable {
     const channel = await this.client.channels.fetch(chatId);
     if (!channel || !channel.isTextBased()) throw new Error("Invalid channel");
     const components = this.toActionRows(buttons);
-    const sent = await (channel as { send: (opts: unknown) => Promise<Message> }).send({
+    const sent = await (
+      channel as { send: (opts: unknown) => Promise<Message> }
+    ).send({
       content: text,
       components,
     });
@@ -130,7 +140,9 @@ export class DiscordAdapter implements Platform, ThreadCapable {
   ): Promise<void> {
     const channel = await this.client.channels.fetch(chatId);
     if (!channel || !channel.isTextBased()) return;
-    const msg = await (channel as { messages: { fetch: (id: string) => Promise<Message> } }).messages.fetch(msgId);
+    const msg = await (
+      channel as { messages: { fetch: (id: string) => Promise<Message> } }
+    ).messages.fetch(msgId);
     const components = buttons.length > 0 ? this.toActionRows(buttons) : [];
     await msg.edit({ content: text, components }).catch(() => {});
   }
@@ -142,7 +154,9 @@ export class DiscordAdapter implements Platform, ThreadCapable {
   ): Promise<void> {
     const channel = await this.client.channels.fetch(chatId);
     if (!channel || !channel.isTextBased()) return;
-    const msg = await (channel as { messages: { fetch: (id: string) => Promise<Message> } }).messages.fetch(msgId);
+    const msg = await (
+      channel as { messages: { fetch: (id: string) => Promise<Message> } }
+    ).messages.fetch(msgId);
     const components = buttons.length > 0 ? this.toActionRows(buttons) : [];
     await msg.edit({ components }).catch(() => {});
   }
@@ -158,7 +172,9 @@ export class DiscordAdapter implements Platform, ThreadCapable {
   async sendTyping(chatId: string): Promise<void> {
     const channel = await this.client.channels.fetch(chatId);
     if (channel && channel.isTextBased() && "sendTyping" in channel) {
-      await (channel as { sendTyping: () => Promise<void> }).sendTyping().catch(() => {});
+      await (channel as { sendTyping: () => Promise<void> })
+        .sendTyping()
+        .catch(() => {});
     }
   }
 
@@ -169,14 +185,18 @@ export class DiscordAdapter implements Platform, ThreadCapable {
   ): Promise<void> {
     const channel = await this.client.channels.fetch(chatId);
     if (!channel || !channel.isTextBased()) return;
-    const msg = await (channel as { messages: { fetch: (id: string) => Promise<Message> } }).messages.fetch(msgId);
+    const msg = await (
+      channel as { messages: { fetch: (id: string) => Promise<Message> } }
+    ).messages.fetch(msgId);
     await msg.react(emoji).catch(() => {});
   }
 
   async pinMessage(chatId: string, msgId: string): Promise<void> {
     const channel = await this.client.channels.fetch(chatId);
     if (!channel || !channel.isTextBased()) return;
-    const msg = await (channel as { messages: { fetch: (id: string) => Promise<Message> } }).messages.fetch(msgId);
+    const msg = await (
+      channel as { messages: { fetch: (id: string) => Promise<Message> } }
+    ).messages.fetch(msgId);
     await msg.pin().catch(() => {});
   }
 
