@@ -572,7 +572,7 @@ export async function invokeClaudeAndReply(
           chatId,
           userId: "system",
           message:
-            "Please compact your conversation context — keep key information, remove unimportant details",
+            "Please compact your conversation context — keep key information, remove unimportant details. After compacting, reply with a brief summary of what was kept and what was removed, starting with '✅ Context compacted:'",
           queuedAt: Date.now(),
         });
       } else if (pct >= CONTEXT_WARN_THRESHOLD && cooledDown) {

@@ -55,8 +55,8 @@ export async function handleBotSlashCommand(
       managed,
       chatId,
       zh
-        ? "请压缩你的对话上下文，保留关键信息，删除不重要的细节"
-        : "Please compact your conversation context — keep key information, remove unimportant details",
+        ? "请压缩你的对话上下文，保留关键信息，删除不重要的细节。压缩后请回复确认，以'✅ 上下文已压缩：'开头，简要说明保留了什么、删除了什么"
+        : "Please compact your conversation context — keep key information, remove unimportant details. After compacting, reply with a brief summary starting with '✅ Context compacted:'",
     );
     return true;
   }
