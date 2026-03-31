@@ -276,8 +276,8 @@ bash scripts/setup.sh
 
 脚本会：
 - 检查依赖（bun、claude、ffmpeg、whisper）
-- 要求输入你的 Telegram User ID（从 [@userinfobot](https://t.me/userinfobot) 获取）
 - 要求输入主控机器人 token（通过 Telegram API 验证）
+- 自动获取你的 Telegram User ID（给 bot 发条消息即可）
 - 创建 `bot-pool.json` 配置文件至 `~/.claude/channels/telegram/`
 - 可选开启开机自启
 - 启动 daemon

@@ -276,8 +276,8 @@ bash scripts/setup.sh
 
 This will:
 - Check dependencies (bun, claude, ffmpeg, whisper)
-- Ask for your Telegram User ID (get from [@userinfobot](https://t.me/userinfobot))
 - Ask for your master bot token (validates via Telegram API)
+- Auto-detect your Telegram User ID (just send a message to the bot)
 - Create `bot-pool.json` config file at `~/.claude/channels/telegram/`
 - Optionally enable auto-start on login
 - Start the daemon

@@ -84,16 +84,7 @@ echo ""
 # ═══════════════════════════════════
 
 setup_telegram() {
-  # Get Owner ID
-  echo "Get your Telegram User ID from @userinfobot (send /start to it)"
-  read -p "📱 Your Telegram User ID: " OWNER_ID
-  if [ -z "$OWNER_ID" ]; then
-    echo "❌ User ID cannot be empty"
-    exit 1
-  fi
-  echo ""
-
-  # Get master bot token
+  # Get master bot token FIRST (needed for auto-detect user ID)
   echo "Create a master bot via @BotFather in Telegram (/newbot)"
   echo "This bot will be your control center — menu, dashboard, bot/config/user management."
   echo ""
@@ -112,6 +103,70 @@ setup_telegram() {
   fi
   MASTER_USERNAME=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['username'])" 2>/dev/null)
   echo "✅ Master bot: @${MASTER_USERNAME}"
+  echo ""
+
+  # Get Owner ID — auto-detect by listening for a message
+  echo "Now let's get your Telegram User ID."
+  echo ""
+  echo "👉 Send any message to @${MASTER_USERNAME} in Telegram (e.g. \"hi\")"
+  echo "   Waiting for your message..."
+  echo ""
+
+  # Clear pending updates first
+  curl -s "https://api.telegram.org/bot${MASTER_TOKEN}/getUpdates?offset=-1" > /dev/null 2>&1
+  sleep 1
+
+  # Poll for new message (timeout 60s)
+  OWNER_ID=""
+  OWNER_NAME=""
+  for i in $(seq 1 30); do
+    UPDATES=$(curl -s "https://api.telegram.org/bot${MASTER_TOKEN}/getUpdates?timeout=2&allowed_updates=[\"message\"]")
+    OWNER_ID=$(echo "$UPDATES" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+results = data.get('result', [])
+if results:
+    msg = results[-1].get('message', {})
+    user = msg.get('from', {})
+    print(user.get('id', ''))
+" 2>/dev/null)
+    if [ -n "$OWNER_ID" ] && [ "$OWNER_ID" != "" ]; then
+      OWNER_NAME=$(echo "$UPDATES" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+results = data.get('result', [])
+if results:
+    msg = results[-1].get('message', {})
+    user = msg.get('from', {})
+    name = user.get('first_name', '')
+    last = user.get('last_name', '')
+    if last: name += ' ' + last
+    print(name)
+" 2>/dev/null)
+      break
+    fi
+  done
+
+  if [ -z "$OWNER_ID" ]; then
+    echo "⏰ Timed out waiting for message. Enter your User ID manually:"
+    echo "   (Get it from @userinfobot — send /start to it)"
+    read -p "📱 Your Telegram User ID: " OWNER_ID
+    if [ -z "$OWNER_ID" ]; then
+      echo "❌ User ID cannot be empty"
+      exit 1
+    fi
+  else
+    echo "✅ Detected: ${OWNER_NAME} (ID: ${OWNER_ID})"
+    # Confirm update offset so the message isn't re-processed
+    LAST_UPDATE=$(echo "$UPDATES" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+results = data.get('result', [])
+if results: print(results[-1].get('update_id', 0) + 1)
+else: print(0)
+" 2>/dev/null)
+    curl -s "https://api.telegram.org/bot${MASTER_TOKEN}/getUpdates?offset=${LAST_UPDATE}" > /dev/null 2>&1
+  fi
   echo ""
 }
 
