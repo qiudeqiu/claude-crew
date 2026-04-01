@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Crew — FAQ</title>
+<style>
+:root {
+  --bg: #0d1117; --bg2: #161b22; --bg3: #21262d; --border: #30363d;
+  --text: #e6edf3; --text2: #8b949e; --accent: #58a6ff; --green: #3fb950;
+  --warn: #d29922; --err: #f85149; --purple: #bc8cff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+.container { max-width: 900px; margin: 0 auto; padding: 24px; }
+.header { text-align: center; padding: 40px 20px 24px; border-bottom: 1px solid var(--border); }
+.header h1 { font-size: 2em; color: #fff; margin-bottom: 6px; }
+.header p { color: var(--text2); }
+.lang-sw { text-align: center; margin: 20px 0; }
+.lang-sw button { background: var(--bg3); color: var(--text); border: 1px solid var(--border); padding: 8px 24px; border-radius: 6px; cursor: pointer; font-size: 1em; margin: 0 4px; }
+.lang-sw button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.sec { margin: 28px 0 0; }
+.sec h2 { font-size: 1.3em; color: var(--green); border-left: 4px solid var(--green); padding-left: 12px; margin-bottom: 14px; }
+.sec.sharp h2 { color: var(--err); border-color: var(--err); }
+.sec.vs h2 { color: var(--purple); border-color: var(--purple); }
+.qa { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
+.qa summary { padding: 12px 16px; cursor: pointer; font-weight: 600; color: var(--accent); list-style: none; display: flex; align-items: flex-start; gap: 8px; }
+.qa.challenge summary { color: var(--err); }
+.qa.vs summary { color: var(--purple); }
+.qa summary::before { content: "Q"; background: var(--accent); color: var(--bg); min-width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; margin-top: 2px; }
+.qa.challenge summary::before { background: var(--err); }
+.qa.vs summary::before { background: var(--purple); }
+.qa summary::-webkit-details-marker { display: none; }
+.qa[open] summary { border-bottom: 1px solid var(--border); }
+.ans { padding: 14px 16px; }
+.ans p { margin-bottom: 8px; }
+.ans ul, .ans ol { padding-left: 20px; margin-bottom: 8px; }
+.ans li { margin-bottom: 3px; }
+.ans code { background: var(--bg3); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 0.88em; color: var(--accent); }
+.ans strong { color: var(--green); }
+.ans .w { color: var(--warn); }
+.ans .r { color: var(--err); }
+table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.88em; }
+th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+th { background: var(--bg3); color: var(--accent); }
+td { background: var(--bg2); }
+.verdict { background: #1a2332; border-left: 4px solid var(--accent); padding: 10px 14px; margin: 8px 0; border-radius: 0 6px 6px 0; }
+.hidden { display: none; }
+footer { text-align: center; padding: 32px 20px; color: var(--text2); font-size: 0.85em; border-top: 1px solid var(--border); margin-top: 32px; }
+footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="header">
+<h1>Claude Crew FAQ</h1>
+<p id="st-en">Honest answers to tough questions</p>
+<p id="st-zh" class="hidden">对尖锐问题的诚实回答</p>
+</div>
+<div class="container">
+<div class="lang-sw">
+  <button id="be" class="on" onclick="sw('en')">English</button>
+  <button id="bz" onclick="sw('zh')">中文</button>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ENGLISH -->
+<!-- ══════════════════════════════════════════ -->
+<div id="en">
+
+<!-- ── Competitive challenges ── -->
+<div class="sec vs">
+<h2>Competitive Comparisons</h2>
+
+<details class="qa vs"><summary>"Claude Code Remote is Anthropic's official solution. Why would I use yours?"</summary><div class="ans">
+<p>Claude Code Remote (CCR) solves a different problem: it lets <em>claude.ai</em> connect to a remote machine for execution. You still interact via the claude.ai web UI, one project at a time, one person at a time.</p>
+<p>Claude Crew solves <strong>multi-project orchestration</strong>: 5 projects in parallel, team-shared timeline, phone-first control, task queue, cron jobs, permission system. CCR is a transport layer; Claude Crew is a management layer.</p>
+<div class="verdict">They're complementary. CCR connects a browser to a server. Claude Crew connects a Telegram group to N projects on that same server.</div>
+</div></details>
+
+<details class="qa vs"><summary>"Anthropic's Telegram Plugin already lets me chat with Claude via Telegram. How is this different?"</summary><div class="ans">
+<p>The official Telegram Plugin forwards messages between one Telegram chat and one Claude Code session. It's 1:1 — one chat, one project, one user.</p>
+<p>Claude Crew is N:N — one group chat manages unlimited projects, each with its own isolated bot, independent context, separate permissions. You also get: task queue, cron scheduler, pinned dashboard, team access control, auto-restart daemon, context warnings, and an interactive button menu for all management.</p>
+<div class="verdict">Plugin = remote chat for one session. Claude Crew = cluster management for N projects.</div>
+</div></details>
+
+<details class="qa vs"><summary>"Happy Coder does Telegram control too, and it has a better UI."</summary><div class="ans">
+<p>Happy Coder is a great project with a polished chat UI. Key differences:</p>
+<table>
+<tr><th></th><th>Happy Coder</th><th>Claude Crew</th></tr>
+<tr><td>Projects</td><td>Single repo</td><td>Unlimited, parallel</td></tr>
+<tr><td>Team</td><td>Single user</td><td>Shared group + permissions</td></tr>
+<tr><td>Daemon</td><td>Manual start</td><td>Watchdog + auto-restart + auto-start on login</td></tr>
+<tr><td>Queue</td><td>Rejects when busy</td><td>Queues with position display</td></tr>
+<tr><td>Cron</td><td>No</td><td>Daily + interval scheduling</td></tr>
+<tr><td>Dashboard</td><td>No</td><td>Pinned, auto-refreshing</td></tr>
+<tr><td>Permission</td><td>Single mode</td><td>Two-layer (access + permission), per-bot</td></tr>
+<tr><td>Context</td><td>Grows until crash</td><td>Auto-warn 80%, auto-compact 95%, sessionMode</td></tr>
+</table>
+<div class="verdict">Happy Coder is good for single-project remote control. Claude Crew is built for multi-project cluster management.</div>
+</div></details>
+
+<details class="qa vs"><summary>"cc-connect also does multi-bot group management. What's the real difference?"</summary><div class="ans">
+<p>cc-connect takes a similar approach (multiple bots in one group). Differences:</p>
+<ul>
+<li><strong>Claude Crew</strong>: Full interactive button menus for all config, no terminal needed after setup. cc-connect requires terminal for management.</li>
+<li><strong>Claude Crew</strong>: Built-in resilience (circuit breaker, adaptive rate limiting, truncation recovery). cc-connect has basic error handling.</li>
+<li><strong>Claude Crew</strong>: Platform abstraction layer with Discord/Feishu planned. cc-connect is Telegram-only.</li>
+<li><strong>Claude Crew</strong>: sessionMode (continue/fresh), auto-compact, context warnings. cc-connect has basic session management.</li>
+</ul>
+<div class="verdict">Similar architecture, different polish level. Try both and see which fits your workflow.</div>
+</div></details>
+
+<details class="qa vs"><summary>"Why not just use tmux + Claude Code CLI? Zero dependencies, works perfectly."</summary><div class="ans">
+<p>If you work on one project, from one machine, alone — tmux works great. Claude Crew adds value when:</p>
+<ul>
+<li>You manage <strong>2+ projects</strong> and want to dispatch from one place</li>
+<li>You want <strong>phone control</strong> — tmux on a phone is painful</li>
+<li>You want <strong>push notifications</strong> when tasks finish</li>
+<li>You have <strong>team members</strong> who need shared visibility</li>
+<li>You want <strong>unattended operation</strong> — daemon runs 24/7, auto-restarts, cron jobs</li>
+</ul>
+<p>If none of these apply, tmux is simpler. No shame in that.</p>
+</div></details>
+
+</div>
+
+<!-- ── Architecture challenges ── -->
+<div class="sec sharp">
+<h2>Architecture Challenges</h2>
+
+<details class="qa challenge"><summary>"Why Telegram? It's blocked in China and not popular in the US."</summary><div class="ans">
+<p>Telegram was the starting point because of its superior Bot API: reliable webhooks, inline buttons, no message rate limits, group privacy controls, free worldwide.</p>
+<p>The architecture uses a <strong>Platform abstraction layer</strong>. Discord and Feishu adapters are planned. Adding a new platform = implementing one TypeScript interface. Core logic (permissions, queue, cron, dashboard) is platform-agnostic.</p>
+<p>For China: Feishu (Lark) support is on the roadmap. For the US: Discord adapter is implemented and in testing.</p>
+</div></details>
+
+<details class="qa challenge"><summary>"Spawning a new claude -p process for every task is wasteful. Why not keep a long-running session?"</summary><div class="ans">
+<p>Deliberate design choice. Short processes give you:</p>
+<ul>
+<li><strong>Context isolation</strong> — no bleed between tasks</li>
+<li><strong>Crash isolation</strong> — one bad task doesn't kill the daemon</li>
+<li><strong>Predictable cost</strong> — each task starts from a known context size</li>
+<li><strong>No context bloat</strong> — with <code>sessionMode: "fresh"</code>, every task is clean</li>
+</ul>
+<p>The trade-off: Claude re-reads project files each time (~10-30s overhead). For most tasks, this is acceptable. For rapid-fire micro-edits, use <code>sessionMode: "continue"</code> to accumulate context.</p>
+<div class="verdict">Short processes = predictable + resilient. Long sessions = faster but fragile. We default to predictable.</div>
+</div></details>
+
+<details class="qa challenge"><summary>"No Docker isolation? That's a security joke for multi-user."</summary><div class="ans">
+<p>Fair criticism. Claude Crew runs all bots in a single process with filesystem access. The permission system (<code>readOnly</code> / <code>approve</code> / <code>allowedUsers</code>) provides <strong>control</strong>, not <strong>security boundaries</strong>.</p>
+<p>This is by design for the target audience: solo developers and trusted small teams on personal machines. The daemon is meant to run on YOUR machine, managing YOUR projects.</p>
+<p>For untrusted multi-tenant use: yes, you need Docker. Claude Crew is not designed for that scenario and says so explicitly in the README.</p>
+</div></details>
+
+<details class="qa challenge"><summary>"approve mode runs Claude twice. That's literally doubling my cost."</summary><div class="ans">
+<p>Yes. The first run is read-only (Claude analyzes but can't write). If writes are needed, the second run retries with approved tools.</p>
+<p><strong>Why it's worth it:</strong> You see what Claude wants to do before it does it. In a team setting with production code, this prevents accidental damage.</p>
+<p><strong>Alternatives:</strong></p>
+<ul>
+<li><code>auto</code> — Claude's safety classifier decides. No double run. Blocks genuinely dangerous ops.</li>
+<li><code>allowAll</code> — Everything pre-approved. No double run. Fastest, cheapest. Use for trusted personal projects.</li>
+</ul>
+<p>Switch via button menu anytime. No restart needed.</p>
+</div></details>
+
+<details class="qa challenge"><summary>"Context hits 90% after 3 tasks. How is that usable?"</summary><div class="ans">
+<p>With <code>sessionMode: "continue"</code> (default), each task accumulates on the previous one. Reading 3 files + editing 2 + running bash = ~30-50K tokens per task. Three tasks = 90%+ context.</p>
+<p><strong>Solutions (pick one):</strong></p>
+<ol>
+<li><code>/new</code> — reset context. Claude re-reads files from disk. ~10s overhead.</li>
+<li><code>/compact</code> — compress history, keep key decisions. Lower overhead.</li>
+<li><code>sessionMode: "fresh"</code> — every task starts clean. No accumulation. Relies on periodic memory files for continuity.</li>
+</ol>
+<p>Auto-compact at 95% is built in. At 80%, the bot warns you proactively.</p>
+</div></details>
+
+<details class="qa challenge"><summary>"Why does this project have 7000+ lines of TypeScript? Feels over-engineered."</summary><div class="ans">
+<p>Breakdown:</p>
+<ul>
+<li>~1200 lines: i18n (bilingual UI text for every button, message, and error)</li>
+<li>~1000 lines: interactive setup (button menus for config, bots, users, onboarding)</li>
+<li>~800 lines: daemon + bot-setup (Telegram handler registration, routing)</li>
+<li>~700 lines: claude.ts (invocation, progress, approval, resilience, context management)</li>
+<li>~600 lines: platform adapters (Telegram + Discord)</li>
+<li>~500 lines: config, types, helpers, state, cron, memory, dashboard</li>
+<li>~250 lines: resilience module</li>
+</ul>
+<p>No framework, no abstraction layers for the sake of it. Every file does one thing. The largest file is i18n (bilingual strings). Remove i18n and it's ~5500 lines for a full management system.</p>
+</div></details>
+
+</div>
+
+<!-- ── Security challenges ── -->
+<div class="sec sharp">
+<h2>Security Challenges</h2>
+
+<details class="qa challenge"><summary>"Bot tokens stored in a plain JSON file? Really?"</summary><div class="ans">
+<p><code>bot-pool.json</code> is stored with <code>chmod 600</code> (owner read/write only). It's in <code>~/.claude/channels/telegram/</code>, excluded from git via <code>.gitignore</code>.</p>
+<p>This is the same security model as <code>~/.ssh/id_rsa</code>, <code>~/.aws/credentials</code>, and <code>~/.claude/</code> itself. If an attacker has read access to your home directory, you have bigger problems than bot tokens.</p>
+</div></details>
+
+<details class="qa challenge"><summary>"Can other people in the group see my code?"</summary><div class="ans">
+<p>They see <strong>Claude's responses</strong> in the group chat — which may include code snippets, file contents, and diff outputs. They do NOT have direct filesystem access.</p>
+<p>Control visibility:</p>
+<ul>
+<li>Set <code>allowedUsers</code> per bot — unauthorized users can't even trigger the bot</li>
+<li>Use <code>readOnly</code> for bots on sensitive projects — no write output to leak</li>
+<li>Use a private group with only trusted members</li>
+<li>For maximum isolation: one group per project (1:1 Focus Mode)</li>
+</ul>
+</div></details>
+
+<details class="qa challenge"><summary>"ANTHROPIC_API_KEY is passed to Claude subprocesses. Isn't that dangerous?"</summary><div class="ans">
+<p>Claude Code CLI <em>requires</em> the API key to function. Without it, no task can run. The key is passed via filtered environment variables — everything except explicitly safe variables is blocked.</p>
+<p>The risk: a prompt injection in your project files could instruct Claude to exfiltrate the key via a Bash command. Mitigations:</p>
+<ul>
+<li><code>approve</code> mode — you see and approve every Bash command</li>
+<li><code>auto</code> mode — Claude's safety classifier blocks exfiltration patterns</li>
+<li>The key is already available to anyone with access to your <code>~/.claude/</code> directory</li>
+</ul>
+<p>If this concerns you: use a scoped API key with spending limits, or use subscription auth instead.</p>
+</div></details>
+
+</div>
+
+<!-- ── Practical questions ── -->
+<div class="sec">
+<h2>Practical Questions</h2>
+
+<details class="qa"><summary>Is this really faster than just opening a terminal?</summary><div class="ans">
+<p>For a single task on a single project? No. Opening a terminal and running <code>claude</code> is faster.</p>
+<p>Claude Crew is faster when:</p>
+<ul>
+<li>You're managing 3+ projects and don't want to context-switch between terminals</li>
+<li>You're away from your computer and want to dispatch from your phone</li>
+<li>You want to check on all projects at a glance (dashboard)</li>
+<li>You need unattended operation (cron jobs, auto-restart)</li>
+<li>Your team needs shared visibility</li>
+</ul>
+</div></details>
+
+<details class="qa"><summary>How much does it cost to run?</summary><div class="ans">
+<p>Claude Crew itself is free and open-source. You pay for Claude API usage (tokens × model price).</p>
+<p><strong>Cost factors:</strong></p>
+<ul>
+<li><code>approve</code> mode = 2× invocation cost (read-only + retry). Use <code>allowAll</code> or <code>auto</code> to halve it.</li>
+<li>Screenshots = 50K+ tokens each. Prefer text descriptions.</li>
+<li>Memory files grow over time and are loaded every session. Clean periodically.</li>
+<li>Cron tasks are full invocations. Use longer intervals for non-urgent checks.</li>
+</ul>
+<p><strong>Cheapest config:</strong> <code>model: "haiku"</code> + <code>sessionMode: "fresh"</code> + <code>permissionMode: "allowAll"</code>.</p>
+</div></details>
+
+<details class="qa"><summary>What platforms are supported?</summary><div class="ans">
+<table>
+<tr><th>Platform</th><th>Status</th><th>Notes</th></tr>
+<tr><td>Telegram</td><td>Supported</td><td>Full feature parity, production-tested</td></tr>
+<tr><td>Discord</td><td>Planned</td><td>Adapter implemented, in testing</td></tr>
+<tr><td>Feishu (Lark)</td><td>Planned</td><td>Architecture ready, adapter not started</td></tr>
+</table>
+<p>Config is platform-segmented — switching platforms is a one-field change, no data loss.</p>
+</div></details>
+
+<details class="qa"><summary>What happens when my API key expires?</summary><div class="ans">
+<p>The circuit breaker detects consecutive failures, pauses the bot after 3 attempts, and tells you the root cause. Auto-recovers after 5 minutes. Update your key and the bot resumes — no restart needed.</p>
+</div></details>
+
+<details class="qa"><summary>Will this project be maintained?</summary><div class="ans">
+<p>Open-source, MIT license. The codebase is ~7200 lines of TypeScript with minimal dependencies (grammY + discord.js). It's small enough for one person to maintain or for anyone to fork and modify.</p>
+<p>No cloud service dependency. No subscription. If the repo goes stale, your existing setup keeps running. The only external dependencies are Telegram's API and Anthropic's API — both stable, public APIs.</p>
+</div></details>
+
+</div>
+
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- CHINESE -->
+<!-- ══════════════════════════════════════════ -->
+<div id="zh" class="hidden">
+
+<!-- ── 竞品对比 ── -->
+<div class="sec vs">
+<h2>竞品对比质疑</h2>
+
+<details class="qa vs"><summary>"Claude Code Remote 是 Anthropic 官方方案，为什么要用你的？"</summary><div class="ans">
+<p>Claude Code Remote (CCR) 解决的是另一个问题：让 claude.ai 网页连接到远程机器执行。你仍然通过浏览器操作，一次一个项目，一个人用。</p>
+<p>Claude Crew 解决的是<strong>多项目集群管理</strong>：5 个项目并行、团队共享时间线、手机操控、任务队列、定时任务、权限体系。CCR 是传输层，Claude Crew 是管理层。</p>
+<div class="verdict">两者互补。CCR 把浏览器连到服务器，Claude Crew 把 Telegram 群连到 N 个项目。</div>
+</div></details>
+
+<details class="qa vs"><summary>"Anthropic 官方的 Telegram Plugin 已经能用 Telegram 聊天了，你这个有什么不同？"</summary><div class="ans">
+<p>官方 Telegram Plugin 是 1:1 — 一个聊天窗口转发到一个 Claude Code 会话。一个项目，一个人。</p>
+<p>Claude Crew 是 N:N — 一个群管理无限项目，每个项目独立 bot、独立上下文、独立权限。你还得到：任务队列、定时任务、看板、团队权限、自动重启、上下文预警、全套按钮菜单。</p>
+<div class="verdict">Plugin = 一个会话的远程聊天。Claude Crew = N 个项目的集群管理。</div>
+</div></details>
+
+<details class="qa vs"><summary>"Happy Coder 也能 Telegram 控制，而且 UI 更好看。"</summary><div class="ans">
+<p>Happy Coder 是一个很不错的项目。核心差异：</p>
+<table>
+<tr><th></th><th>Happy Coder</th><th>Claude Crew</th></tr>
+<tr><td>项目数</td><td>单仓库</td><td>无限，并行</td></tr>
+<tr><td>团队</td><td>单人</td><td>群聊 + 权限</td></tr>
+<tr><td>守护进程</td><td>手动启动</td><td>watchdog + 崩溃自重启 + 开机自启</td></tr>
+<tr><td>队列</td><td>忙时拒绝</td><td>排队 + 位置显示</td></tr>
+<tr><td>定时任务</td><td>无</td><td>每天/每N分钟</td></tr>
+<tr><td>看板</td><td>无</td><td>置顶、自动刷新</td></tr>
+<tr><td>权限</td><td>单一模式</td><td>两层（访问 + 授权），按 bot 配置</td></tr>
+<tr><td>上下文</td><td>持续膨胀</td><td>80% 预警、95% 自动压缩、sessionMode</td></tr>
+</table>
+<div class="verdict">Happy Coder 适合单项目远程控制。Claude Crew 为多项目集群管理而生。</div>
+</div></details>
+
+<details class="qa vs"><summary>"cc-connect 也做了多 bot 群控，到底有什么区别？"</summary><div class="ans">
+<p>cc-connect 采用了类似的架构（多个 bot 在一个群里）。差异：</p>
+<ul>
+<li><strong>Claude Crew</strong>：完整的按钮菜单管理所有配置，setup 后不需要终端。cc-connect 需要终端管理。</li>
+<li><strong>Claude Crew</strong>：内置容错（熔断器、自适应限速、截断续写）。cc-connect 基础错误处理。</li>
+<li><strong>Claude Crew</strong>：平台抽象层，Discord/飞书已在规划。cc-connect 仅 Telegram。</li>
+<li><strong>Claude Crew</strong>：sessionMode（continue/fresh）、自动压缩、上下文预警。cc-connect 基础会话管理。</li>
+</ul>
+<div class="verdict">类似架构，完成度不同。建议都试试，看哪个更合你的工作流。</div>
+</div></details>
+
+<details class="qa vs"><summary>"为什么不直接 tmux + Claude Code CLI？零依赖，完美运行。"</summary><div class="ans">
+<p>如果你只做一个项目、只在一台机器上、一个人用 — tmux 完全够用。Claude Crew 在以下场景有价值：</p>
+<ul>
+<li>管理 <strong>2 个以上项目</strong>，想在一个地方调度</li>
+<li>想用<strong>手机控制</strong> — 手机上用 tmux 很痛苦</li>
+<li>想要<strong>推送通知</strong>，任务完成手机响</li>
+<li>有<strong>团队成员</strong>需要共享可见性</li>
+<li>想要<strong>无人值守</strong> — daemon 24/7 运行、崩溃自重启、定时任务</li>
+</ul>
+<p>如果这些都不需要，tmux 更简单。</p>
+</div></details>
+
+</div>
+
+<!-- ── 架构质疑 ── -->
+<div class="sec sharp">
+<h2>架构质疑</h2>
+
+<details class="qa challenge"><summary>"为什么选 Telegram？中国被墙，美国不流行。"</summary><div class="ans">
+<p>Telegram 的 Bot API 最适合这个场景：可靠的推送通知、内联按钮、消息无速率限制、群隐私控制、全球免费。</p>
+<p>架构使用<strong>平台抽象层</strong>。Discord 和飞书适配器已在计划中。新增平台 = 实现一个 TypeScript 接口。核心逻辑（权限、队列、定时、看板）与平台无关。</p>
+<p>中国用户：飞书支持在路线图上。美国用户：Discord 适配器已实现，测试中。</p>
+</div></details>
+
+<details class="qa challenge"><summary>"每次任务都起新进程 claude -p，不浪费吗？"</summary><div class="ans">
+<p>刻意的设计选择。短进程带来：</p>
+<ul>
+<li><strong>上下文隔离</strong> — 任务之间不串</li>
+<li><strong>崩溃隔离</strong> — 一个任务崩溃不影响 daemon</li>
+<li><strong>成本可预测</strong> — 每次从已知大小的上下文开始</li>
+<li><strong>无上下文膨胀</strong> — <code>sessionMode: "fresh"</code> 每次都是干净的</li>
+</ul>
+<p>代价：Claude 每次重新读项目文件（~10-30s 开销）。对大多数任务可接受。需要快速连续微编辑时，用 <code>sessionMode: "continue"</code> 累积上下文。</p>
+<div class="verdict">短进程 = 可预测 + 可靠。长会话 = 更快但脆弱。我们默认选可预测。</div>
+</div></details>
+
+<details class="qa challenge"><summary>"没有 Docker 隔离？多人用的安全性是个笑话吧？"</summary><div class="ans">
+<p>批评有道理。所有 bot 跑在一个进程里，共享文件系统。权限系统提供<strong>控制</strong>，不是<strong>安全边界</strong>。</p>
+<p>这是面向目标用户的设计：个人开发者和信任的小团队，跑在自己的机器上。daemon 就是在你的机器上管理你的项目。</p>
+<p>需要不信任的多租户隔离？对，你需要 Docker。Claude Crew 不是为那个场景设计的，README 里明确说了。</p>
+</div></details>
+
+<details class="qa challenge"><summary>"approve 模式跑两次 Claude，费用直接翻倍。"</summary><div class="ans">
+<p>是的。第一次只读（分析但不能写），第二次带权限重试。</p>
+<p><strong>为什么值得：</strong>你能在 Claude 动手之前看到它要做什么。团队场景下管理生产代码，这防止意外损坏。</p>
+<p><strong>替代方案：</strong></p>
+<ul>
+<li><code>auto</code> — 安全分类器自动决定。不跑两次。阻止真正危险的操作。</li>
+<li><code>allowAll</code> — 全部预授权。不跑两次。最快最便宜。个人信任项目首选。</li>
+</ul>
+<p>菜单里随时切换，不需要重启。</p>
+</div></details>
+
+<details class="qa challenge"><summary>"3 个任务上下文就 90% 了，这怎么用？"</summary><div class="ans">
+<p>默认 <code>sessionMode: "continue"</code> 会累积上下文。读 3 个文件 + 改 2 个 + 跑 bash ≈ 30-50K tokens/任务。三个任务 = 90%+。</p>
+<p><strong>解法（选一个）：</strong></p>
+<ol>
+<li><code>/new</code> — 重置上下文。Claude 从磁盘重新读文件。~10s 开销。</li>
+<li><code>/compact</code> — 压缩历史，保留关键决策。</li>
+<li><code>sessionMode: "fresh"</code> — 每次独立上下文。无累积。靠 memory 文件恢复记忆。</li>
+</ol>
+<p>95% 自动压缩已内置。80% 会主动提醒。</p>
+</div></details>
+
+<details class="qa challenge"><summary>"7000 多行 TypeScript？感觉过度工程了。"</summary><div class="ans">
+<p>拆开看：</p>
+<ul>
+<li>~1200 行：i18n（中英双语 UI 文案）</li>
+<li>~1000 行：交互式设置（按钮菜单、配置、用户管理、引导）</li>
+<li>~800 行：daemon + 消息处理（Telegram handler、路由）</li>
+<li>~700 行：Claude 调用（执行、进度、审批、容错、上下文管理）</li>
+<li>~600 行：平台适配器（Telegram + Discord）</li>
+<li>~500 行：配置、类型、工具函数、状态、定时、记忆、看板</li>
+<li>~250 行：容错模块</li>
+</ul>
+<p>没有框架，没有为抽象而抽象。每个文件做一件事。最大的文件是 i18n（双语字符串）。去掉 i18n 就是 ~5500 行的完整管理系统。</p>
+</div></details>
+
+</div>
+
+<!-- ── 安全质疑 ── -->
+<div class="sec sharp">
+<h2>安全质疑</h2>
+
+<details class="qa challenge"><summary>"Bot token 存在明文 JSON 里？这安全吗？"</summary><div class="ans">
+<p><code>bot-pool.json</code> 存储权限为 <code>chmod 600</code>（只有 owner 可读写），在 <code>~/.claude/channels/telegram/</code> 目录下，通过 <code>.gitignore</code> 排除在 git 外。</p>
+<p>和 <code>~/.ssh/id_rsa</code>、<code>~/.aws/credentials</code>、<code>~/.claude/</code> 本身的安全模型一样。如果攻击者能读你的 home 目录，bot token 不是你最大的问题。</p>
+</div></details>
+
+<details class="qa challenge"><summary>"群里其他人能看到我的代码吗？"</summary><div class="ans">
+<p>他们能看到 <strong>Claude 的回复</strong>（可能包含代码片段、文件内容、diff 输出），但<strong>没有</strong>直接文件系统访问。</p>
+<p>控制可见性：</p>
+<ul>
+<li>按 bot 设 <code>allowedUsers</code> — 未授权用户连触发 bot 都做不到</li>
+<li>敏感项目设 <code>readOnly</code> — 无写操作输出可泄露</li>
+<li>私人群只加信任的人</li>
+<li>最大隔离：一个群一个项目（1:1 Focus Mode）</li>
+</ul>
+</div></details>
+
+<details class="qa challenge"><summary>"ANTHROPIC_API_KEY 传给了 Claude 子进程，不危险吗？"</summary><div class="ans">
+<p>Claude Code CLI <em>需要</em> API key 才能运行。没有它任何任务都跑不了。key 通过过滤后的环境变量传递 — 除了明确安全的变量，其他全部屏蔽。</p>
+<p>风险：项目文件中的 prompt injection 可能指示 Claude 通过 Bash 命令外泄 key。缓解措施：</p>
+<ul>
+<li><code>approve</code> 模式 — 你审批每一个 Bash 命令</li>
+<li><code>auto</code> 模式 — 安全分类器阻止外泄模式</li>
+<li>key 本身已经在你的 <code>~/.claude/</code> 目录里，有本地访问权的人都能拿到</li>
+</ul>
+<p>如果仍然担心：使用带消费限制的 scoped API key，或用订阅认证代替。</p>
+</div></details>
+
+</div>
+
+<!-- ── 实用问题 ── -->
+<div class="sec">
+<h2>实用问题</h2>
+
+<details class="qa"><summary>真的比直接开终端快吗？</summary><div class="ans">
+<p>单个项目单个任务？不一定。开终端跑 <code>claude</code> 更直接。</p>
+<p>Claude Crew 更快的场景：</p>
+<ul>
+<li>管理 3+ 项目，不想在终端间切换</li>
+<li>不在电脑前，想用手机调度</li>
+<li>想一眼看到所有项目状态（看板）</li>
+<li>想要无人值守（定时任务、自动重启）</li>
+<li>团队需要共享可见性</li>
+</ul>
+</div></details>
+
+<details class="qa"><summary>运行成本多少？</summary><div class="ans">
+<p>Claude Crew 免费开源。你只付 Claude API 用量（tokens × 模型价格）。</p>
+<p><strong>最省配置：</strong><code>model: "haiku"</code> + <code>sessionMode: "fresh"</code> + <code>permissionMode: "allowAll"</code>。</p>
+<p><strong>省钱技巧：</strong>简单任务用 haiku，避免发截图（单张 50K+ tokens），定期清理 memory 文件，非紧急定时任务用长间隔。</p>
+</div></details>
+
+<details class="qa"><summary>支持哪些平台？</summary><div class="ans">
+<table>
+<tr><th>平台</th><th>状态</th><th>说明</th></tr>
+<tr><td>Telegram</td><td>已支持</td><td>完整功能，生产验证</td></tr>
+<tr><td>Discord</td><td>计划中</td><td>适配器已实现，测试中</td></tr>
+<tr><td>飞书 (Lark)</td><td>计划中</td><td>架构就绪，适配器未开始</td></tr>
+</table>
+<p>配置按平台分段 — 切换平台只改一个字段，数据不丢。</p>
+</div></details>
+
+<details class="qa"><summary>API key 过期了怎么办？</summary><div class="ans">
+<p>熔断器检测到连续失败，3 次后暂停 bot 并显示根因。5 分钟后自动尝试恢复。更新 key 后 bot 自动恢复，不需要重启。</p>
+</div></details>
+
+<details class="qa"><summary>这个项目会持续维护吗？</summary><div class="ans">
+<p>开源，MIT 协议。代码 ~7200 行 TypeScript，依赖极简（grammY + discord.js）。一个人就能维护，任何人都能 fork 和修改。</p>
+<p>不依赖云服务、不需要订阅。即使仓库停更，你现有的部署继续运行。唯一外部依赖是 Telegram API 和 Anthropic API — 都是稳定的公共 API。</p>
+</div></details>
+
+</div>
+
+</div>
+
+</div>
+
+<footer>
+Claude Crew &mdash; Every Project, Anywhere.<br>
+<a href="https://github.com/qiudeqiu/claude-crew">GitHub</a>
+</footer>
+
+<script>
+function sw(l){
+document.getElementById('en').classList.toggle('hidden',l!=='en');
+document.getElementById('zh').classList.toggle('hidden',l!=='zh');
+document.getElementById('st-en').classList.toggle('hidden',l!=='en');
+document.getElementById('st-zh').classList.toggle('hidden',l!=='zh');
+document.getElementById('be').classList.toggle('on',l==='en');
+document.getElementById('bz').classList.toggle('on',l==='zh');
+}
+</script>
+</body>
+</html>
