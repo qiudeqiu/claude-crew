@@ -1,7 +1,10 @@
-import { loadPool } from "../config.js";
+import { loadPool, getPlatform } from "../config.js";
 
 const EXAMPLE_HOME =
   process.platform === "darwin" ? "/Users/your-name" : "/home/your-name";
+
+/** Is the current platform Discord? */
+const isDiscord = () => getPlatform() === "discord";
 
 export type Lang = "en" | "zh";
 
@@ -26,7 +29,9 @@ export function common(lang: Lang) {
         restartNow: "立即重启",
         save: "保存",
         cancelled: "\u274c 已取消。",
-        replyHint: "\n\n\ud83d\udca1 请回复此消息或 @主控 发送",
+        replyHint: isDiscord()
+          ? "\n\n\ud83d\udca1 请 @主控 发送"
+          : "\n\n\ud83d\udca1 请回复此消息或 @主控 发送",
       }
     : {
         confirm: "Confirm",
@@ -36,8 +41,9 @@ export function common(lang: Lang) {
         restartNow: "Restart Now",
         save: "Save",
         cancelled: "\u274c Cancelled.",
-        replyHint:
-          "\n\n\ud83d\udca1 Reply to this message or @mention master to respond",
+        replyHint: isDiscord()
+          ? "\n\n\ud83d\udca1 @mention master to respond"
+          : "\n\n\ud83d\udca1 Reply to this message or @mention master to respond",
       };
 }
 
@@ -210,21 +216,31 @@ export function botsMsg(lang: Lang) {
         notFound: (u: string) => `\u26a0\ufe0f @${u} 未找到。`,
         removed: (u: string) =>
           `\u2705 @${u} 已从池中删除。\n\n重启后完全停止。`,
-        addTitle:
-          "\u2795 请按照以下流程进行机器人添加：\n\n" +
-          "1\ufe0f\u20e3 点击打开 @BotFather\n" +
-          "2\ufe0f\u20e3 发送 /newbot\n" +
-          "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
-          "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
-          "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
-          "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
-        invalidToken:
-          "\u26a0\ufe0f token 格式无效。\n格式如: 123456789:ABCdefGHI...\n请重试:",
+        addTitle: isDiscord()
+          ? "\u2795 请按照以下流程添加 Discord 机器人：\n\n" +
+            "1\ufe0f\u20e3 打开 Discord Developer Portal\n" +
+            "   https://discord.com/developers/applications\n" +
+            "2\ufe0f\u20e3 New Application → 输入名称 → Create\n" +
+            "3\ufe0f\u20e3 左侧 Bot → Reset Token → 复制 token 发送到此处\n" +
+            "4\ufe0f\u20e3 开启 MESSAGE CONTENT INTENT（同页面下方）\n\n" +
+            "token 格式参考：\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+          : "\u2795 请按照以下流程进行机器人添加：\n\n" +
+            "1\ufe0f\u20e3 点击打开 @BotFather\n" +
+            "2\ufe0f\u20e3 发送 /newbot\n" +
+            "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
+            "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
+            "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
+            "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        invalidToken: isDiscord()
+          ? "\u26a0\ufe0f token 格式无效。\nDiscord token 由 3 段 base64 组成（用 . 分隔）\n请重试:"
+          : "\u26a0\ufe0f token 格式无效。\n格式如: 123456789:ABCdefGHI...\n请重试:",
         duplicateToken: "\u26a0\ufe0f 此机器人已在池中。",
         validating: "\ud83d\udd0d 验证 token...",
-        invalidTokenApi: "\u274c 无效 token。请重试:",
+        invalidTokenApi: isDiscord()
+          ? "\u274c 无效 token — Discord 拒绝了。\n请在 Developer Portal 重新生成后重试:"
+          : "\u274c 无效 token。请重试:",
         foundBot: (u: string) =>
-          `\u2705 找到 @${u}！\n\n请输入项目名称 (如 "my-api"):`,
+          `\u2705 找到 ${isDiscord() ? u : "@" + u}！\n\n请输入项目名称 (如 "my-api"):`,
         invalidProject: "\u26a0\ufe0f 1-50 个字符。请重试:",
         askPath: (_p: string) =>
           `请输入项目代码所在的绝对路径:\n\n` +
@@ -237,6 +253,12 @@ export function botsMsg(lang: Lang) {
         bot: "机器人",
         added: (u: string, proj: string, path: string) =>
           `\u2705 @${u} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n重启后上线。`,
+        inviteSteps: (url: string) =>
+          "\ud83d\udd17 邀请机器人进服务器：\n" +
+          "1\ufe0f\u20e3 点击下方链接授权\n" +
+          `${url}\n` +
+          "2\ufe0f\u20e3 选择你的服务器 \u2192 授权\n" +
+          "3\ufe0f\u20e3 确认后点击「立即重启」",
         none: "(无)",
       }
     : {
@@ -258,21 +280,31 @@ export function botsMsg(lang: Lang) {
         notFound: (u: string) => `\u26a0\ufe0f @${u} not found.`,
         removed: (u: string) =>
           `\u2705 @${u} removed from pool.\n\nRestart to fully stop it.`,
-        addTitle:
-          "\u2795 Follow these steps to add a bot:\n\n" +
-          "1\ufe0f\u20e3 Open @BotFather\n" +
-          "2\ufe0f\u20e3 Send /newbot\n" +
-          "3\ufe0f\u20e3 Send the bot display name\n" +
-          "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
-          "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
-          "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
-        invalidToken:
-          "\u26a0\ufe0f Invalid token format.\nTokens look like: 123456789:ABCdefGHI...\nTry again:",
+        addTitle: isDiscord()
+          ? "\u2795 Follow these steps to add a Discord bot:\n\n" +
+            "1\ufe0f\u20e3 Open Discord Developer Portal\n" +
+            "   https://discord.com/developers/applications\n" +
+            "2\ufe0f\u20e3 New Application \u2192 enter name \u2192 Create\n" +
+            "3\ufe0f\u20e3 Go to Bot \u2192 Reset Token \u2192 copy & send here\n" +
+            "4\ufe0f\u20e3 Enable MESSAGE CONTENT INTENT (same page, below)\n\n" +
+            "Token format:\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+          : "\u2795 Follow these steps to add a bot:\n\n" +
+            "1\ufe0f\u20e3 Open @BotFather\n" +
+            "2\ufe0f\u20e3 Send /newbot\n" +
+            "3\ufe0f\u20e3 Send the bot display name\n" +
+            "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
+            "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
+            "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        invalidToken: isDiscord()
+          ? "\u26a0\ufe0f Invalid token format.\nDiscord tokens are 3 base64 segments joined by dots.\nTry again:"
+          : "\u26a0\ufe0f Invalid token format.\nTokens look like: 123456789:ABCdefGHI...\nTry again:",
         duplicateToken: "\u26a0\ufe0f This bot is already in the pool.",
         validating: "\ud83d\udd0d Validating token...",
-        invalidTokenApi: "\u274c Invalid token. Try again:",
+        invalidTokenApi: isDiscord()
+          ? "\u274c Invalid token \u2014 Discord rejected it.\nRegenerate in Developer Portal and try again:"
+          : "\u274c Invalid token. Try again:",
         foundBot: (u: string) =>
-          `\u2705 Found @${u}!\n\nWhat project name? (e.g. "my-api")`,
+          `\u2705 Found ${isDiscord() ? u : "@" + u}!\n\nWhat project name? (e.g. "my-api")`,
         invalidProject: "\u26a0\ufe0f 1-50 characters. Try again:",
         askPath: (_p: string) =>
           `Enter the absolute path to the project code:\n\n` +
@@ -285,6 +317,12 @@ export function botsMsg(lang: Lang) {
         bot: "Bot",
         added: (u: string, proj: string, path: string) =>
           `\u2705 @${u} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\nRestart to bring it online.`,
+        inviteSteps: (url: string) =>
+          "\ud83d\udd17 Invite bot to server:\n" +
+          "1\ufe0f\u20e3 Click the link below to authorize\n" +
+          `${url}\n` +
+          "2\ufe0f\u20e3 Select your server \u2192 Authorize\n" +
+          "3\ufe0f\u20e3 Then click Restart Now",
         none: "(none)",
       };
 }
@@ -411,8 +449,7 @@ export function optDesc(lang: Lang) {
   return lang === "zh"
     ? {
         pm_allowAll: "预授权所有工具 — 无提示，最快执行",
-        pm_approve:
-          "首次只读运行；需要写入时，发送 Telegram 按钮请求管理员批准",
+        pm_approve: "首次只读运行；需要写入时，发送按钮请求管理员批准",
         pm_auto: "Claude Code 后台安全分类器自动批准安全操作，阻止危险操作",
         pm_inherit: "使用全局 permissionMode 设置",
         al_readWrite: "完全访问 — 读文件、写文件、运行命令",
@@ -429,7 +466,7 @@ export function optDesc(lang: Lang) {
         pm_allowAll:
           "Pre-authorize all tools \u2014 no prompts, fastest execution",
         pm_approve:
-          "First run read-only; if writes needed, sends a Telegram button for admin approval",
+          "First run read-only; if writes needed, sends a button for admin approval",
         pm_auto:
           "Claude Code\u2019s background safety classifier auto-approves safe ops, blocks dangerous ones",
         pm_inherit: "Use the global permissionMode setting",
@@ -489,8 +526,9 @@ export function usersMsg(lang: Lang) {
         userCount: (n: number) => (n > 0 ? `${n} 个用户` : "无"),
         addAdmin: "\u2795 添加管理员",
         botUsers: (u: string) => `\ud83d\udc65 @${u} 用户`,
-        addAdminPrompt:
-          "\ud83d\udc51 添加管理员\n\n发送 Telegram 用户 ID（数字）。\n\n提示: 可通过 @userinfobot 获取 ID",
+        addAdminPrompt: isDiscord()
+          ? "\ud83d\udc51 添加管理员\n\n发送 Discord 用户 ID（数字）。\n\n提示: 开启开发者模式后右键用户 → 复制用户 ID"
+          : "\ud83d\udc51 添加管理员\n\n发送 Telegram 用户 ID（数字）。\n\n提示: 可通过 @userinfobot 获取 ID",
         cantRemoveLast:
           "\u26a0\ufe0f 不能删除最后一个管理员。\n\n请先添加其他管理员。",
         adminRemoved: (id: string) => `\u2705 管理员 ${id} 已移除。`,
@@ -498,7 +536,9 @@ export function usersMsg(lang: Lang) {
         noUsers: "  (无用户 — 管理员始终有权限)",
         addUser: "\u2795 添加用户",
         addUserPrompt: (u: string) =>
-          `\ud83d\udc65 添加用户到 @${u}\n\n发送 Telegram 用户 ID（数字）:`,
+          isDiscord()
+            ? `\ud83d\udc65 添加用户到 ${u}\n\n发送 Discord 用户 ID（数字）:`
+            : `\ud83d\udc65 添加用户到 @${u}\n\n发送 Telegram 用户 ID（数字）:`,
         invalidId: "\u26a0\ufe0f 用户 ID 必须是数字（如 123456789）。\n请重试:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} 已是管理员。`,
         adminAdded: (id: string) => `\u2705 管理员已添加: ${id}`,
@@ -515,8 +555,9 @@ export function usersMsg(lang: Lang) {
         userCount: (n: number) => (n > 0 ? `${n} user(s)` : "none"),
         addAdmin: "\u2795 Add Admin",
         botUsers: (u: string) => `\ud83d\udc65 @${u} users`,
-        addAdminPrompt:
-          "\ud83d\udc51 Add Admin\n\nSend the Telegram user ID (numeric).\n\nTip: users can find their ID with @userinfobot",
+        addAdminPrompt: isDiscord()
+          ? "\ud83d\udc51 Add Admin\n\nSend the Discord user ID (numeric).\n\nTip: enable Developer Mode, right-click user \u2192 Copy User ID"
+          : "\ud83d\udc51 Add Admin\n\nSend the Telegram user ID (numeric).\n\nTip: users can find their ID with @userinfobot",
         cantRemoveLast:
           "\u26a0\ufe0f Can't remove the last admin.\n\nAdd another admin first.",
         adminRemoved: (id: string) => `\u2705 Admin ${id} removed.`,
@@ -524,7 +565,9 @@ export function usersMsg(lang: Lang) {
         noUsers: "  (no users \u2014 admins always have access)",
         addUser: "\u2795 Add User",
         addUserPrompt: (u: string) =>
-          `\ud83d\udc65 Add user to @${u}\n\nSend the Telegram user ID (numeric):`,
+          isDiscord()
+            ? `\ud83d\udc65 Add user to ${u}\n\nSend the Discord user ID (numeric):`
+            : `\ud83d\udc65 Add user to @${u}\n\nSend the Telegram user ID (numeric):`,
         invalidId:
           "\u26a0\ufe0f User ID must be numeric (e.g. 123456789).\nTry again:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} is already an admin.`,
@@ -542,14 +585,16 @@ export function usersMsg(lang: Lang) {
 export function onboardMsg(lang: Lang) {
   return lang === "zh"
     ? {
-        dmOnly:
-          "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
-          "下一步：\n" +
-          "1\ufe0f\u20e3 创建一个 Telegram 私密群组\n" +
-          "2\ufe0f\u20e3 把我拉进群组\n" +
-          "3\ufe0f\u20e3 在 @BotFather 中关闭我的 Group Privacy：\n" +
-          "   /mybots \u2192 选择我 \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
-          "拉进群后我会自动发起设置向导 \ud83d\ude80",
+        dmOnly: isDiscord()
+          ? "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
+            "请在服务器的文字频道中 @我 并发送 setup 开始设置向导 \ud83d\ude80"
+          : "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
+            "下一步：\n" +
+            "1\ufe0f\u20e3 创建一个 Telegram 私密群组\n" +
+            "2\ufe0f\u20e3 把我拉进群组\n" +
+            "3\ufe0f\u20e3 在 @BotFather 中关闭我的 Group Privacy：\n" +
+            "   /mybots \u2192 选择我 \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
+            "拉进群后我会自动发起设置向导 \ud83d\ude80",
         needAdmin:
           "\ud83d\udc4b 我已加入群组！\n\n\u26a0\ufe0f 请先将我设为群组管理员，这样我才能置顶看板和管理消息。\n\n操作：群组设置 \u2192 管理员 \u2192 添加我 \u2192 保存",
         groupDetected:
@@ -566,30 +611,46 @@ export function onboardMsg(lang: Lang) {
         yesUseGroup: "是，使用此群组",
         groupDone: (n: number) =>
           `\u2705 群组已配置！\n\n你已有 ${n} 个项目机器人。\n它们将在此群组发布更新。\n\n\ud83d\udd04 重启以应用更改。`,
-        groupSet:
-          "\u2705 群组已设置！\n\n" +
-          "现在添加你的第一个项目机器人：\n\n" +
-          "1\ufe0f\u20e3 点击打开 @BotFather\n" +
-          "2\ufe0f\u20e3 发送 /newbot\n" +
-          "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
-          "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
-          "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
-          "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
-        welcomeGuide:
-          "\u2705 群组设置完成！\n\n" +
-          "\ud83c\udf89 下一步：\n\n" +
-          "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
-          "\u2022 添加后在群里 @项目bot 即可让 Claude Code 在该项目中执行任务\n" +
-          "\u2022 @master menu 随时打开管理菜单\n\n" +
-          "\ud83d\udca1 项目 bot 需要先在 @BotFather 创建，拿到 token 后在这里添加",
-        invalidToken:
-          "\u26a0\ufe0f 这不像一个 bot token。\n\n" +
-          "token 格式如: 123456789:ABCdefGHI...\n" +
-          "从 @BotFather 获取后重试:",
+        groupSet: isDiscord()
+          ? "\u2705 频道已设置！\n\n" +
+            "现在添加你的第一个项目机器人：\n\n" +
+            "1\ufe0f\u20e3 打开 Discord Developer Portal\n" +
+            "   https://discord.com/developers/applications\n" +
+            "2\ufe0f\u20e3 New Application \u2192 输入名称 \u2192 Create\n" +
+            "3\ufe0f\u20e3 左侧 Bot \u2192 Reset Token \u2192 复制 token 发送到此处\n" +
+            "4\ufe0f\u20e3 开启 MESSAGE CONTENT INTENT\n\n" +
+            "token 格式参考：\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+          : "\u2705 群组已设置！\n\n" +
+            "现在添加你的第一个项目机器人：\n\n" +
+            "1\ufe0f\u20e3 点击打开 @BotFather\n" +
+            "2\ufe0f\u20e3 发送 /newbot\n" +
+            "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
+            "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
+            "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
+            "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        welcomeGuide: isDiscord()
+          ? "\u2705 频道设置完成！\n\n" +
+            "\ud83c\udf89 下一步：\n\n" +
+            "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
+            "\u2022 添加后在频道中 @项目bot 即可让 Claude Code 执行任务\n" +
+            "\u2022 @master menu 随时打开管理菜单\n\n" +
+            "\ud83d\udca1 项目 bot 需要先在 Developer Portal 创建，拿到 token 后在这里添加"
+          : "\u2705 群组设置完成！\n\n" +
+            "\ud83c\udf89 下一步：\n\n" +
+            "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
+            "\u2022 添加后在群里 @项目bot 即可让 Claude Code 在该项目中执行任务\n" +
+            "\u2022 @master menu 随时打开管理菜单\n\n" +
+            "\ud83d\udca1 项目 bot 需要先在 @BotFather 创建，拿到 token 后在这里添加",
+        invalidToken: isDiscord()
+          ? "\u26a0\ufe0f 这不像一个 bot token。\n\nDiscord token 由 3 段 base64 组成（用 . 分隔）\n请在 Developer Portal 重新获取后重试:"
+          : "\u26a0\ufe0f 这不像一个 bot token。\n\n" +
+            "token 格式如: 123456789:ABCdefGHI...\n" +
+            "从 @BotFather 获取后重试:",
         duplicateToken: "\u26a0\ufe0f 此机器人已在池中。\n请发送其他 token:",
         validating: "\ud83d\udd0d 验证 token...",
-        invalidTokenApi:
-          "\u274c 无效 token — Telegram 拒绝了。\n请检查 @BotFather 后重试:",
+        invalidTokenApi: isDiscord()
+          ? "\u274c 无效 token — Discord 拒绝了。\n请在 Developer Portal 重新生成后重试:"
+          : "\u274c 无效 token — Telegram 拒绝了。\n请检查 @BotFather 后重试:",
         foundBot: (u: string) =>
           `\u2705 找到 @${u}！\n\n请输入项目名称 (如 "my-api"、"frontend"):`,
         invalidProject: "\u26a0\ufe0f 项目名称应为 1-50 个字符。\n请重试:",
@@ -605,16 +666,24 @@ export function onboardMsg(lang: Lang) {
         saveConfig: "保存此配置?",
         added: (u: string, proj: string, path: string) =>
           `\u2705 @${u} 已添加到池中！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n重启以上线。`,
+        inviteSteps: (url: string) =>
+          "\ud83d\udd17 邀请机器人进服务器：\n" +
+          "1\ufe0f\u20e3 点击下方链接授权\n" +
+          `${url}\n` +
+          "2\ufe0f\u20e3 选择你的服务器 \u2192 授权\n" +
+          "3\ufe0f\u20e3 确认后点击「立即重启」",
       }
     : {
-        dmOnly:
-          "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
-          "Next steps:\n" +
-          "1\ufe0f\u20e3 Create a private Telegram group\n" +
-          "2\ufe0f\u20e3 Add me to the group\n" +
-          "3\ufe0f\u20e3 Disable my Group Privacy in @BotFather:\n" +
-          "   /mybots \u2192 select me \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
-          "I'll auto-start the setup wizard once I'm in the group \ud83d\ude80",
+        dmOnly: isDiscord()
+          ? "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
+            "Please @mention me in a server channel and send setup to start the wizard \ud83d\ude80"
+          : "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
+            "Next steps:\n" +
+            "1\ufe0f\u20e3 Create a private Telegram group\n" +
+            "2\ufe0f\u20e3 Add me to the group\n" +
+            "3\ufe0f\u20e3 Disable my Group Privacy in @BotFather:\n" +
+            "   /mybots \u2192 select me \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
+            "I'll auto-start the setup wizard once I'm in the group \ud83d\ude80",
         needAdmin:
           "\ud83d\udc4b I've joined the group!\n\n\u26a0\ufe0f Please make me a group admin so I can pin the dashboard and manage messages.\n\nHow: Group settings \u2192 Administrators \u2192 Add me \u2192 Save",
         groupDetected:
@@ -632,31 +701,47 @@ export function onboardMsg(lang: Lang) {
         yesUseGroup: "Yes, use this group",
         groupDone: (n: number) =>
           `\u2705 Group configured!\n\nYou already have ${n} project bot(s). They'll now post updates here.\n\n\ud83d\udd04 Restart to apply changes.`,
-        groupSet:
-          "\u2705 Group set!\n\n" +
-          "Now let's add your first project bot:\n\n" +
-          "1\ufe0f\u20e3 Open @BotFather\n" +
-          "2\ufe0f\u20e3 Send /newbot\n" +
-          "3\ufe0f\u20e3 Send the bot display name\n" +
-          "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
-          "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
-          "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
-        welcomeGuide:
-          "\u2705 Group set up!\n\n" +
-          "\ud83c\udf89 Next steps:\n\n" +
-          '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
-          "\u2022 Then @projectbot in the group to run Claude Code tasks in that project\n" +
-          "\u2022 @master menu to open the management menu anytime\n\n" +
-          "\ud83d\udca1 Create a bot in @BotFather first, then add its token here",
-        invalidToken:
-          "\u26a0\ufe0f That doesn't look like a bot token.\n\n" +
-          "Tokens look like: 123456789:ABCdefGHI...\n" +
-          "Get one from @BotFather and try again:",
+        groupSet: isDiscord()
+          ? "\u2705 Channel set!\n\n" +
+            "Now let's add your first project bot:\n\n" +
+            "1\ufe0f\u20e3 Open Discord Developer Portal\n" +
+            "   https://discord.com/developers/applications\n" +
+            "2\ufe0f\u20e3 New Application \u2192 enter name \u2192 Create\n" +
+            "3\ufe0f\u20e3 Go to Bot \u2192 Reset Token \u2192 copy & send here\n" +
+            "4\ufe0f\u20e3 Enable MESSAGE CONTENT INTENT\n\n" +
+            "Token format:\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+          : "\u2705 Group set!\n\n" +
+            "Now let's add your first project bot:\n\n" +
+            "1\ufe0f\u20e3 Open @BotFather\n" +
+            "2\ufe0f\u20e3 Send /newbot\n" +
+            "3\ufe0f\u20e3 Send the bot display name\n" +
+            "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
+            "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
+            "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        welcomeGuide: isDiscord()
+          ? "\u2705 Channel set up!\n\n" +
+            "\ud83c\udf89 Next steps:\n\n" +
+            '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
+            "\u2022 Then @projectbot in the channel to run Claude Code tasks\n" +
+            "\u2022 @master menu to open the management menu anytime\n\n" +
+            "\ud83d\udca1 Create a bot in Developer Portal first, then add its token here"
+          : "\u2705 Group set up!\n\n" +
+            "\ud83c\udf89 Next steps:\n\n" +
+            '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
+            "\u2022 Then @projectbot in the group to run Claude Code tasks in that project\n" +
+            "\u2022 @master menu to open the management menu anytime\n\n" +
+            "\ud83d\udca1 Create a bot in @BotFather first, then add its token here",
+        invalidToken: isDiscord()
+          ? "\u26a0\ufe0f That doesn't look like a bot token.\n\nDiscord tokens are 3 base64 segments joined by dots.\nRegenerate in Developer Portal and try again:"
+          : "\u26a0\ufe0f That doesn't look like a bot token.\n\n" +
+            "Tokens look like: 123456789:ABCdefGHI...\n" +
+            "Get one from @BotFather and try again:",
         duplicateToken:
           "\u26a0\ufe0f This bot is already in the pool.\nSend a different token:",
         validating: "\ud83d\udd0d Validating token...",
-        invalidTokenApi:
-          "\u274c Invalid token \u2014 Telegram rejected it.\nDouble-check with @BotFather and try again:",
+        invalidTokenApi: isDiscord()
+          ? "\u274c Invalid token \u2014 Discord rejected it.\nRegenerate in Developer Portal and try again:"
+          : "\u274c Invalid token \u2014 Telegram rejected it.\nDouble-check with @BotFather and try again:",
         foundBot: (u: string) =>
           `\u2705 Found @${u}!\n\nWhat project name should I assign? (e.g. "my-api", "frontend")`,
         invalidProject:
@@ -673,6 +758,12 @@ export function onboardMsg(lang: Lang) {
         saveConfig: "Save this configuration?",
         added: (u: string, proj: string, path: string) =>
           `\u2705 @${u} added to pool!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\nRestart the daemon to bring the bot online.`,
+        inviteSteps: (url: string) =>
+          "\ud83d\udd17 Invite bot to server:\n" +
+          "1\ufe0f\u20e3 Click the link below to authorize\n" +
+          `${url}\n` +
+          "2\ufe0f\u20e3 Select your server \u2192 Authorize\n" +
+          "3\ufe0f\u20e3 Then click Restart Now",
       };
 }
 
@@ -706,6 +797,19 @@ export function setupMsg(lang: Lang) {
           `\ud83d\udd12 需要工具权限:\n${tools}\n\n批准后将重试\n\u23f0 ${min} 分钟内响应\n\ud83d\udca1 在 menu \u2192 配置 \u2192 permissionMode 中可切换为 allowAll 或 auto 免审批`,
         sessionTimedOut: (min: number) =>
           `\u23f0 任务超时（${min} 分钟限制）\n\ud83d\udca1 可在 menu \u2192 配置 \u2192 sessionTimeout 中调整时长`,
+        circuitOpen: (bot: string, err: string, sec: number) =>
+          `\u26a0\ufe0f @${bot} 连续失败已暂停（${sec}s 后恢复）\n原因: ${err}`,
+        circuitTripped: (bot: string, count: number) =>
+          `\ud83d\udea8 @${bot} 连续 ${count} 次失败，已熔断\n\ud83d\udca1 排查后 5 分钟内自动恢复`,
+        authError: (bot: string) =>
+          `\ud83d\udd11 @${bot} API 认证失败，已暂停\n\ud83d\udca1 请检查 ANTHROPIC_API_KEY`,
+        contextAutoCompact: (bot: string) =>
+          `\ud83d\udd04 @${bot} 上下文溢出，自动压缩中...`,
+        truncationContinue: (attempt: number, max: number) =>
+          `\u2702\ufe0f 输出被截断，自动续写 (${attempt}/${max})...`,
+        adaptiveRateLimit: (sec: number) => `\u23f3 API 限速中，${sec}s 后恢复`,
+        denialLimitReached:
+          "\u26d4 审批多次被跳过\n\ud83d\udca1 建议 permissionMode 切换为 allowAll",
       }
     : {
         noPermission:
@@ -734,6 +838,20 @@ export function setupMsg(lang: Lang) {
           `\ud83d\udd12 Requires tool permissions:\n${tools}\n\nWill retry after approval\n\u23f0 ${min} min to respond\n\ud83d\udca1 Switch to allowAll or auto in menu \u2192 Config \u2192 permissionMode to skip approval`,
         sessionTimedOut: (min: number) =>
           `\u23f0 Task timed out (${min} min limit)\n\ud83d\udca1 Adjust in menu \u2192 Config \u2192 sessionTimeout`,
+        circuitOpen: (bot: string, err: string, sec: number) =>
+          `\u26a0\ufe0f @${bot} paused after repeated failures (recovers in ${sec}s)\nLast error: ${err}`,
+        circuitTripped: (bot: string, count: number) =>
+          `\ud83d\udea8 @${bot} circuit breaker tripped after ${count} consecutive failures\n\ud83d\udca1 Auto-recovers in 5 minutes`,
+        authError: (bot: string) =>
+          `\ud83d\udd11 @${bot} API authentication failed, paused\n\ud83d\udca1 Check ANTHROPIC_API_KEY`,
+        contextAutoCompact: (bot: string) =>
+          `\ud83d\udd04 @${bot} context overflow, auto-compacting...`,
+        truncationContinue: (attempt: number, max: number) =>
+          `\u2702\ufe0f Output truncated, auto-continuing (${attempt}/${max})...`,
+        adaptiveRateLimit: (sec: number) =>
+          `\u23f3 API rate-limited, resets in ${sec}s`,
+        denialLimitReached:
+          "\u26d4 Approval skipped too many times\n\ud83d\udca1 Consider switching permissionMode to allowAll",
       };
 }
 

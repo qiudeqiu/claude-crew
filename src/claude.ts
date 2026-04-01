@@ -20,11 +20,27 @@ import {
   CONTEXT_WARN_THRESHOLD,
   CONTEXT_COMPACT_THRESHOLD,
   CONTEXT_WARN_COOLDOWN_MS,
+  CIRCUIT_BREAKER_COOLDOWN_MS,
+  CIRCUIT_BREAKER_MAX_FAILURES,
+  MAX_TRUNCATION_RECOVERIES,
+  getMessageLimit,
 } from "./config.js";
 import { log } from "./logger.js";
 import { getSafeEnv, formatToolLabel, splitMessage } from "./helpers.js";
 import { daemon, sessionStats, pendingApprovals } from "./state.js";
 import { getLang, setupMsg } from "./interactive/i18n.js";
+import {
+  isCircuitOpen,
+  getCircuitInfo,
+  recordSuccess,
+  recordFailure,
+  tripCircuit,
+  recordDenial,
+  clearDenials,
+  classifyError,
+  shouldAutoContinue,
+  getAdaptiveDelay,
+} from "./resilience.js";
 
 // ══════════════════════════════════════
 // ── Core: run Claude and parse stream ──
@@ -88,6 +104,7 @@ export async function runClaude(
   let contextUsed = 0;
   let contextWindow = 0;
   let model = "";
+  let stopReason = "";
   let tokensByModel: Record<string, number> = {};
   let buffer = "";
   let gotResultEvent = false;
@@ -115,6 +132,8 @@ export async function runClaude(
       costUSD = (event.total_cost_usd as number) ?? 0;
       durationMs = (event.duration_ms as number) ?? 0;
       numTurns = (event.num_turns as number) ?? 0;
+      stopReason =
+        (event.stop_reason as string) ?? (event.subtype as string) ?? "";
       // Extract per-model token counts + context info
       const mu =
         (event.modelUsage as Record<string, Record<string, number>>) ?? {};
@@ -240,6 +259,9 @@ export async function runClaude(
     contextUsed,
     contextWindow,
     model,
+    stopReason,
+    exitCode,
+    gotResultEvent,
   };
 }
 
@@ -412,6 +434,38 @@ export async function invokeClaudeAndReply(
   const cfg = getConfig();
 
   const s = setupMsg(getLang());
+  const botKey = config.username ?? config.token.slice(0, 8);
+
+  // ── Resilience: circuit breaker ──
+  if (isCircuitOpen(botKey)) {
+    const info = getCircuitInfo(botKey);
+    const remaining = info?.trippedAt
+      ? Math.max(
+          0,
+          Math.ceil(
+            (CIRCUIT_BREAKER_COOLDOWN_MS - (Date.now() - info.trippedAt)) /
+              1000,
+          ),
+        )
+      : 0;
+    await platform
+      .sendMessage(
+        chatId,
+        s.circuitOpen(botKey, info?.lastError ?? "", remaining),
+      )
+      .catch(() => {});
+    return;
+  }
+
+  // ── Resilience: adaptive rate limiting ──
+  const adaptiveMs = getAdaptiveDelay(daemon.rateLimitInfo);
+  if (adaptiveMs > 3000) {
+    await platform
+      .sendMessage(chatId, s.adaptiveRateLimit(Math.ceil(adaptiveMs / 1000)))
+      .catch(() => {});
+    return;
+  }
+
   if (Date.now() - managed.lastInvoke < cfg.rateLimitMs) {
     await platform.sendMessage(chatId, s.rateLimited).catch(() => {});
     return;
@@ -481,6 +535,7 @@ export async function invokeClaudeAndReply(
           config,
         );
         if (approved) {
+          clearDenials(botKey);
           log(`APPROVE: retrying with tools: ${approved}`);
           progress.resetSteps();
           result = await runClaude(
@@ -502,6 +557,13 @@ export async function invokeClaudeAndReply(
           if (!result.text && result.numTurns > 0) {
             result = { ...result, text: setupMsg(getLang()).taskDone };
           }
+        } else {
+          // Denial tracking: too many skips → suggest mode change
+          if (recordDenial(botKey)) {
+            await platform
+              .sendMessage(chatId, s.denialLimitReached)
+              .catch(() => {});
+          }
         }
       }
     } else if (mode === "auto") {
@@ -514,8 +576,9 @@ export async function invokeClaudeAndReply(
         onProgress: progress.onProgress,
       });
     } else {
+      // allowAll: bypass all permission checks (including MCP tools)
       result = await runClaude(dir, prompt, {
-        allowedTools: WRITE_TOOLS,
+        permissionMode: "bypassPermissions",
         model: botModel,
         effort: botEffort,
         resume: shouldContinue,
@@ -524,18 +587,78 @@ export async function invokeClaudeAndReply(
       });
     }
 
+    // ── Resilience: output truncation recovery ──
+    // If max_output_tokens was hit, auto-continue to get the full response.
+    let truncationRecoveries = 0;
+    while (shouldAutoContinue(result.stopReason, truncationRecoveries)) {
+      truncationRecoveries++;
+      log(
+        `TRUNCATION: ${project} — recovery ${truncationRecoveries}, continuing...`,
+      );
+      await platform
+        .sendMessage(
+          chatId,
+          s.truncationContinue(truncationRecoveries, MAX_TRUNCATION_RECOVERIES),
+        )
+        .catch(() => {});
+      progress.resetSteps();
+      const continued = await runClaude(
+        dir,
+        "Continue from where you left off. Resume your output directly without repeating what was already said.",
+        {
+          model: botModel,
+          effort: botEffort,
+          resume: true, // --continue to resume context
+          appendSystemPrompt: systemPrompt,
+          onProgress: progress.onProgress,
+        },
+      );
+      // Merge: append continued text, accumulate cost
+      result = {
+        ...continued,
+        text: result.text + (continued.text ? "\n" + continued.text : ""),
+        costUSD: result.costUSD + continued.costUSD,
+        durationMs: result.durationMs + continued.durationMs,
+      };
+    }
+
     await progress.deleteStatusMsg();
 
     if (!result.text) {
+      // No output — might be a silent failure, don't reset circuit breaker
       await platform
         .sendMessage(chatId, setupMsg(getLang()).noOutput)
         .catch(() => {});
       return;
     }
 
+    // ── Resilience: check for system-level failure signals ──
+    if (result.exitCode !== 0 || !result.gotResultEvent) {
+      const reason = !result.gotResultEvent
+        ? "no result event"
+        : `exit code ${result.exitCode}`;
+      const errClass = classifyError(result.exitCode, reason, false);
+      if (errClass === "auth_error") {
+        tripCircuit(botKey, reason);
+        await platform.sendMessage(chatId, s.authError(botKey)).catch(() => {});
+      } else {
+        const tripped = recordFailure(botKey, reason);
+        if (tripped) {
+          await platform
+            .sendMessage(
+              chatId,
+              s.circuitTripped(botKey, CIRCUIT_BREAKER_MAX_FAILURES),
+            )
+            .catch(() => {});
+        }
+      }
+    } else {
+      recordSuccess(botKey);
+    }
+
     const projectTag = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff_]/g, "_");
     const mention = requesterName ? ` @${requesterName}` : "";
-    const chunks = splitMessage(result.text);
+    const chunks = splitMessage(result.text, getMessageLimit());
     for (let i = 0; i < chunks.length; i++) {
       const text =
         i === chunks.length - 1
@@ -592,11 +715,61 @@ export async function invokeClaudeAndReply(
       }
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    log(`FAIL: ${project} — ${msg}`);
-    await platform
-      .sendMessage(chatId, `\u26a0\ufe0f Failed: ${msg.slice(0, 200)}`)
-      .catch(() => {});
+    const errMsg = err instanceof Error ? err.message : String(err);
+    log(`FAIL: ${project} — ${errMsg}`);
+
+    // ── Resilience: error classification ──
+    const errClass = classifyError(
+      0, // no exit code in catch path
+      errMsg,
+      false,
+    );
+
+    switch (errClass) {
+      case "auth_error":
+        tripCircuit(botKey, errMsg);
+        await platform.sendMessage(chatId, s.authError(botKey)).catch(() => {});
+        break;
+      case "rate_limit":
+        await platform
+          .sendMessage(
+            chatId,
+            s.adaptiveRateLimit(
+              daemon.rateLimitInfo
+                ? Math.ceil(getAdaptiveDelay(daemon.rateLimitInfo) / 1000)
+                : 30,
+            ),
+          )
+          .catch(() => {});
+        break;
+      case "context_full":
+        await platform
+          .sendMessage(chatId, s.contextAutoCompact(botKey))
+          .catch(() => {});
+        runClaude(dir, "/compact", { resume: true }).catch(() => {});
+        break;
+      default: {
+        // Record failure for circuit breaker
+        const tripped = recordFailure(botKey, errMsg);
+        if (tripped) {
+          await platform
+            .sendMessage(
+              chatId,
+              s.circuitTripped(botKey, CIRCUIT_BREAKER_MAX_FAILURES),
+            )
+            .catch(() => {});
+        } else {
+          await platform
+            .sendMessage(
+              chatId,
+              getLang() === "zh"
+                ? `\u26a0\ufe0f 任务失败，请查看 daemon 日志`
+                : `\u26a0\ufe0f Task failed. Check daemon logs for details.`,
+            )
+            .catch(() => {});
+        }
+      }
+    }
   } finally {
     progress.cleanup();
     clearInterval(typingInterval);

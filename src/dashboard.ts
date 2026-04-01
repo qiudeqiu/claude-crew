@@ -15,6 +15,7 @@ import {
 } from "./helpers.js";
 import { daemon, botByUsername, sessionStats } from "./state.js";
 import { getLang, dashMsg } from "./interactive/i18n.js";
+import { getCircuitInfo } from "./resilience.js";
 
 export async function updateDashboard(): Promise<void> {
   if (!daemon.masterBot) {
@@ -66,6 +67,13 @@ export async function updateDashboard(): Promise<void> {
       if (managed.lastCostUSD > 0)
         text += ` \u00b7 ${formatCost(managed.lastCostUSD)}`;
       text += `\n`;
+    }
+    // Circuit breaker status
+    const circuit = getCircuitInfo(b.username ?? "");
+    if (circuit && circuit.tripped) {
+      text += `   \ud83d\udea8 ${lang === "zh" ? "已熔断" : "TRIPPED"}: ${circuit.lastError.slice(0, 40)}\n`;
+    } else if (circuit && circuit.failures > 0) {
+      text += `   \u26a0\ufe0f ${lang === "zh" ? "失败" : "failures"}: ${circuit.failures}\n`;
     }
     text += `   \ud83e\udd16 ${botLabel}\n\n`;
   }
