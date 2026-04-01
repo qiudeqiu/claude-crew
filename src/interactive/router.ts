@@ -146,21 +146,33 @@ async function handleMenuCallback(
     case "cron": {
       const jobs = loadCron();
       const masterName = getMasterName();
-      const text =
-        jobs.length === 0
-          ? m.noTasks(masterName)
-          : `${m.tasksTitle}\n${SEPARATOR}\n\n` +
-            jobs
-              .map((j) => {
-                const status = j.enabled ? "\ud83d\udfe2" : "\u23f8";
-                const last = j.lastRun ? j.lastRun.split("T")[0] : "never";
-                return `${status} [${j.id}] @${j.botUsername} ${j.schedule}\n   ${j.prompt.slice(0, 60)}\n   ${m.last}: ${last}`;
-              })
-              .join("\n\n") +
-            `\n\n${SEPARATOR}\n${m.cronGuide(masterName)}`;
-      await edit(api, chatId, messageId, text, {
-        reply_markup: { inline_keyboard: menuButton(lang) },
-      }).catch(() => {});
+      if (jobs.length === 0) {
+        await edit(api, chatId, messageId, m.noTasks(masterName), {
+          reply_markup: { inline_keyboard: menuButton(lang) },
+        }).catch(() => {});
+      } else {
+        const text =
+          `${m.tasksTitle}\n${SEPARATOR}\n\n` +
+          jobs
+            .map((j) => {
+              const status = j.enabled ? "\ud83d\udfe2" : "\u23f8";
+              const last = j.lastRun ? j.lastRun.split("T")[0] : "never";
+              return `${status} [${j.id}] @${j.botUsername} ${j.schedule}\n   ${j.prompt.slice(0, 60)}\n   ${m.last}: ${last}`;
+            })
+            .join("\n\n") +
+          `\n\n${SEPARATOR}\n${m.cronGuide(masterName)}`;
+        const delButtons = jobs.map((j) => [
+          {
+            text: `\ud83d\uddd1 ${j.id}`,
+            data: `m:cdel:${j.id}`,
+          },
+        ]);
+        await edit(api, chatId, messageId, text, {
+          reply_markup: {
+            inline_keyboard: [...delButtons, ...menuButton(lang)],
+          },
+        }).catch(() => {});
+      }
       return true;
     }
 
@@ -203,6 +215,24 @@ async function handleMenuCallback(
 
     default:
       break;
+  }
+
+  // Cron delete: m:cdel:JOB_ID
+  if (action.startsWith("cdel:")) {
+    const jobId = action.slice(5);
+    const jobs = loadCron();
+    const filtered = jobs.filter((j) => j.id !== jobId);
+    if (filtered.length < jobs.length) {
+      saveCron(filtered);
+    }
+    // Re-render cron list
+    return await handleMenuCallback(
+      managed,
+      chatId,
+      _userId,
+      "m:cron",
+      messageId,
+    );
   }
 
   // Guide sub-pages: m:help:master / m:help:project / m:help:cron
