@@ -496,7 +496,7 @@ export async function invokeClaudeAndReply(
   const progress = createProgressTracker(platform, chatId);
 
   try {
-    const cleanMsg = userMessage.replace(/@\w+/g, "").trim();
+    const cleanMsg = userMessage.replace(/@[\w-]+/g, "").trim();
     const prompt = imagePath
       ? `The user sent an image at path: ${imagePath}. Please use the Read tool to view the image first, then respond: ${cleanMsg || "Analyze this image"}`
       : cleanMsg;
