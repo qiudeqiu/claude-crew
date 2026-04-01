@@ -24,6 +24,20 @@
   <img src="docs/concept.png" alt="claude-crew concept" width="100%">
 </p>
 
+### 看看效果
+
+<p align="center">
+  <img src="docs/teaser_cn.gif" alt="claude-crew 演示" width="300">
+</p>
+
+<!-- TODO: 上传到 Bilibili 后替换
+<p align="center">
+  <a href="https://bilibili.com/video/YOUR_VIDEO_ID">
+    <img src="docs/video-thumbnail.png" alt="观看完整演示" width="600">
+  </a>
+</p>
+-->
+
 ### 为什么是群聊？
 
 其他方案在多项目之间工作时，你需要切换 session、切换 tab、切换 app。claude-crew 把一切放进**一个 IM 群** — 所有项目 bot、所有请求、所有回复、所有进度，汇聚在同一条时间线上。@一个 bot，它干活；@另一个，它并行干活。所有项目的动态一目了然，不用切换任何东西。你的团队也同样看得到。一个群就是你的整个开发驾驶舱。

@@ -24,6 +24,20 @@ All from one group chat. Each project gets a dedicated bot. @mention to dispatch
   <img src="docs/concept.png" alt="claude-crew concept" width="100%">
 </p>
 
+### See it in action
+
+<p align="center">
+  <img src="docs/teaser.gif" alt="claude-crew demo" width="300">
+</p>
+
+<!-- TODO: Replace with YouTube link after upload
+<p align="center">
+  <a href="https://youtube.com/watch?v=YOUR_VIDEO_ID">
+    <img src="docs/video-thumbnail.png" alt="Watch the full demo" width="600">
+  </a>
+</p>
+-->
+
 ### Why a group chat?
 
 Other solutions require you to switch between sessions, tabs, or apps when working on multiple projects. claude-crew puts everything in **one group chat** — all project bots, all requests, all responses, all progress updates in a single timeline. @mention a bot, it works. @mention another, it works in parallel. You see every project's activity without switching anything. Your team sees it too. One group is your entire development cockpit.
