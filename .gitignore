@@ -14,3 +14,5 @@ hook-progress.json
 access.json
 video/
 *.pen
+.DS_Store
+.playwright-mcp/
