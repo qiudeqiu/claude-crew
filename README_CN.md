@@ -501,6 +501,7 @@ daemon.sh no-autostart   # 禁用开机自启
 | `dashboardIntervalMinutes` | `30` | 看板刷新间隔（分钟） |
 | `whisperLanguage` | （自动检测） | 语音识别语言，如 `"zh"`、`"en"`、`"ja"` |
 | `model` | （默认） | Claude 模型：`"sonnet"`（均衡）、`"opus"`（最强）、`"haiku"`（最快最便宜） |
+| `sessionMode` | `"continue"` | `"continue"` — 接续上次对话（上下文累积）。`"fresh"` — 每次独立上下文（靠 periodic memory 恢复记忆，单次成本更低） |
 
 #### 单 Bot 配置
 

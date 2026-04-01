@@ -128,6 +128,7 @@ export function loadPool(): BotPool {
       whisperLanguage: raw.whisperLanguage,
       language: raw.language,
       model: raw.model,
+      sessionMode: raw.sessionMode,
     };
   }
 
@@ -164,6 +165,7 @@ export function savePool(pool: BotPool): void {
     whisperLanguage: pool.whisperLanguage,
     language: pool.language,
     model: pool.model,
+    sessionMode: pool.sessionMode,
   };
 
   writeFileSync(POOL_FILE, JSON.stringify(updated, null, 2) + "\n", {
@@ -232,6 +234,10 @@ export function getBotPermissionMode(
 export function getBotModel(botConfig: PoolBot): string | undefined {
   const model = botConfig.model ?? loadPool().model;
   return model || undefined;
+}
+
+export function getSessionMode(): "continue" | "fresh" {
+  return loadPool().sessionMode ?? "continue";
 }
 
 export function getMasterName(pool?: BotPool): string {

@@ -492,6 +492,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | `dashboardIntervalMinutes` | `30` | Dashboard auto-refresh interval. |
 | `whisperLanguage` | (auto-detect) | Whisper language code for voice (e.g. `"zh"`, `"en"`, `"ja"`). |
 | `model` | (default) | Claude model: `"sonnet"` (balanced), `"opus"` (strongest), `"haiku"` (fastest/cheapest). |
+| `sessionMode` | `"continue"` | `"continue"` — resume last conversation (context accumulates). `"fresh"` — clean context each time (relies on periodic memory for continuity, lower cost per task). |
 
 #### Per-Bot Settings
 

@@ -113,6 +113,12 @@ const GLOBAL_FIELDS: Record<string, FieldDef> = {
     type: "string",
     hintKey: "ap_list",
   },
+  sm: {
+    key: "sessionMode",
+    descKey: "sm",
+    options: ["continue", "fresh"],
+    optionDescKeys: ["sm_continue", "sm_fresh"],
+  },
 };
 
 const BOT_FIELDS: Record<string, FieldDef> = {
@@ -193,7 +199,8 @@ export async function showGlobalConfig(
     `\ud83e\udde0 memoryInterval: ${pool.memoryIntervalMinutes ?? 120} min\n   ${fd.mi}\n\n` +
     `\ud83c\udfa4 whisperLanguage: ${pool.whisperLanguage || "(auto)"}\n   ${fd.wl}\n\n` +
     `\ud83e\udd16 model: ${pool.model || "(default)"}\n   ${fd.md}\n\n` +
-    `\ud83d\udd10 approvers: ${pool.approvers?.length ? pool.approvers.join(", ") : "(any admin)"}\n   ${fd.ap_list}`;
+    `\ud83d\udd10 approvers: ${pool.approvers?.length ? pool.approvers.join(", ") : "(any admin)"}\n   ${fd.ap_list}\n\n` +
+    `\ud83d\udd04 sessionMode: ${pool.sessionMode ?? "continue"}\n   ${fd.sm}`;
 
   const buttons: Button[][] = [
     [
@@ -214,6 +221,7 @@ export async function showGlobalConfig(
     [
       { text: "model", data: "c:ge:md" },
       { text: "approvers", data: "c:ge:ap_list" },
+      { text: "sessionMode", data: "c:ge:sm" },
     ],
     ...menuButton(lang),
   ];

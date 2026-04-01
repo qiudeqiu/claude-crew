@@ -33,6 +33,8 @@ export type BotPool = {
   language?: string;
   model?: string;
   approvers?: string[];
+  /** Session context mode: "continue" resumes last session, "fresh" starts clean each time. */
+  sessionMode?: "continue" | "fresh";
 };
 
 /** Platform-specific section in the on-disk config. */
@@ -60,6 +62,7 @@ export type RawBotPool = {
   whisperLanguage?: string;
   language?: string;
   model?: string;
+  sessionMode?: "continue" | "fresh";
 };
 
 export type ManagedBot = {

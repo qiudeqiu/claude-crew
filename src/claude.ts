@@ -11,6 +11,7 @@ import {
   getBotAccessLevel,
   getBotPermissionMode,
   getBotModel,
+  getSessionMode,
   WRITE_TOOLS,
   READONLY_DISALLOWED,
   TYPING_INTERVAL_MS,
@@ -429,7 +430,8 @@ export async function invokeClaudeAndReply(
   const mode = getBotPermissionMode(config);
   const botModel = getBotModel(config);
   const botEffort = managed.effort;
-  const shouldContinue = !managed.skipContinue;
+  const shouldContinue =
+    !managed.skipContinue && getSessionMode() === "continue";
   managed.skipContinue = false; // reset after reading
   const cfg = getConfig();
 

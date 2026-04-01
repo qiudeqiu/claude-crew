@@ -364,6 +364,7 @@ export function configMsg(lang: Lang) {
         dashboardInterval: "dashboardInterval",
         memoryInterval: "memoryInterval",
         whisperLanguage: "whisperLanguage",
+        sessionMode: "sessionMode",
         assignedProject: "assignedProject",
         assignedPath: "assignedPath",
       }
@@ -400,6 +401,7 @@ export function configMsg(lang: Lang) {
         dashboardInterval: "dashboardInterval",
         memoryInterval: "memoryInterval",
         whisperLanguage: "whisperLanguage",
+        sessionMode: "sessionMode",
         assignedProject: "assignedProject",
         assignedPath: "assignedPath",
       };
@@ -424,6 +426,7 @@ export function fieldDesc(lang: Lang) {
         md: "Claude 模型选择。不同模型在速度、能力和成本之间有不同取舍。",
         ap_list:
           "approve 模式下必须全部同意才能执行的审批人列表。空 = 任意管理员即可。",
+        sm: "会话上下文模式。continue = 接续上次对话（上下文累积），fresh = 每次独立上下文（靠 memory 恢复记忆）。",
       }
     : {
         pm: "How write operations (file edits, shell commands) are authorized",
@@ -440,6 +443,7 @@ export function fieldDesc(lang: Lang) {
         md: "Claude model selection. Different models trade off speed, capability, and cost.",
         ap_list:
           "List of user IDs who must ALL approve before writes execute in approve mode. Empty = any admin.",
+        sm: "Session context mode. continue = resume last conversation (context accumulates), fresh = clean context each time (relies on memory for continuity).",
       };
 }
 
@@ -461,6 +465,8 @@ export function optDesc(lang: Lang) {
         md_opus: "最强推理 — 复杂架构和深度分析",
         md_haiku: "最快最便宜 — 简单查询和轻量任务",
         md_inherit: "使用全局 model 设置",
+        sm_continue: "接续上次对话 — 上下文累积，多轮连贯",
+        sm_fresh: "每次独立上下文 — 干净高效，靠 memory 记忆",
       }
     : {
         pm_allowAll:
@@ -482,6 +488,10 @@ export function optDesc(lang: Lang) {
         md_haiku:
           "Fastest and cheapest \u2014 simple queries and lightweight tasks",
         md_inherit: "Use the global model setting",
+        sm_continue:
+          "Resume last conversation \u2014 context accumulates, multi-turn coherence",
+        sm_fresh:
+          "Clean context each time \u2014 efficient, relies on memory for continuity",
       };
 }
 
