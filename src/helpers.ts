@@ -53,7 +53,6 @@ export function formatCost(usd: number): string {
 export function shortModelName(model: string): string {
   return model.replace("claude-", "").replace(/\[.*$/, "");
 }
-
 export function formatDuration(ms: number): string {
   const s = Math.round(ms / 1000);
   if (s < 60) return `${s}s`;
@@ -242,8 +241,8 @@ export function getSafeEnv(): Record<string, string> {
       if (SAFE_EXACT.has(upper)) return true;
       // Allow safe prefixes
       if (SAFE_PREFIXES.some((p) => upper.startsWith(p))) return true;
-      // Default: allow (non-sensitive, non-prefixed vars like EDITOR, DISPLAY, etc.)
-      return true;
+      // Default: deny unknown variables (allowlist-first)
+      return false;
     }),
   ) as Record<string, string>;
 }

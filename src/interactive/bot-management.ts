@@ -9,7 +9,11 @@ import {
   setConversation,
   clearConversation,
 } from "./state.js";
-import { validatePath, handleTokenValidation } from "./validate.js";
+import {
+  validatePath,
+  handleTokenValidation,
+  buildDiscordInviteUrl,
+} from "./validate.js";
 import {
   confirmRow,
   restartRow,
@@ -392,15 +396,4 @@ async function finalizeAddBot(
     reply_markup: { inline_keyboard: restartRow(lang) },
   }).catch(() => {});
   return true;
-}
-
-function buildDiscordInviteUrl(token: string): string {
-  try {
-    const appId = atob(token.split(".")[0]);
-    // Permissions: View Channels, Send Messages, Manage Messages, Embed Links,
-    // Attach Files, Read History, Add Reactions, Use External Emojis
-    return `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot&permissions=387136`;
-  } catch {
-    return "";
-  }
 }

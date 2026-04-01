@@ -245,10 +245,3 @@ export function getAdaptiveDelay(
   if (resetMs > now) return resetMs - now;
   return 0;
 }
-
-/** Format adaptive delay for user display. */
-export function formatDelay(ms: number): string {
-  const s = Math.ceil(ms / 1000);
-  if (s < 60) return `${s}s`;
-  return `${Math.ceil(s / 60)}m`;
-}

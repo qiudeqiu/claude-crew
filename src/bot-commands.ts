@@ -53,7 +53,19 @@ export async function handleBotSlashCommand(
       return true;
     }
     // Silent compact — run Claude directly, just notify when done
+    if (managed.busy) {
+      await p
+        .sendMessage(
+          chatId,
+          zh
+            ? "⏳ 任务执行中，请稍后再压缩"
+            : "⏳ Task running, try compact later",
+        )
+        .catch(() => {});
+      return true;
+    }
     const dir = config.assignedPath ?? "";
+    managed.busy = true;
     await p
       .sendMessage(chatId, zh ? "🔄 正在压缩..." : "🔄 Compacting...")
       .catch(() => {});
@@ -67,6 +79,9 @@ export async function handleBotSlashCommand(
         await p
           .sendMessage(chatId, zh ? "⚠️ 压缩失败" : "⚠️ Compact failed")
           .catch(() => {});
+      })
+      .finally(() => {
+        managed.busy = false;
       });
     return true;
   }

@@ -89,6 +89,16 @@ export function validatePath(path: string): boolean {
   }
 }
 
+/** Build Discord bot invite URL from token (extracts app ID from JWT). */
+export function buildDiscordInviteUrl(token: string): string {
+  try {
+    const appId = atob(token.split(".")[0]);
+    return `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot&permissions=387136`;
+  } catch {
+    return "";
+  }
+}
+
 // ── Shared token input handler ──
 // Used by both onboarding and bot-management flows to deduplicate
 // the regex check → duplicate check → API validate → setConversation flow.

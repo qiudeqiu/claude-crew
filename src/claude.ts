@@ -779,6 +779,7 @@ export async function invokeClaudeAndReply(
     daemon.activeInvocations = Math.max(0, daemon.activeInvocations - 1);
 
     // Process next queued task — re-validate user access (skip for system tasks)
+    // Set busy BEFORE dispatching to prevent concurrent message acceptance
     while (managed.queue.length > 0) {
       const next = managed.queue.shift()!;
       if (next.userId !== "system" && !canUseBot(next.userId, config)) {
@@ -788,6 +789,7 @@ export async function invokeClaudeAndReply(
       log(
         `QUEUE: ${project} — processing next (${managed.queue.length} remaining)`,
       );
+      managed.busy = true;
       void invokeClaudeAndReply(
         managed,
         next.chatId,

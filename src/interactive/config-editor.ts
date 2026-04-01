@@ -559,6 +559,17 @@ async function setBotValue(
   const bot = pool.bots.find((b) => b.username === username);
   if (!bot) return false;
 
+  // Validate path if setting assignedPath
+  if (field.key === "assignedPath" && value !== "inherit") {
+    const { validatePath } = await import("./validate.js");
+    if (!validatePath(value)) {
+      await edit(api, chatId, messageId, cm.invalidPath(value), {
+        reply_markup: { inline_keyboard: menuButton(lang) },
+      }).catch(() => {});
+      return true;
+    }
+  }
+
   const updatedBots = pool.bots.map((b) => {
     if (b.username !== username) return b;
     if (value === "inherit") {

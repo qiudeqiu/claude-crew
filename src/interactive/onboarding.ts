@@ -7,7 +7,11 @@ import {
   setConversation,
   clearConversation,
 } from "./state.js";
-import { validatePath, handleTokenValidation } from "./validate.js";
+import {
+  validatePath,
+  handleTokenValidation,
+  buildDiscordInviteUrl,
+} from "./validate.js";
 import {
   confirmRow,
   restartRow,
@@ -301,15 +305,6 @@ async function finalizeOnboarding(
   }).catch(() => {});
 
   return true;
-}
-
-function buildDiscordInviteUrl(token: string): string {
-  try {
-    const appId = atob(token.split(".")[0]);
-    return `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot&permissions=387136`;
-  } catch {
-    return "";
-  }
 }
 
 // ── Helpers ──
