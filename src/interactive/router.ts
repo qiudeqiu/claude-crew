@@ -32,7 +32,7 @@ const INTERACTIVE_PREFIXES = ["o:", "b:", "c:", "u:", "m:", "x:"];
 export async function showMainMenu(
   managed: ManagedBot,
   chatId: string,
-  messageId?: number,
+  messageId?: number | string,
 ): Promise<void> {
   const lang = getLang();
   const m = menuMsg(lang);
@@ -68,7 +68,7 @@ export async function routeCallback(
   chatId: string,
   userId: string,
   data: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   if (!isAdmin(userId)) return false;
 
@@ -114,7 +114,7 @@ async function handleMenuCallback(
   chatId: string,
   _userId: string,
   data: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const api = managed.platform;
   const action = data.slice(2);
@@ -213,7 +213,7 @@ async function showLanguageSelector(
   api: import("../platform/types.js").Platform,
   chatId: string,
   lang: Lang,
-  messageId: number,
+  messageId: number | string,
 ): Promise<void> {
   const lm = langMsg(lang);
   const enMark = lang === "en" ? "\u2705 " : "";

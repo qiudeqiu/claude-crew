@@ -192,8 +192,34 @@ async function main(): Promise<void> {
     } else if (platformType === "discord") {
       // Discord: register message handlers via Platform interface
       adapter.onMessage(async (msg) => {
-        if (!msg.userId || !msg.text) return;
+        if (!msg.userId || (!msg.text && !msg.photoFileId)) return;
         const authorized = canUseBot(msg.userId, config);
+
+        // Interactive text flow: active conversation takes priority (no @mention needed)
+        // Strip Discord mentions before routing (same as Telegram strips @mentions)
+        if (authorized && config.role === "master") {
+          const { routeText } = await import("./interactive/index.js");
+          const cleanText = (msg.text ?? "").replace(/<@[&!]?\d+>/g, "").trim();
+          if (cleanText) {
+            const handled = await routeText(
+              managed,
+              msg.chatId,
+              msg.userId,
+              cleanText,
+            );
+            if (handled) return;
+          }
+        }
+
+        // Check for bot mention (user or role) or reply to THIS bot's message
+        const discordAdapter =
+          adapter as import("./platform/discord/adapter.js").DiscordAdapter;
+        const discordBotId = discordAdapter.botId ?? "";
+        const isMentioned = discordAdapter.isMentionedIn(msg);
+        const isReplyToMe = msg.replyTo?.userId === discordBotId;
+        if (!isMentioned && !isReplyToMe) return;
+
+        // Only log targeted messages (mentioned or replied)
         log(
           `RAW: ${config.username ?? "?"} ← ${msg.username ?? "?"}(${msg.userId}) auth=${authorized}: ${(msg.text ?? "").slice(0, 60)}`,
         );
@@ -203,39 +229,72 @@ async function main(): Promise<void> {
             .catch(() => {});
           return;
         }
-        // Check for bot mention in Discord (<@botId> format)
-        const botMention = `<@${(adapter as import("./platform/discord/adapter.js").DiscordAdapter).botId ?? ""}>`;
-        const isMentioned = msg.text.includes(botMention);
-        if (!isMentioned && !msg.replyTo) return;
 
-        const text = msg.text.replace(/<@\d+>/g, "").trim();
-        if (!text) return;
+        const text = (msg.text ?? "").replace(/<@[&!]?\d+>/g, "").trim();
+        if (!text && !msg.photoFileId) return;
 
-        // Slash commands
+        // Slash commands (/new, /compact, /model, etc.)
         const cmdText = text.replace(/^\//, "");
         const { handleBotSlashCommand } = await import("./bot-commands.js");
-        const handled = await handleBotSlashCommand(
+        const slashHandled = await handleBotSlashCommand(
           managed,
           msg.chatId,
           cmdText,
         );
-        if (handled) return;
+        if (slashHandled) return;
 
-        // Master bot commands
+        // Master bot: interactive commands (menu, bots, config, users, setup)
         if (config.role === "master") {
           const stripped = text.replace(/^\//, "");
+
+          if (/^(help|menu|start)$/i.test(stripped)) {
+            const { showMainMenu } = await import("./interactive/index.js");
+            await showMainMenu(managed, msg.chatId);
+            return;
+          }
+          if (/^setup$/i.test(stripped)) {
+            const { startOnboarding } =
+              await import("./interactive/onboarding.js");
+            await startOnboarding(managed, msg.chatId, msg.userId);
+            return;
+          }
+          if (/^(bots|addbot)$/i.test(stripped)) {
+            const { showBotList } =
+              await import("./interactive/bot-management.js");
+            await showBotList(managed, msg.chatId);
+            return;
+          }
+          if (/^config$/i.test(stripped)) {
+            const { showGlobalConfig } =
+              await import("./interactive/config-editor.js");
+            await showGlobalConfig(managed, msg.chatId);
+            return;
+          }
+          if (/^users$/i.test(stripped)) {
+            const { showUserManagement } =
+              await import("./interactive/user-management.js");
+            await showUserManagement(managed, msg.chatId);
+            return;
+          }
+
+          // Text-only master commands (status, restart, cron, search, delegate)
           const { handleMasterCommand } = await import("./commands.js");
           const directReply = handleMasterCommand(stripped);
           if (directReply !== undefined) {
             if (directReply !== null) {
               const { splitMessage } = await import("./helpers.js");
-              for (const chunk of splitMessage(directReply)) {
+              const { getMessageLimit } = await import("./config.js");
+              for (const chunk of splitMessage(
+                directReply,
+                getMessageLimit(),
+              )) {
                 await adapter.sendMessage(msg.chatId, chunk).catch(() => {});
               }
             }
             return;
           }
-          // Show menu for unrecognized master input
+
+          // Unrecognized input → show menu (if masterExecute disabled)
           if (!loadPool().masterExecute) {
             const { showMainMenu } = await import("./interactive/index.js");
             await showMainMenu(managed, msg.chatId);
@@ -243,27 +302,71 @@ async function main(): Promise<void> {
           }
         }
 
-        if (!config.assignedPath && config.role !== "master") return;
-        if (managed.busy) {
-          if (managed.queue.length < MAX_QUEUE_SIZE) {
-            managed.queue.push({
-              chatId: msg.chatId,
-              userId: msg.userId,
-              message: text,
-              queuedAt: Date.now(),
-              requesterName: msg.username,
-            });
-            const pos = managed.queue.length;
+        // Project bot: intercept master-only commands
+        if (config.role !== "master" && text) {
+          const stripped = text.replace(/^\//, "");
+          if (
+            /^cron\s/i.test(stripped) ||
+            /^(help|setup|bots|config|users|restart)$/i.test(stripped) ||
+            /^search\s/i.test(stripped)
+          ) {
+            const { getMasterName } = await import("./config.js");
+            const masterName = getMasterName();
             await adapter
               .sendMessage(
                 msg.chatId,
-                getLang() === "zh"
-                  ? `⏳ 你是第 ${pos + 1} 个，前面还有 ${pos} 个任务`
-                  : `⏳ You're #${pos + 1} in queue, ${pos} task(s) ahead`,
+                setupMsg(getLang()).masterOnly(masterName),
               )
               .catch(() => {});
+            return;
           }
+        }
+
+        if (!config.assignedPath && config.role !== "master") {
+          await adapter
+            .sendMessage(
+              msg.chatId,
+              setupMsg(getLang()).noProject(config.username ?? "?"),
+            )
+            .catch(() => {});
           return;
+        }
+        if (managed.busy) {
+          if (managed.queue.length >= MAX_QUEUE_SIZE) {
+            await adapter
+              .sendMessage(
+                msg.chatId,
+                setupMsg(getLang()).queueFull(
+                  managed.queue.length + 1,
+                  MAX_QUEUE_SIZE,
+                ),
+              )
+              .catch(() => {});
+            return;
+          }
+          managed.queue.push({
+            chatId: msg.chatId,
+            userId: msg.userId,
+            message: text,
+            queuedAt: Date.now(),
+            requesterName: msg.username,
+          });
+          const pos = managed.queue.length;
+          await adapter
+            .sendMessage(
+              msg.chatId,
+              getLang() === "zh"
+                ? `⏳ 你是第 ${pos + 1} 个，前面还有 ${pos} 个任务`
+                : `⏳ You're #${pos + 1} in queue, ${pos} task(s) ahead`,
+            )
+            .catch(() => {});
+          return;
+        }
+
+        // Download image if present
+        let imagePath: string | undefined;
+        if (msg.photoFileId) {
+          imagePath = await adapter.downloadFile(msg.photoFileId);
         }
 
         await adapter.setReaction(msg.chatId, msg.id, "👀").catch(() => {});
@@ -272,28 +375,145 @@ async function main(): Promise<void> {
           managed,
           msg.chatId,
           text,
-          undefined,
+          imagePath,
           msg.username,
         );
       });
 
       adapter.onCallback(async (event) => {
-        // Route interactive callbacks
-        if (!isAdmin(event.userId)) {
+        const userId = event.userId;
+        // Interactive setup callbacks (o:, b:, c:, u:, m:, x:)
+        if (config.role === "master") {
+          const { routeCallback } = await import("./interactive/index.js");
+          const handled = await routeCallback(
+            managed,
+            event.chatId,
+            userId,
+            event.data,
+            event.messageId,
+          );
+          if (handled) return;
+        }
+
+        // Approval callbacks (approve:yes:id / approve:no:id)
+        const { pendingApprovals, delegatedApprovers } =
+          await import("./state.js");
+        const isDelegated = (() => {
+          const expires = delegatedApprovers.get(userId);
+          if (!expires) return false;
+          if (Date.now() > expires) {
+            delegatedApprovers.delete(userId);
+            return false;
+          }
+          return true;
+        })();
+
+        if (!isAdmin(userId) && !isDelegated) {
           await adapter
             .answerCallback(event.id, setupMsg(getLang()).adminOnly)
             .catch(() => {});
           return;
         }
-        if (config.role === "master") {
-          const { routeCallback } = await import("./interactive/index.js");
-          await routeCallback(
-            managed,
-            event.chatId,
-            event.userId,
-            event.data,
-            Number(event.messageId),
+        if (!event.data.startsWith("approve:")) return;
+
+        const [, action, approvalId] = event.data.split(":");
+        const pending = pendingApprovals.get(approvalId!);
+        if (!pending) {
+          await adapter
+            .answerCallback(event.id, setupMsg(getLang()).expired)
+            .catch(() => {});
+          return;
+        }
+
+        const { WRITE_TOOLS } = await import("./config.js");
+        const s = setupMsg(getLang());
+
+        if (action === "no") {
+          if (
+            pending.requiredApprovers.length > 0 &&
+            !pending.requiredApprovers.includes(userId) &&
+            !isAdmin(userId)
+          ) {
+            return;
+          }
+          pendingApprovals.delete(approvalId!);
+          pending.resolve(null);
+          if (event.messageText) {
+            await adapter
+              .editButtons(
+                event.chatId,
+                event.messageId,
+                `${event.messageText}\n\n${s.skipped}`,
+                [],
+              )
+              .catch(() => {});
+          }
+          return;
+        }
+
+        // approve:yes
+        if (
+          pending.requiredApprovers.length > 0 &&
+          !pending.requiredApprovers.includes(userId) &&
+          !isAdmin(userId)
+        ) {
+          return;
+        }
+
+        if (pending.approvedBy.has(userId)) return;
+        pending.approvedBy.add(userId);
+
+        if (pending.requiredApprovers.length === 0) {
+          pendingApprovals.delete(approvalId!);
+          pending.resolve(WRITE_TOOLS);
+          if (event.messageText) {
+            await adapter
+              .editButtons(
+                event.chatId,
+                event.messageId,
+                `${event.messageText}\n\n${s.authorized}`,
+                [],
+              )
+              .catch(() => {});
+          }
+        } else {
+          const allApproved = pending.requiredApprovers.every((id) =>
+            pending.approvedBy.has(id),
           );
+          const count = pending.approvedBy.size;
+          const total = pending.requiredApprovers.length;
+
+          if (allApproved) {
+            pendingApprovals.delete(approvalId!);
+            pending.resolve(WRITE_TOOLS);
+            if (event.messageText) {
+              await adapter
+                .editButtons(
+                  event.chatId,
+                  event.messageId,
+                  `${event.messageText}\n\n${s.authorized} (${count}/${total})`,
+                  [],
+                )
+                .catch(() => {});
+            }
+          } else {
+            const lang = getLang();
+            const label =
+              lang === "zh"
+                ? `\u2705 允许 (${count}/${total})`
+                : `\u2705 Allow (${count}/${total})`;
+            await adapter
+              .editButtonsOnly(event.chatId, event.messageId, [
+                [
+                  { text: label, data: `approve:yes:${approvalId}` },
+                  {
+                    text: lang === "zh" ? "\u274c 跳过" : "\u274c Skip",
+                    data: `approve:no:${approvalId}`,
+                  },
+                ],
+              ])
+              .catch(() => {});
+          }
         }
       });
 

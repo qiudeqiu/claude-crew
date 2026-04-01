@@ -24,7 +24,7 @@ import { getLang, usersMsg, common } from "./i18n.js";
 export async function showUserManagement(
   managed: ManagedBot,
   chatId: string,
-  messageId?: number,
+  messageId?: number | string,
 ): Promise<void> {
   const lang = getLang();
   const m = usersMsg(lang);
@@ -49,9 +49,7 @@ export async function showUserManagement(
     }
   }
 
-  const buttons: Button[][] = [
-    [{ text: m.addAdmin, data: "u:aa" }],
-  ];
+  const buttons: Button[][] = [[{ text: m.addAdmin, data: "u:aa" }]];
 
   if (admins.length > 0) {
     buttons.push(
@@ -84,7 +82,7 @@ async function showBotUsers(
   api: Platform,
   chatId: string,
   username: string,
-  messageId?: number,
+  messageId?: number | string,
 ): Promise<void> {
   const lang = getLang();
   const m = usersMsg(lang);
@@ -100,9 +98,7 @@ async function showBotUsers(
     users.length > 0 ? users.map((u) => `  \u2022 ${u}`).join("\n") : m.noUsers,
   ];
 
-  const buttons: Button[][] = [
-    [{ text: m.addUser, data: `u:au:${username}` }],
-  ];
+  const buttons: Button[][] = [[{ text: m.addUser, data: `u:au:${username}` }]];
 
   if (users.length > 0) {
     buttons.push(
@@ -127,7 +123,7 @@ export async function handleUserCallback(
   chatId: string,
   userId: string,
   data: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const api = managed.platform;
   const lang = getLang();
@@ -141,9 +137,8 @@ export async function handleUserCallback(
 
   if (data === "u:aa") {
     await edit(api, chatId, messageId, m.addAdminPrompt, {
-        reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
-      })
-      .catch(() => {});
+      reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
+    }).catch(() => {});
     setConversation(userId, chatId, "user:awaitAdmin");
     return true;
   }
@@ -155,13 +150,10 @@ export async function handleUserCallback(
 
     if (admins.length <= 1) {
       await edit(api, chatId, messageId, m.cantRemoveLast, {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }],
-            ],
-          },
-        })
-        .catch(() => {});
+        reply_markup: {
+          inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]],
+        },
+      }).catch(() => {});
       return true;
     }
 
@@ -169,13 +161,10 @@ export async function handleUserCallback(
     log(`USERS: removed admin ${adminId} by ${userId}`);
 
     await edit(api, chatId, messageId, m.adminRemoved(adminId), {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }],
-          ],
-        },
-      })
-      .catch(() => {});
+      reply_markup: {
+        inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]],
+      },
+    }).catch(() => {});
     return true;
   }
 
@@ -188,11 +177,10 @@ export async function handleUserCallback(
   if (data.startsWith("u:au:")) {
     const username = data.slice(5);
     await edit(api, chatId, messageId, m.addUserPrompt(username), {
-        reply_markup: {
-          inline_keyboard: cancelButton(`u:b:${username}`, lang),
-        },
-      })
-      .catch(() => {});
+      reply_markup: {
+        inline_keyboard: cancelButton(`u:b:${username}`, lang),
+      },
+    }).catch(() => {});
     setConversation(userId, chatId, "user:awaitUser", { targetBot: username });
     return true;
   }
@@ -246,9 +234,8 @@ export async function handleUserText(
   if (state.step === "user:awaitAdmin") {
     if (!/^\d+$/.test(input)) {
       await send(api, chatId, m.invalidId, {
-          reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
-        })
-        .catch(() => {});
+        reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
+      }).catch(() => {});
       return true;
     }
 
@@ -265,13 +252,12 @@ export async function handleUserText(
     clearConversation(userId, chatId);
 
     await send(api, chatId, m.adminAdded(input), {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: `\u25c0\ufe0f ${m.userMgmt}`, data: "u:l" }],
-          ],
-        },
-      })
-      .catch(() => {});
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: `\u25c0\ufe0f ${m.userMgmt}`, data: "u:l" }],
+        ],
+      },
+    }).catch(() => {});
     return true;
   }
 
@@ -279,11 +265,10 @@ export async function handleUserText(
     const targetBot = state.data.targetBot;
     if (!/^\d+$/.test(input)) {
       await send(api, chatId, m.invalidId, {
-          reply_markup: {
-            inline_keyboard: cancelButton(`u:b:${targetBot}`, lang),
-          },
-        })
-        .catch(() => {});
+        reply_markup: {
+          inline_keyboard: cancelButton(`u:b:${targetBot}`, lang),
+        },
+      }).catch(() => {});
       return true;
     }
 
@@ -296,8 +281,7 @@ export async function handleUserText(
 
     const users = bot.allowedUsers ?? [];
     if (users.includes(input)) {
-      await send(api, chatId, m.alreadyUser(input, username))
-        .catch(() => {});
+      await send(api, chatId, m.alreadyUser(input, username)).catch(() => {});
       clearConversation(userId, chatId);
       return true;
     }
@@ -312,18 +296,17 @@ export async function handleUserText(
     clearConversation(userId, chatId);
 
     await send(api, chatId, m.userAdded(input, username), {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: `\u25c0\ufe0f @${username}`,
-                data: `u:b:${username}`,
-              },
-            ],
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: `\u25c0\ufe0f @${username}`,
+              data: `u:b:${username}`,
+            },
           ],
-        },
-      })
-      .catch(() => {});
+        ],
+      },
+    }).catch(() => {});
     return true;
   }
 

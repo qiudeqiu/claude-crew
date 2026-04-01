@@ -79,6 +79,7 @@ Use `/new` to reset when context gets stale, `/compact` to compress without losi
 | Restart = lost context | Conversation files + memory files persist on disk |
 | Headless server auth fails | Supports API key — no browser needed |
 | Bot rejects when busy | Task queue — shows position, auto-processes when ready |
+| API key expires → silent failures | Adaptive rate limiting uses real API reset times, not guesswork |
 
 ## Table of Contents
 
@@ -430,25 +431,28 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 
 ```json
 {
-  "admins": ["123456789"],
-  "bots": [
-    {
-      "token": "123:AAH...",
-      "username": "master_bot",
-      "role": "master"
-    },
-    {
-      "token": "456:AAH...",
-      "username": "proj_bot",
-      "role": "project",
-      "assignedProject": "my-app",
-      "assignedPath": "/home/user/my-app",
-      "accessLevel": "readWrite",
-      "permissionMode": "approve",
-      "allowedUsers": ["111111111", "222222222"]
-    }
-  ],
-  "sharedGroupId": "-100123456789",
+  "activePlatform": "telegram",
+  "telegram": {
+    "admins": ["123456789"],
+    "sharedGroupId": "-100123456789",
+    "bots": [
+      {
+        "token": "123:AAH...",
+        "username": "master_bot",
+        "role": "master"
+      },
+      {
+        "token": "456:AAH...",
+        "username": "proj_bot",
+        "role": "project",
+        "assignedProject": "my-app",
+        "assignedPath": "/home/user/my-app",
+        "accessLevel": "readWrite",
+        "permissionMode": "approve",
+        "allowedUsers": ["111111111", "222222222"]
+      }
+    ]
+  },
   "accessLevel": "readWrite",
   "permissionMode": "approve",
   "masterExecute": false,
@@ -463,11 +467,20 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 }
 ```
 
+> Platform-specific fields (`admins`, `sharedGroupId`, `bots`) live inside the platform section. Shared settings live at the top level. Switch platforms by changing `activePlatform`. Old flat-format configs are auto-migrated on first startup.
+
+#### Platform Section
+
+| Field | Description |
+|-------|-------------|
+| `admins` | **(required)** Admin user IDs for this platform. Admins can use **all** bots. |
+| `sharedGroupId` | Group/channel ID where all bots operate. |
+| `bots` | Array of bot configs (see Per-Bot Settings below). |
+
 #### Global Settings
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `admins` | **(required)** | Admin user ID list. Admins can use **all** bots. |
 | `accessLevel` | `"readWrite"` | Global default. `"readWrite"` = full access. `"readOnly"` = read/search only, no writes. |
 | `permissionMode` | `"approve"` | Global default (only when readWrite). `"approve"` = button confirmation. `"auto"` = background safety classifier. `"allowAll"` = pre-authorize all tools. |
 | `language` | `"en"` | Menu language. `"en"` or `"zh"`. Switchable via menu button. |
@@ -567,7 +580,7 @@ This project runs as a background daemon with access to your filesystem. You sho
 
 - **Read the source** — ~7200 lines of TypeScript, no minification, no obfuscation. Small enough to audit in an afternoon.
 - **Runs from source** — `bun run src/daemon.ts` executes the TypeScript directly. No compiled binaries, no build artifacts. What you read is what runs.
-- **One dependency** — only [grammY](https://grammy.dev) (Telegram Bot framework). No hidden packages. Check `package.json`.
+- **Minimal dependencies** — [grammY](https://grammy.dev) (Telegram) and [discord.js](https://discord.js.org) (Discord, planned). No hidden packages. Check `package.json`.
 - **No external network calls** — only communicates with Telegram Bot API and your local `claude` CLI. Verify: `grep -r "fetch" src/` shows only Telegram file downloads.
 - **No data collection** — no analytics, no telemetry, no remote database. Verify: `grep -r "analytics\|telemetry\|track" src/`
 - **Monitor at runtime** — check all network connections: `lsof -i -p $(cat ~/.claude/channels/telegram/daemon.pid)`
@@ -585,6 +598,18 @@ This project runs as a background daemon with access to your filesystem. You sho
 - **Timeout**: configurable session timeout per invocation
 - **Process supervision**: watchdog auto-restarts on crash, gives up after 5 rapid crashes
 - **Self-restart safety**: when a project bot modifies daemon code, it finishes work and replies before restarting
+
+## 🌐 Platform Roadmap
+
+claude-crew currently supports **Telegram**. The architecture uses a platform abstraction layer (`Platform` interface) designed for horizontal multi-platform support.
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| **Telegram** | Supported | Full feature parity, production-tested |
+| **Discord** | Planned | Adapter implemented, in testing |
+| **Feishu (Lark)** | Planned | Architecture ready, adapter not started |
+
+> The Platform interface (`src/platform/types.ts`) defines all capabilities — messaging, buttons, files, threads. Adding a new platform means implementing this interface. Core logic (task execution, permissions, queue, dashboard) is platform-agnostic.
 
 ## 📋 Changelog
 

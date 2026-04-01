@@ -4,11 +4,12 @@ import { homedir } from "os";
 import type { Platform } from "../platform/types.js";
 import type { Button } from "../platform/types.js";
 import type { ConversationStep } from "../types.js";
-import { loadPool } from "../config.js";
+import { loadPool, getPlatform } from "../config.js";
 import { setConversation } from "./state.js";
 import { getLang, common } from "./i18n.js";
+import { send, edit } from "./keyboards.js";
 
-export async function validateBotToken(
+async function validateTelegramToken(
   token: string,
 ): Promise<{ ok: boolean; username?: string }> {
   try {
@@ -24,6 +25,31 @@ export async function validateBotToken(
   } catch {
     return { ok: false };
   }
+}
+
+async function validateDiscordToken(
+  token: string,
+): Promise<{ ok: boolean; username?: string }> {
+  try {
+    const res = await fetch("https://discord.com/api/v10/users/@me", {
+      headers: { Authorization: `Bot ${token}` },
+    });
+    if (!res.ok) return { ok: false };
+    const data = (await res.json()) as { username?: string };
+    return data.username
+      ? { ok: true, username: data.username }
+      : { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
+export async function validateBotToken(
+  token: string,
+): Promise<{ ok: boolean; username?: string }> {
+  return getPlatform() === "discord"
+    ? validateDiscordToken(token)
+    : validateTelegramToken(token);
 }
 
 const BLOCKED_PATHS = [
@@ -83,7 +109,12 @@ export async function handleTokenValidation(
 ): Promise<boolean> {
   const token = text.trim();
 
-  if (!/^\d+:[A-Za-z0-9_-]+$/.test(token)) {
+  // Telegram: 123456789:ABCdefGHI...  Discord: base64.base64.base64
+  const tokenPattern =
+    getPlatform() === "discord"
+      ? /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
+      : /^\d+:[A-Za-z0-9_-]+$/;
+  if (!tokenPattern.test(token)) {
     await send(api, chatId, msgs.invalidToken, cancelKb).catch(() => {});
     return true;
   }

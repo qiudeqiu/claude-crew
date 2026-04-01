@@ -6,6 +6,7 @@ import {
   savePool,
   getBotModel,
   CONTEXT_BAR_LENGTH,
+  getMessageLimit,
 } from "./config.js";
 import { log } from "./logger.js";
 import { formatCost, splitMessage } from "./helpers.js";
@@ -180,7 +181,7 @@ export async function handleBotSlashCommand(
     const header = zh
       ? `📝 @${config.username} 项目记忆 (CLAUDE.md)\n━━━━━━━━━━━━━━━\n\n`
       : `📝 @${config.username} Project memory (CLAUDE.md)\n━━━━━━━━━━━━━━━\n\n`;
-    for (const chunk of splitMessage(header + content)) {
+    for (const chunk of splitMessage(header + content, getMessageLimit())) {
       await p.sendMessage(chatId, chunk).catch(() => {});
     }
     return true;

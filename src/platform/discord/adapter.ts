@@ -68,12 +68,13 @@ export class DiscordAdapter implements Platform, ThreadCapable {
       interaction.deferUpdate().catch(() => {});
     });
 
-    await this.client.login(this.token);
-
+    // Register ready listener BEFORE login to avoid race condition
     this.client.once("ready", (c) => {
       this.botId = c.user.id;
       onReady({ username: c.user.username });
     });
+
+    await this.client.login(this.token);
   }
 
   async stop(): Promise<void> {
@@ -101,7 +102,7 @@ export class DiscordAdapter implements Platform, ThreadCapable {
     const msg = await (
       channel as { messages: { fetch: (id: string) => Promise<Message> } }
     ).messages.fetch(msgId);
-    await msg.edit(text).catch(() => {});
+    await msg.edit({ content: text, components: [] }).catch(() => {});
   }
 
   async deleteMessage(chatId: string, msgId: string): Promise<void> {
@@ -243,6 +244,19 @@ export class DiscordAdapter implements Platform, ThreadCapable {
     return { id: sent.id, chatId: threadId };
   }
 
+  // ── Mention detection ──
+
+  /** Check if this bot was mentioned (user mention, role mention, or reply). */
+  isMentionedIn(msg: PlatformMessage): boolean {
+    const raw = msg.raw as Message | undefined;
+    if (!raw?.mentions || !this.client.user) return false;
+    // mentions.has() checks both user mentions (<@ID>) and role mentions (<@&ID>)
+    return raw.mentions.has(this.client.user, {
+      ignoreEveryone: true,
+      ignoreRoles: false,
+    });
+  }
+
   // ── Events ──
 
   onMessage(handler: (msg: PlatformMessage) => void): void {
@@ -258,6 +272,7 @@ export class DiscordAdapter implements Platform, ThreadCapable {
   private toActionRows(buttons: Button[][]): ActionRowBuilder<ButtonBuilder>[] {
     return buttons
       .filter((row) => row.length > 0)
+      .slice(0, 5) // Discord max 5 action rows per message
       .map((row) => {
         const actionRow = new ActionRowBuilder<ButtonBuilder>();
         for (const btn of row) {
@@ -278,14 +293,14 @@ export class DiscordAdapter implements Platform, ThreadCapable {
       a.contentType?.startsWith("image/"),
     );
 
-    // Extract reply
+    // Extract reply — include replied-to message author for routing
     let replyTo: PlatformMessage | undefined;
     if (msg.reference?.messageId) {
       replyTo = {
         id: msg.reference.messageId,
         chatId: msg.channelId,
-        userId: "",
-        text: undefined, // Discord doesn't include reply content in the message object
+        userId: msg.mentions.repliedUser?.id ?? "",
+        text: undefined,
       };
     }
 

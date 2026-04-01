@@ -67,7 +67,7 @@ export async function handleOnboardCallback(
   chatId: string,
   userId: string,
   data: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const lang = getLang();
   const m = onboardMsg(lang);
@@ -271,7 +271,7 @@ async function finalizeOnboarding(
   managed: ManagedBot,
   chatId: string,
   userId: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const lang = getLang();
   const m = onboardMsg(lang);
@@ -289,11 +289,27 @@ async function finalizeOnboarding(
   log(`ONBOARD: added @${username} → ${project} (${path}) by ${userId}`);
   clearConversation(userId, chatId);
 
-  await edit(api, chatId, messageId, m.added(username, project, path), {
+  const { getPlatform } = await import("../config.js");
+  let text = m.added(username, project, path);
+  if (getPlatform() === "discord") {
+    const inviteUrl = buildDiscordInviteUrl(token);
+    text += `\n\n${m.inviteSteps(inviteUrl)}`;
+  }
+
+  await edit(api, chatId, messageId, text, {
     reply_markup: { inline_keyboard: restartRow(lang) },
   }).catch(() => {});
 
   return true;
+}
+
+function buildDiscordInviteUrl(token: string): string {
+  try {
+    const appId = atob(token.split(".")[0]);
+    return `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot&permissions=387136`;
+  } catch {
+    return "";
+  }
 }
 
 // ── Helpers ──

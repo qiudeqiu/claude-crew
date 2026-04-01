@@ -28,7 +28,7 @@ import { getLang, botsMsg, common } from "./i18n.js";
 export async function showBotList(
   managed: ManagedBot,
   chatId: string,
-  messageId?: number,
+  messageId?: number | string,
 ): Promise<void> {
   const lang = getLang();
   const m = botsMsg(lang);
@@ -75,7 +75,7 @@ export async function showBotDetail(
   api: Platform,
   chatId: string,
   username: string,
-  messageId?: number,
+  messageId?: number | string,
 ): Promise<void> {
   const lang = getLang();
   const m = botsMsg(lang);
@@ -129,7 +129,7 @@ export async function handleBotCallback(
   chatId: string,
   userId: string,
   data: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const api = managed.platform;
   const lang = getLang();
@@ -143,9 +143,8 @@ export async function handleBotCallback(
 
   if (data === "b:a") {
     await edit(api, chatId, messageId, m.addTitle + c.replyHint, {
-        reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
-      })
-      .catch(() => {});
+      reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
+    }).catch(() => {});
     setConversation(userId, chatId, "bot:awaitToken");
     return true;
   }
@@ -159,17 +158,16 @@ export async function handleBotCallback(
   if (data.startsWith("b:r:")) {
     const username = data.slice(4);
     await edit(api, chatId, messageId, m.confirmRemove(username), {
-        reply_markup: {
-          inline_keyboard: confirmRow(
-            `b:xr:${username}`,
-            `b:d:${username}`,
-            undefined,
-            undefined,
-            lang,
-          ),
-        },
-      })
-      .catch(() => {});
+      reply_markup: {
+        inline_keyboard: confirmRow(
+          `b:xr:${username}`,
+          `b:d:${username}`,
+          undefined,
+          undefined,
+          lang,
+        ),
+      },
+    }).catch(() => {});
     return true;
   }
 
@@ -178,8 +176,7 @@ export async function handleBotCallback(
     const pool = loadPool();
     const filtered = pool.bots.filter((b) => b.username !== username);
     if (filtered.length === pool.bots.length) {
-      await edit(api, chatId, messageId, m.notFound(username))
-        .catch(() => {});
+      await edit(api, chatId, messageId, m.notFound(username)).catch(() => {});
       return true;
     }
 
@@ -188,9 +185,8 @@ export async function handleBotCallback(
     log(`BOT_MGMT: removed @${username} by ${userId}`);
 
     await edit(api, chatId, messageId, m.removed(username), {
-        reply_markup: { inline_keyboard: restartRow(lang) },
-      })
-      .catch(() => {});
+      reply_markup: { inline_keyboard: restartRow(lang) },
+    }).catch(() => {});
     return true;
   }
 
@@ -206,28 +202,31 @@ export async function handleBotCallback(
       mkdirSync(dirPath, { recursive: true });
       setConversation(userId, chatId, "idle", { path: dirPath });
       const s = getConversation(userId, chatId)!;
-      await edit(api, chatId, messageId,
-          `${m.created(dirPath)}\n\n${m.summaryTitle}\n${SEPARATOR}\n\n` +
-            `${m.bot}: @${s.data.username}\n` +
-            `${m.project}: ${s.data.project}\n` +
-            `${m.path}: ${dirPath}\n\n${common(lang).save}?`,
-          {
-            reply_markup: {
-              inline_keyboard: confirmRow(
-                "b:confirm",
-                "b:l",
-                undefined,
-                undefined,
-                lang,
-              ),
-            },
+      await edit(
+        api,
+        chatId,
+        messageId,
+        `${m.created(dirPath)}\n\n${m.summaryTitle}\n${SEPARATOR}\n\n` +
+          `${m.bot}: @${s.data.username}\n` +
+          `${m.project}: ${s.data.project}\n` +
+          `${m.path}: ${dirPath}\n\n${common(lang).save}?`,
+        {
+          reply_markup: {
+            inline_keyboard: confirmRow(
+              "b:confirm",
+              "b:l",
+              undefined,
+              undefined,
+              lang,
+            ),
           },
-        )
-        .catch(() => {});
+        },
+      ).catch(() => {});
       return true;
     } catch {
-      await edit(api, chatId, messageId, m.invalidPath(dirPath))
-        .catch(() => {});
+      await edit(api, chatId, messageId, m.invalidPath(dirPath)).catch(
+        () => {},
+      );
       return true;
     }
   }
@@ -235,9 +234,8 @@ export async function handleBotCallback(
   if (data === "b:reenter") {
     const c = common(lang);
     await edit(api, chatId, messageId, m.askPath("") + c.replyHint, {
-        reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
-      })
-      .catch(() => {});
+      reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
+    }).catch(() => {});
     return true;
   }
 
@@ -287,11 +285,12 @@ export async function handleBotText(
       return true;
     }
     setConversation(userId, chatId, "bot:awaitPath", { project });
-    await send(api, chatId,
-        m.askPath(project) + common(lang).replyHint,
-        cancelKb,
-      )
-      .catch(() => {});
+    await send(
+      api,
+      chatId,
+      m.askPath(project) + common(lang).replyHint,
+      cancelKb,
+    ).catch(() => {});
     return true;
   }
 
@@ -302,50 +301,56 @@ export async function handleBotText(
       if (path.startsWith("/")) {
         // Absolute path but doesn't exist — offer to create
         setConversation(userId, chatId, "bot:awaitPath", { pendingPath: path });
-        await send(api, chatId,
-            `${m.invalidPath(path)}\n\n${m.createDir(path)}`,
-            {
-              reply_markup: {
-                inline_keyboard: confirmRow(
-                  "b:mkdir",
-                  "b:reenter",
-                  undefined,
-                  undefined,
-                  lang,
-                ),
-              },
+        await send(
+          api,
+          chatId,
+          `${m.invalidPath(path)}\n\n${m.createDir(path)}`,
+          {
+            reply_markup: {
+              inline_keyboard: confirmRow(
+                "b:mkdir",
+                "b:reenter",
+                undefined,
+                undefined,
+                lang,
+              ),
             },
-          )
-          .catch(() => {});
+          },
+        ).catch(() => {});
       } else {
         // Not absolute path
-        await send(api, chatId, m.invalidPath(path) + c.replyHint, cancelKb)
-          .catch(() => {});
+        await send(
+          api,
+          chatId,
+          m.invalidPath(path) + c.replyHint,
+          cancelKb,
+        ).catch(() => {});
       }
       return true;
     }
 
     setConversation(userId, chatId, "idle", { path });
     const s = getConversation(userId, chatId)!;
-    await send(api, chatId,
-        `${m.summaryTitle}\n${SEPARATOR}\n\n` +
-          `${m.bot}: @${s.data.username}\n` +
-          `${m.project}: ${s.data.project}\n` +
-          `${m.path}: ${path}\n\n` +
-          `${common(lang).save}?`,
-        {
-          reply_markup: {
-            inline_keyboard: confirmRow(
-              "b:confirm",
-              "b:l",
-              undefined,
-              undefined,
-              lang,
-            ),
-          },
+    await send(
+      api,
+      chatId,
+      `${m.summaryTitle}\n${SEPARATOR}\n\n` +
+        `${m.bot}: @${s.data.username}\n` +
+        `${m.project}: ${s.data.project}\n` +
+        `${m.path}: ${path}\n\n` +
+        `${common(lang).save}?`,
+      {
+        reply_markup: {
+          inline_keyboard: confirmRow(
+            "b:confirm",
+            "b:l",
+            undefined,
+            undefined,
+            lang,
+          ),
         },
-      )
-      .catch(() => {});
+      },
+    ).catch(() => {});
     return true;
   }
 
@@ -358,7 +363,7 @@ async function finalizeAddBot(
   managed: ManagedBot,
   chatId: string,
   userId: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const api = managed.platform;
   const state = getConversation(userId, chatId);
@@ -376,9 +381,26 @@ async function finalizeAddBot(
   log(`BOT_MGMT: added @${username} → ${project} (${path}) by ${userId}`);
   clearConversation(userId, chatId);
 
-  await edit(api, chatId, messageId, m.added(username, project, path), {
-      reply_markup: { inline_keyboard: restartRow(lang) },
-    })
-    .catch(() => {});
+  const { getPlatform } = await import("../config.js");
+  let text = m.added(username, project, path);
+  if (getPlatform() === "discord") {
+    const inviteUrl = buildDiscordInviteUrl(token);
+    text += `\n\n${m.inviteSteps(inviteUrl)}`;
+  }
+
+  await edit(api, chatId, messageId, text, {
+    reply_markup: { inline_keyboard: restartRow(lang) },
+  }).catch(() => {});
   return true;
+}
+
+function buildDiscordInviteUrl(token: string): string {
+  try {
+    const appId = atob(token.split(".")[0]);
+    // Permissions: View Channels, Send Messages, Manage Messages, Embed Links,
+    // Attach Files, Read History, Add Reactions, Use External Emojis
+    return `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot&permissions=387136`;
+  } catch {
+    return "";
+  }
 }

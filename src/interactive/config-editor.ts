@@ -168,7 +168,7 @@ function getFieldLabel(key: string): string {
 export async function showGlobalConfig(
   managed: ManagedBot,
   chatId: string,
-  messageId?: number,
+  messageId?: number | string,
 ): Promise<void> {
   const lang = getLang();
   const cm = configMsg(lang);
@@ -199,24 +199,22 @@ export async function showGlobalConfig(
     [
       { text: "permissionMode", data: "c:ge:pm" },
       { text: "accessLevel", data: "c:ge:al" },
-    ],
-    [
       { text: "masterExecute", data: "c:ge:me" },
-      { text: "maxConcurrent", data: "c:ge:mc" },
     ],
     [
+      { text: "maxConcurrent", data: "c:ge:mc" },
       { text: "rateLimitSeconds", data: "c:ge:rl" },
       { text: "sessionTimeout", data: "c:ge:st" },
     ],
     [
       { text: "dashboardInterval \u26a1", data: "c:ge:di" },
       { text: "memoryInterval", data: "c:ge:mi" },
+      { text: "whisperLanguage", data: "c:ge:wl" },
     ],
     [
-      { text: "whisperLanguage", data: "c:ge:wl" },
       { text: "model", data: "c:ge:md" },
+      { text: "approvers", data: "c:ge:ap_list" },
     ],
-    [{ text: "approvers", data: "c:ge:ap_list" }],
     ...menuButton(lang),
   ];
 
@@ -231,7 +229,7 @@ export async function showBotConfig(
   api: Platform,
   chatId: string,
   username: string,
-  messageId?: number,
+  messageId?: number | string,
 ): Promise<void> {
   const lang = getLang();
   const cm = configMsg(lang);
@@ -269,10 +267,12 @@ export async function showBotConfig(
     [
       { text: "project", data: `c:be:${username}:ap` },
       { text: "path", data: `c:be:${username}:ph` },
+      { text: "model", data: `c:be:${username}:md` },
     ],
-    [{ text: "model", data: `c:be:${username}:md` }],
-    [{ text: "approvers", data: `c:be:${username}:ap_list` }],
-    [{ text: `\u25c0\ufe0f ${c.back}`, data: `b:d:${username}` }],
+    [
+      { text: "approvers", data: `c:be:${username}:ap_list` },
+      { text: `\u25c0\ufe0f ${c.back}`, data: `b:d:${username}` },
+    ],
   ];
 
   await sendOrEdit(api, chatId, text, messageId, {
@@ -287,7 +287,7 @@ export async function handleConfigCallback(
   chatId: string,
   userId: string,
   data: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const api = managed.platform;
 
@@ -376,7 +376,7 @@ async function showFieldEditor(
   field: FieldDef,
   fieldKey: string,
   scope: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const lang = getLang();
   const cm = configMsg(lang);
@@ -472,7 +472,7 @@ async function setGlobalValue(
   userId: string,
   field: FieldDef,
   value: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const lang = getLang();
   const cm = configMsg(lang);
@@ -493,8 +493,8 @@ async function setGlobalValue(
         api,
         chatId,
         lang === "zh"
-          ? `⚠️ 无效 ID: ${invalid.join(", ")}。请输入数字 Telegram User ID`
-          : `⚠️ Invalid ID: ${invalid.join(", ")}. Please enter numeric Telegram User IDs`,
+          ? `⚠️ 无效 ID: ${invalid.join(", ")}。请输入数字用户 ID`
+          : `⚠️ Invalid ID: ${invalid.join(", ")}. Please enter numeric user IDs`,
       ).catch(() => {});
       return true;
     }
@@ -542,7 +542,7 @@ async function setBotValue(
   username: string,
   field: FieldDef,
   value: string,
-  messageId: number,
+  messageId: number | string,
 ): Promise<boolean> {
   const lang = getLang();
   const cm = configMsg(lang);

@@ -79,6 +79,7 @@
 | 重启后失忆 | 对话文件 + memory 文件持久化在磁盘 |
 | 无头服务器认证失败 | 支持 API key — 不需要浏览器 |
 | bot 忙时直接拒绝 | 任务队列 — 显示位置，就绪后自动处理 |
+| API key 过期→静默失败 | 自适应限速使用实际 API 重置时间 |
 
 ## 目录
 
@@ -439,25 +440,28 @@ daemon.sh no-autostart   # 禁用开机自启
 
 ```json
 {
-  "admins": ["123456789"],
-  "bots": [
-    {
-      "token": "123:AAH...",
-      "username": "master_bot",
-      "role": "master"
-    },
-    {
-      "token": "456:AAH...",
-      "username": "proj_bot",
-      "role": "project",
-      "assignedProject": "my-app",
-      "assignedPath": "/home/user/my-app",
-      "accessLevel": "readWrite",
-      "permissionMode": "approve",
-      "allowedUsers": ["111111111", "222222222"]
-    }
-  ],
-  "sharedGroupId": "-100123456789",
+  "activePlatform": "telegram",
+  "telegram": {
+    "admins": ["123456789"],
+    "sharedGroupId": "-100123456789",
+    "bots": [
+      {
+        "token": "123:AAH...",
+        "username": "master_bot",
+        "role": "master"
+      },
+      {
+        "token": "456:AAH...",
+        "username": "proj_bot",
+        "role": "project",
+        "assignedProject": "my-app",
+        "assignedPath": "/home/user/my-app",
+        "accessLevel": "readWrite",
+        "permissionMode": "approve",
+        "allowedUsers": ["111111111", "222222222"]
+      }
+    ]
+  },
   "accessLevel": "readWrite",
   "permissionMode": "approve",
   "masterExecute": false,
@@ -472,11 +476,20 @@ daemon.sh no-autostart   # 禁用开机自启
 }
 ```
 
+> 平台相关字段（`admins`、`sharedGroupId`、`bots`）放在平台段内，共享设置放顶层。切换平台只需改 `activePlatform`。旧的平坦格式会在首次启动时自动迁移。
+
+#### 平台段配置
+
+| 字段 | 说明 |
+|------|------|
+| `admins` | **（必填）** 该平台的管理员用户 ID 列表。管理员可用**所有** bot。 |
+| `sharedGroupId` | 所有 bot 运行的群组/频道 ID。 |
+| `bots` | Bot 配置数组（详见下方单 Bot 配置）。 |
+
 #### 全局配置
 
 | 字段 | 默认值 | 说明 |
 |------|--------|------|
-| `admins` | **（必填）** | 管理员用户 ID 列表。管理员可用**所有** bot。 |
 | `accessLevel` | `"readWrite"` | 全局默认。`"readWrite"` = 读写。`"readOnly"` = 仅读取搜索，禁止写入 |
 | `permissionMode` | `"approve"` | 全局默认（仅 readWrite 时生效）。`"approve"` = 按钮确认。`"auto"` = 后台安全分类器。`"allowAll"` = 预授权所有工具 |
 | `language` | `"en"` | 菜单语言。`"en"` 或 `"zh"`。可通过菜单按钮切换。 |
@@ -576,7 +589,7 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 
 - **阅读源码** — 约 7200 行 TypeScript，无混淆无压缩。一个下午就能审完。
 - **从源码直接运行** — `bun run src/daemon.ts` 直接执行 TypeScript，没有编译产物。你看到什么就跑什么。
-- **仅一个依赖** — 只有 [grammY](https://grammy.dev)（Telegram Bot 框架），无隐藏包。查看 `package.json`。
+- **极简依赖** — [grammY](https://grammy.dev)（Telegram）和 [discord.js](https://discord.js.org)（Discord，计划中），无隐藏包。查看 `package.json`。
 - **无外部网络请求** — 只和 Telegram Bot API 以及本地 `claude` CLI 通信。验证：`grep -r "fetch" src/` 只会看到 Telegram 文件下载。
 - **无数据收集** — 无 analytics，无 telemetry，无远程数据库。验证：`grep -r "analytics\|telemetry\|track" src/`
 - **运行时监控** — 查看所有网络连接：`lsof -i -p $(cat ~/.claude/channels/telegram/daemon.pid)`
@@ -594,6 +607,18 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 - **超时保护**：可配置单次调用超时
 - **进程守护**：watchdog 崩溃自动重启，连续崩溃 5 次后放弃
 - **自重启安全**：项目 bot 修改 daemon 代码时，先完成并回复，最后才重启
+
+## 🌐 平台支持计划
+
+claude-crew 目前支持 **Telegram**。架构使用平台抽象层（`Platform` 接口），设计上支持横向扩展多个 IM 平台。
+
+| 平台 | 状态 | 说明 |
+|------|------|------|
+| **Telegram** | 已支持 | 完整功能，生产验证 |
+| **Discord** | 计划中 | 适配器已实现，测试中 |
+| **飞书 (Lark)** | 计划中 | 架构就绪，适配器未开始 |
+
+> Platform 接口（`src/platform/types.ts`）定义了所有能力 — 消息、按钮、文件、线程。新增平台只需实现该接口。核心逻辑（任务执行、权限、队列、看板）与平台无关。
 
 ## 📋 更新日志
 
