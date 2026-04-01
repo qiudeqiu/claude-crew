@@ -169,22 +169,16 @@ async function handleMenuCallback(
       return true;
 
     case "help": {
-      const c = common(lang);
+      const guideButtons = [
+        [
+          { text: m.guideMaster, data: "m:help:master" },
+          { text: m.guideProject, data: "m:help:project" },
+        ],
+        [{ text: m.guideCron, data: "m:help:cron" }],
+        ...menuButton(lang),
+      ];
       await edit(api, chatId, messageId, m.helpText, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: m.btnBots, data: "m:bots" },
-              { text: m.btnConfig, data: "m:config" },
-              { text: m.btnCron, data: "m:cron" },
-            ],
-            [
-              { text: m.btnUsers, data: "m:users" },
-              { text: m.btnStatus, data: "m:status" },
-            ],
-            [{ text: `\u25c0\ufe0f ${c.menu}`, data: "m:menu" }],
-          ],
-        },
+        reply_markup: { inline_keyboard: guideButtons },
       }).catch(() => {});
       return true;
     }
@@ -205,6 +199,37 @@ async function handleMenuCallback(
 
     default:
       break;
+  }
+
+  // Guide sub-pages: m:help:master / m:help:project / m:help:cron
+  if (action.startsWith("help:")) {
+    const sub = action.slice(5);
+    const backToGuide = [
+      [
+        {
+          text: `\u25c0\ufe0f ${lang === "zh" ? "返回指南" : "Back to Guide"}`,
+          data: "m:help",
+        },
+      ],
+    ];
+    const masterName = getMasterName();
+    switch (sub) {
+      case "master":
+        await edit(api, chatId, messageId, m.helpMaster, {
+          reply_markup: { inline_keyboard: backToGuide },
+        }).catch(() => {});
+        return true;
+      case "project":
+        await edit(api, chatId, messageId, m.helpProject, {
+          reply_markup: { inline_keyboard: backToGuide },
+        }).catch(() => {});
+        return true;
+      case "cron":
+        await edit(api, chatId, messageId, m.helpCron(masterName), {
+          reply_markup: { inline_keyboard: backToGuide },
+        }).catch(() => {});
+        return true;
+    }
   }
 
   // Language set: m:lang:en / m:lang:zh

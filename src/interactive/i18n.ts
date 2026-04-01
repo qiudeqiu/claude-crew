@@ -71,27 +71,54 @@ export function menuMsg(lang: Lang) {
         btnLang: "\ud83c\udf10 语言",
         btnHelp: "\ud83d\udcd6 指南",
         helpText:
-          "\ud83d\udcd6 命令指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "\ud83d\udc51 主控 Bot（@master）\n" +
+          "\ud83d\udcd6 使用指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "每个项目一个专属 bot，@提及即可调度任务。\n" +
+          "主控机器人负责管理：添加 bot、修改配置、管理权限。\n\n" +
+          "\ud83d\udca1 所有命令通过 @mention 使用\n\n" +
+          "点击下方按钮查看各模块详细指南:",
+        helpMaster:
+          "\ud83d\udc51 主控机器人指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "按钮菜单:\n" +
           "  menu \u2014 打开管理菜单\n" +
           "  bots \u2014 管理项目 Bot\n" +
           "  config \u2014 全局配置\n" +
-          "  users \u2014 管理管理员和用户\n" +
+          "  users \u2014 管理管理员和用户\n\n" +
+          "文字命令:\n" +
           "  status \u2014 刷新仪表盘\n" +
           "  restart \u2014 重启 daemon\n" +
-          "  search 关键词 \u2014 搜索所有项目\n" +
-          "  cron list \u2014 查看定时任务\n" +
-          "  cron add @bot HH:MM 任务\n" +
-          "  cron del ID \u2014 删除定时任务\n\n" +
-          "\ud83e\udd16 项目 Bot（@项目bot）\n" +
-          "  /new \u2014 重置会话\n" +
-          "  /compact \u2014 压缩上下文\n" +
+          "  search 关键词 \u2014 搜索所有项目",
+        helpProject:
+          "\ud83e\udd16 项目机器人指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "@提及项目 bot 后跟任务描述即可执行。\n" +
+          "回复 bot 消息可继续上下文对话。\n\n" +
+          "会话命令:\n" +
+          "  /new \u2014 重置会话（清空上下文）\n" +
+          "  /compact \u2014 压缩上下文（保留关键信息）\n\n" +
+          "调整:\n" +
           "  /model sonnet|opus|haiku \u2014 切换模型\n" +
-          "  /effort low|medium|high|max \u2014 思考深度\n" +
-          "  /cost \u2014 查看花费\n" +
-          "  /memory \u2014 查看项目记忆\n" +
-          "  /status \u2014 Bot 状态\n\n" +
-          "\ud83d\udca1 所有命令通过 @mention 使用：@master 或 @项目bot 后跟命令",
+          "  /effort low|medium|high|max \u2014 思考深度\n\n" +
+          "查看:\n" +
+          "  /cost \u2014 累计花费\n" +
+          "  /memory \u2014 项目记忆文件\n" +
+          "  /status \u2014 Bot 状态",
+        helpCron: (master: string) =>
+          "\ud83d\udccb 定时任务指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "所有 cron 命令需 @主控 发送\n\n" +
+          "添加任务:\n" +
+          `  @${master} cron add @项目bot HH:MM 任务描述\n` +
+          "    \u2514 每天定时执行\n" +
+          `  @${master} cron add @项目bot */N 任务描述\n` +
+          "    \u2514 每 N 分钟执行一次\n\n" +
+          "\ud83d\udca1 @项目bot 支持项目名或 Telegram 用户名\n\n" +
+          "示例:\n" +
+          `  @${master} cron add @api_bot 09:00 跑测试并汇报\n` +
+          `  @${master} cron add @monitor_bot */30 检查服务状态\n\n` +
+          "管理:\n" +
+          `  @${master} cron list \u2014 查看任务\n` +
+          `  @${master} cron del <id> \u2014 删除任务`,
+        guideMaster: "\ud83d\udc51 主控指南",
+        guideProject: "\ud83e\udd16 项目 Bot 指南",
+        guideCron: "\ud83d\udccb 定时任务指南",
         refreshing: "\ud83d\udcca 正在刷新看板...",
         restarting: "\ud83d\udd04 正在重启...",
         started: "\u2705 主控机器人已上线",
@@ -141,27 +168,54 @@ export function menuMsg(lang: Lang) {
         btnLang: "\ud83c\udf10 Lang",
         btnHelp: "\ud83d\udcd6 Guide",
         helpText:
-          "\ud83d\udcd6 Command Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "\ud83d\udc51 Master Bot (@master)\n" +
+          "\ud83d\udcd6 User Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "Each project gets a dedicated bot. @mention to dispatch tasks.\n" +
+          "The master bot handles management: add bots, configure settings, manage access.\n\n" +
+          "\ud83d\udca1 All commands via @mention\n\n" +
+          "Tap a button below for detailed guides:",
+        helpMaster:
+          "\ud83d\udc51 Master Bot Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "Button menu:\n" +
           "  menu \u2014 Open management menu\n" +
           "  bots \u2014 Manage project bots\n" +
           "  config \u2014 Global settings\n" +
-          "  users \u2014 Manage admins & users\n" +
+          "  users \u2014 Manage admins & users\n\n" +
+          "Text commands:\n" +
           "  status \u2014 Refresh dashboard\n" +
           "  restart \u2014 Restart daemon\n" +
-          "  search keyword \u2014 Search all projects\n" +
-          "  cron list \u2014 View scheduled tasks\n" +
-          "  cron add @bot HH:MM task\n" +
-          "  cron del ID \u2014 Delete task\n\n" +
-          "\ud83e\udd16 Project Bot (@projectbot)\n" +
-          "  /new \u2014 Reset session\n" +
-          "  /compact \u2014 Compress context\n" +
+          "  search keyword \u2014 Search all projects",
+        helpProject:
+          "\ud83e\udd16 Project Bot Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "@mention a project bot followed by your task.\n" +
+          "Reply to a bot's message to continue the conversation.\n\n" +
+          "Session:\n" +
+          "  /new \u2014 Reset session (clear context)\n" +
+          "  /compact \u2014 Compress context (keep key info)\n\n" +
+          "Tuning:\n" +
           "  /model sonnet|opus|haiku \u2014 Switch model\n" +
-          "  /effort low|medium|high|max \u2014 Thinking depth\n" +
-          "  /cost \u2014 View spend\n" +
-          "  /memory \u2014 View project memory\n" +
-          "  /status \u2014 Bot status\n\n" +
-          "\ud83d\udca1 All commands via @mention: @master or @projectbot followed by command",
+          "  /effort low|medium|high|max \u2014 Thinking depth\n\n" +
+          "Info:\n" +
+          "  /cost \u2014 Cumulative spend\n" +
+          "  /memory \u2014 Project memory files\n" +
+          "  /status \u2014 Bot status",
+        helpCron: (master: string) =>
+          "\ud83d\udccb Scheduled Tasks Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "All cron commands must be @sent to master\n\n" +
+          "Add tasks:\n" +
+          `  @${master} cron add @bot HH:MM task\n` +
+          "    \u2514 Run daily at HH:MM\n" +
+          `  @${master} cron add @bot */N task\n` +
+          "    \u2514 Run every N minutes\n\n" +
+          "\ud83d\udca1 @bot accepts project name or Telegram username\n\n" +
+          "Examples:\n" +
+          `  @${master} cron add @api_bot 09:00 run tests\n` +
+          `  @${master} cron add @monitor_bot */30 health check\n\n` +
+          "Manage:\n" +
+          `  @${master} cron list \u2014 View tasks\n` +
+          `  @${master} cron del <id> \u2014 Delete task`,
+        guideMaster: "\ud83d\udc51 Master Guide",
+        guideProject: "\ud83e\udd16 Project Bot Guide",
+        guideCron: "\ud83d\udccb Cron Guide",
         refreshing: "\ud83d\udcca Refreshing dashboard...",
         restarting: "\ud83d\udd04 Restarting daemon...",
         started: "\u2705 Master bot is online",
