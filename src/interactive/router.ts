@@ -171,6 +171,10 @@ async function handleMenuCallback(
     case "help": {
       const guideButtons = [
         [
+          { text: m.guideStart, data: "m:help:start" },
+          { text: m.guideTips, data: "m:help:tips" },
+        ],
+        [
           { text: m.guideMaster, data: "m:help:master" },
           { text: m.guideProject, data: "m:help:project" },
         ],
@@ -213,22 +217,18 @@ async function handleMenuCallback(
       ],
     ];
     const masterName = getMasterName();
-    switch (sub) {
-      case "master":
-        await edit(api, chatId, messageId, m.helpMaster, {
-          reply_markup: { inline_keyboard: backToGuide },
-        }).catch(() => {});
-        return true;
-      case "project":
-        await edit(api, chatId, messageId, m.helpProject, {
-          reply_markup: { inline_keyboard: backToGuide },
-        }).catch(() => {});
-        return true;
-      case "cron":
-        await edit(api, chatId, messageId, m.helpCron(masterName), {
-          reply_markup: { inline_keyboard: backToGuide },
-        }).catch(() => {});
-        return true;
+    const content: Record<string, string> = {
+      start: m.helpStart,
+      tips: m.helpTips,
+      master: m.helpMaster,
+      project: m.helpProject,
+      cron: m.helpCron(masterName),
+    };
+    if (content[sub]) {
+      await edit(api, chatId, messageId, content[sub], {
+        reply_markup: { inline_keyboard: backToGuide },
+      }).catch(() => {});
+      return true;
     }
   }
 

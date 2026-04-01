@@ -119,6 +119,42 @@ export function menuMsg(lang: Lang) {
         guideMaster: "\ud83d\udc51 主控指南",
         guideProject: "\ud83e\udd16 项目 Bot 指南",
         guideCron: "\ud83d\udccb 定时任务指南",
+        guideStart: "\ud83d\ude80 快速上手",
+        guideTips: "\ud83d\udca1 使用技巧",
+        helpStart:
+          "\ud83d\ude80 快速上手\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "1\ufe0f\u20e3 给项目 bot 发任务\n" +
+          "  @项目bot 帮我看一下这个 bug\n\n" +
+          "2\ufe0f\u20e3 等待执行（实时进度可见）\n" +
+          "  bot 会发送 \ud83d\udc40 表示已接收\n" +
+          "  执行过程中显示正在操作的文件\n\n" +
+          "3\ufe0f\u20e3 收到结果\n" +
+          "  结果带 #项目名 标签，方便筛选\n" +
+          "  回复 bot 消息可继续对话\n\n" +
+          "4\ufe0f\u20e3 多项目并行\n" +
+          "  @另一个bot 同时处理其他项目\n" +
+          "  各 bot 上下文完全隔离\n\n" +
+          "\ud83d\udca1 所有管理操作在主控 bot 的 menu 中完成",
+        helpTips:
+          "\ud83d\udca1 使用技巧\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "\ud83c\udfa4 语音指令\n" +
+          "  发送语音消息给项目 bot，自动转写为文字执行\n" +
+          "  在 config \u2192 whisperLanguage 指定语言提高准确率\n\n" +
+          "\ud83d\uddbc 图片分析\n" +
+          "  发送截图 + @项目bot 描述，Claude 会先读图再回答\n" +
+          "  \u26a0\ufe0f 单张图片可能消耗 50K+ tokens\n\n" +
+          "\ud83d\udcac 引用任意消息\n" +
+          "  回复任何消息（文字/图片/文件）并 @bot\n" +
+          "  引用内容自动作为上下文传入\n\n" +
+          "\ud83d\udcb0 控制成本\n" +
+          "  /model haiku \u2014 简单任务用便宜模型\n" +
+          "  /effort low \u2014 降低思考深度\n" +
+          "  /new \u2014 上下文膨胀时重置\n" +
+          "  sessionMode: fresh \u2014 每次独立上下文\n\n" +
+          "\ud83d\udd04 会话管理\n" +
+          "  /compact \u2014 上下文大但不想丢失关键信息时压缩\n" +
+          "  /cost \u2014 查看累计花费，掌握用量\n" +
+          "  上下文到 80% 会自动提醒，95% 自动压缩",
         refreshing: "\ud83d\udcca 正在刷新看板...",
         restarting: "\ud83d\udd04 正在重启...",
         started: "\u2705 主控机器人已上线",
@@ -216,6 +252,43 @@ export function menuMsg(lang: Lang) {
         guideMaster: "\ud83d\udc51 Master Guide",
         guideProject: "\ud83e\udd16 Project Bot Guide",
         guideCron: "\ud83d\udccb Cron Guide",
+        guideStart: "\ud83d\ude80 Quick Start",
+        guideTips: "\ud83d\udca1 Tips",
+        helpStart:
+          "\ud83d\ude80 Quick Start\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "1\ufe0f\u20e3 Send a task to a project bot\n" +
+          "  @projectbot fix this login bug\n\n" +
+          "2\ufe0f\u20e3 Wait for execution (live progress)\n" +
+          "  Bot reacts with \ud83d\udc40 when it picks up your task\n" +
+          "  Shows files being read/edited in real time\n\n" +
+          "3\ufe0f\u20e3 Get the result\n" +
+          "  Tagged with #projectName for easy filtering\n" +
+          "  Reply to continue the conversation\n\n" +
+          "4\ufe0f\u20e3 Work on multiple projects\n" +
+          "  @anotherbot handles a different project in parallel\n" +
+          "  Each bot has fully isolated context\n\n" +
+          "\ud83d\udca1 All management is done via the master bot's menu",
+        helpTips:
+          "\ud83d\udca1 Tips & Tricks\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "\ud83c\udfa4 Voice commands\n" +
+          "  Send a voice message to a project bot \u2014 auto-transcribed\n" +
+          "  Set config \u2192 whisperLanguage for better accuracy\n\n" +
+          "\ud83d\uddbc Photo analysis\n" +
+          "  Send screenshot + @projectbot description\n" +
+          "  Claude reads the image before responding\n" +
+          "  \u26a0\ufe0f A single image can use 50K+ tokens\n\n" +
+          "\ud83d\udcac Quote any message\n" +
+          "  Reply to any message (text/photo/file) with @bot\n" +
+          "  Quoted content is auto-included as context\n\n" +
+          "\ud83d\udcb0 Cost control\n" +
+          "  /model haiku \u2014 cheaper model for simple tasks\n" +
+          "  /effort low \u2014 reduce thinking depth\n" +
+          "  /new \u2014 reset when context bloats\n" +
+          "  sessionMode: fresh \u2014 clean context each time\n\n" +
+          "\ud83d\udd04 Session management\n" +
+          "  /compact \u2014 compress without losing key info\n" +
+          "  /cost \u2014 track cumulative spend\n" +
+          "  Auto-warns at 80%, auto-compacts at 95%",
         refreshing: "\ud83d\udcca Refreshing dashboard...",
         restarting: "\ud83d\udd04 Restarting daemon...",
         started: "\u2705 Master bot is online",
