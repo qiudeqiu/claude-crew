@@ -10,11 +10,21 @@
 
 POOL_FILE="$HOME/.claude/channels/telegram/bot-pool.json"
 
-# Ensure pool file exists
+# Ensure pool file exists (new segmented format)
 if [ ! -f "$POOL_FILE" ]; then
-  echo '{"bots":[]}' > "$POOL_FILE"
+  echo '{"activePlatform":"telegram","telegram":{"admins":[],"bots":[]}}' > "$POOL_FILE"
   chmod 600 "$POOL_FILE"
 fi
+
+# Helper: get active platform section key
+get_section() {
+  POOL="$POOL_FILE" python3 -c "
+import json, os
+pool = json.load(open(os.environ['POOL']))
+print(pool.get('activePlatform', 'telegram'))
+" 2>/dev/null
+}
+SECTION=$(get_section)
 
 case "${1:-help}" in
   add)
@@ -42,10 +52,11 @@ case "${1:-help}" in
     USERNAME=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['username'])" 2>/dev/null)
 
     # Check if already in pool
-    EXISTS=$(POOL="$POOL_FILE" TK="$TOKEN" python3 -c "
+    EXISTS=$(POOL="$POOL_FILE" TK="$TOKEN" SEC="$SECTION" python3 -c "
 import json, os
 pool = json.load(open(os.environ['POOL']))
-print(any(b['token'] == os.environ['TK'] for b in pool['bots']))
+sec = pool.get(os.environ['SEC'], {})
+print(any(b['token'] == os.environ['TK'] for b in sec.get('bots', [])))
 " 2>/dev/null)
     if [ "$EXISTS" = "True" ]; then
       echo "⚠️  @${USERNAME} already in pool"
@@ -55,9 +66,12 @@ print(any(b['token'] == os.environ['TK'] for b in pool['bots']))
     # Add to pool
     ROLE="project"
     if [ "$IS_MASTER" = "true" ]; then ROLE="master"; fi
-    POOL="$POOL_FILE" TK="$TOKEN" UN="$USERNAME" RL="$ROLE" python3 -c "
+    POOL="$POOL_FILE" TK="$TOKEN" UN="$USERNAME" RL="$ROLE" SEC="$SECTION" python3 -c "
 import json, os
 pool = json.load(open(os.environ['POOL']))
+sec = os.environ['SEC']
+if sec not in pool:
+    pool[sec] = {'admins': [], 'bots': []}
 bot = {'token': os.environ['TK'], 'username': os.environ['UN'], 'role': os.environ['RL']}
 if os.environ['RL'] == 'project':
     bot['assignedProject'] = ''
@@ -65,7 +79,7 @@ if os.environ['RL'] == 'project':
     bot['accessLevel'] = 'readWrite'
     bot['permissionMode'] = pool.get('permissionMode', 'approve')
     bot['allowedUsers'] = []
-pool['bots'].append(bot)
+pool[sec]['bots'].append(bot)
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 os.chmod(os.environ['POOL'], 0o600)
 "
@@ -79,15 +93,19 @@ os.chmod(os.environ['POOL'], 0o600)
   list)
     echo "📋 Bot Pool Status:"
     echo "────────────────────────────────────────"
-    python3 -c "
-import json
-pool = json.load(open('$POOL_FILE'))
-gid = pool.get('sharedGroupId', '(not set)')
+    POOL="$POOL_FILE" SEC="$SECTION" python3 -c "
+import json, os
+pool = json.load(open(os.environ['POOL']))
+sec = pool.get(os.environ['SEC'], {})
+platform = pool.get('activePlatform', 'telegram')
+gid = sec.get('sharedGroupId', '(not set)')
+print(f'  Platform: {platform}')
 print(f'  Shared group: {gid}')
 print()
-if not pool['bots']:
+bots = sec.get('bots', [])
+if not bots:
     print('  (empty) Use ./manage-pool.sh add <token> to add a bot')
-for i, b in enumerate(pool['bots']):
+for i, b in enumerate(bots):
     role = '🏠 Master' if b.get('role') == 'master' else '📂 Project'
     status = '🟢 ' + b.get('assignedProject', '') if b.get('assignedProject') else '⚪ Idle'
     username = '@' + b.get('username', '?')
@@ -97,17 +115,18 @@ for i, b in enumerate(pool['bots']):
         print(f'     📁 {path}')
 " 2>/dev/null
     echo "────────────────────────────────────────"
-    echo "Total: $(python3 -c "import json; print(len(json.load(open('$POOL_FILE'))['bots']))" 2>/dev/null) bots"
+    echo "Total: $(POOL="$POOL_FILE" SEC="$SECTION" python3 -c "import json,os; print(len(json.load(open(os.environ['POOL'])).get(os.environ['SEC'],{}).get('bots',[])))" 2>/dev/null) bots"
     ;;
 
   release)
     PROJECT="$2"
-    POOL="$POOL_FILE" PRJ="$PROJECT" python3 -c "
+    POOL="$POOL_FILE" PRJ="$PROJECT" SEC="$SECTION" python3 -c "
 import json, os
 pool = json.load(open(os.environ['POOL']))
+sec = pool.get(os.environ['SEC'], {})
 prj = os.environ['PRJ']
 count = 0
-for b in pool['bots']:
+for b in sec.get('bots', []):
     if b.get('assignedProject') and (prj == '' or b.get('assignedProject') == prj):
         print(f\"  Released @{b.get('username','?')} <- {b.get('assignedProject')}\")
         b.pop('assignedProject', None)
@@ -126,13 +145,15 @@ print(f'✅ Released {count} bot(s)')
       exit 1
     fi
     USERNAME="${USERNAME#@}"
-    POOL="$POOL_FILE" UN="$USERNAME" python3 -c "
+    POOL="$POOL_FILE" UN="$USERNAME" SEC="$SECTION" python3 -c "
 import json, os
 pool = json.load(open(os.environ['POOL']))
+sec = pool.get(os.environ['SEC'], {})
 un = os.environ['UN']
-before = len(pool['bots'])
-pool['bots'] = [b for b in pool['bots'] if b.get('username') != un]
-after = len(pool['bots'])
+bots = sec.get('bots', [])
+before = len(bots)
+sec['bots'] = [b for b in bots if b.get('username') != un]
+after = len(sec['bots'])
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 os.chmod(os.environ['POOL'], 0o600)
 if before > after:
@@ -154,10 +175,13 @@ else:
       echo "  4. Find chat.id (negative number, e.g. -1001234567890)"
       exit 1
     fi
-    POOL="$POOL_FILE" GID="$GROUP_ID" python3 -c "
+    POOL="$POOL_FILE" GID="$GROUP_ID" SEC="$SECTION" python3 -c "
 import json, os
 pool = json.load(open(os.environ['POOL']))
-pool['sharedGroupId'] = os.environ['GID']
+sec = os.environ['SEC']
+if sec not in pool:
+    pool[sec] = {'admins': [], 'bots': []}
+pool[sec]['sharedGroupId'] = os.environ['GID']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 os.chmod(os.environ['POOL'], 0o600)
 print(f'✅ Shared group set to: ' + os.environ['GID'])
@@ -181,12 +205,13 @@ print(f'✅ Shared group set to: ' + os.environ['GID'])
       echo "⚠️  Path does not exist: $PROJPATH"
       exit 1
     fi
-    POOL="$POOL_FILE" UN="$USERNAME" PRJ="$PROJECT" PP="$PROJPATH" python3 -c "
+    POOL="$POOL_FILE" UN="$USERNAME" PRJ="$PROJECT" PP="$PROJPATH" SEC="$SECTION" python3 -c "
 import json, os
 pool = json.load(open(os.environ['POOL']))
+sec = pool.get(os.environ['SEC'], {})
 un = os.environ['UN']
 found = False
-for b in pool['bots']:
+for b in sec.get('bots', []):
     if b.get('username') == un:
         b['assignedProject'] = os.environ['PRJ']
         b['assignedPath'] = os.environ['PP']
@@ -196,7 +221,7 @@ if not found:
     print(f'⚠️  Not found: @{un}, run add first')
 else:
     json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
-os.chmod(os.environ['POOL'], 0o600)
+    os.chmod(os.environ['POOL'], 0o600)
     print(f'✅ @{un} → {os.environ[\"PRJ\"]} ({os.environ[\"PP\"]})')
 " 2>/dev/null
     ;;
@@ -205,10 +230,11 @@ os.chmod(os.environ['POOL'], 0o600)
     echo "🔍 Auto-detecting group..."
     # Try each bot's getUpdates to find a group chat
     FOUND=""
-    python3 -c "
-import json, sys, urllib.request
-pool = json.load(open('$POOL_FILE'))
-for b in pool['bots']:
+    POOL="$POOL_FILE" SEC="$SECTION" python3 -c "
+import json, os, sys, urllib.request
+pool = json.load(open(os.environ['POOL']))
+sec = pool.get(os.environ['SEC'], {})
+for b in sec.get('bots', []):
     token = b['token']
     try:
         resp = urllib.request.urlopen(f'https://api.telegram.org/bot{token}/getUpdates?limit=20', timeout=5)
@@ -229,10 +255,13 @@ print('NOTFOUND')
     if echo "$RESULT" | grep -q "^FOUND:"; then
       GID=$(echo "$RESULT" | cut -d: -f2)
       TITLE=$(echo "$RESULT" | cut -d: -f3-)
-      POOL="$POOL_FILE" GID="$GID" python3 -c "
+      POOL="$POOL_FILE" GID="$GID" SEC="$SECTION" python3 -c "
 import json, os
 pool = json.load(open(os.environ['POOL']))
-pool['sharedGroupId'] = os.environ['GID']
+sec = os.environ['SEC']
+if sec not in pool:
+    pool[sec] = {'admins': [], 'bots': []}
+pool[sec]['sharedGroupId'] = os.environ['GID']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 os.chmod(os.environ['POOL'], 0o600)
 " 2>/dev/null

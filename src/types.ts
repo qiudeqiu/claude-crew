@@ -15,6 +15,7 @@ export type PoolBot = {
   approvers?: string[];
 };
 
+/** Flattened view of the active platform's config — what all consuming code sees. */
 export type BotPool = {
   platform?: "telegram" | "discord";
   bots: PoolBot[];
@@ -32,6 +33,33 @@ export type BotPool = {
   language?: string;
   model?: string;
   approvers?: string[];
+};
+
+/** Platform-specific section in the on-disk config. */
+export type PlatformSection = {
+  admins?: string[];
+  approvers?: string[];
+  sharedGroupId?: string;
+  bots: PoolBot[];
+};
+
+/** On-disk config format — platform sections + shared settings. */
+export type RawBotPool = {
+  activePlatform?: "telegram" | "discord";
+  telegram?: PlatformSection;
+  discord?: PlatformSection;
+  // Shared settings (platform-agnostic)
+  accessLevel?: "readWrite" | "readOnly";
+  permissionMode?: "allowAll" | "approve" | "auto";
+  memoryIntervalMinutes?: number;
+  masterExecute?: boolean;
+  maxConcurrent?: number;
+  rateLimitSeconds?: number;
+  sessionTimeoutMinutes?: number;
+  dashboardIntervalMinutes?: number;
+  whisperLanguage?: string;
+  language?: string;
+  model?: string;
 };
 
 export type ManagedBot = {
@@ -85,6 +113,12 @@ export type ClaudeResult = {
   contextUsed: number;
   contextWindow: number;
   model: string;
+  /** Why the session stopped (e.g. "end_turn", "max_output_tokens"). */
+  stopReason: string;
+  /** Process exit code (0 = success). */
+  exitCode: number;
+  /** Whether the stream contained a result event. */
+  gotResultEvent: boolean;
 };
 
 // ── Interactive setup ──

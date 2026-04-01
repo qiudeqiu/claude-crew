@@ -230,43 +230,45 @@ fi
 # 5. Write bot-pool.json
 # ═══════════════════════════════════
 if [ ! -f "$INSTALL_DIR/bot-pool.json" ]; then
-  cat > "$INSTALL_DIR/bot-pool.json" << POOLJSON
-{
-  "platform": "$PLATFORM",
-  "admins": ["$OWNER_ID"],
-  "bots": [
-    {
-      "token": "$MASTER_TOKEN",
-      "username": "$MASTER_USERNAME",
-      "role": "master"
-    }
-  ],
-  "sharedGroupId": "",
-  "accessLevel": "readWrite",
-  "permissionMode": "approve",
-  "masterExecute": false,
-  "maxConcurrent": 3,
-  "rateLimitSeconds": 5,
-  "sessionTimeoutMinutes": 10,
-  "dashboardIntervalMinutes": 30,
-  "memoryIntervalMinutes": 120,
-  "whisperLanguage": "",
-  "language": "en"
+  POOL="$INSTALL_DIR/bot-pool.json" OID="$OWNER_ID" TK="$MASTER_TOKEN" UN="$MASTER_USERNAME" PF="$PLATFORM" python3 -c "
+import json, os, stat
+pool = {
+  'activePlatform': os.environ['PF'],
+  os.environ['PF']: {
+    'admins': [os.environ['OID']],
+    'sharedGroupId': '',
+    'bots': [{'token': os.environ['TK'], 'username': os.environ['UN'], 'role': 'master'}]
+  },
+  'accessLevel': 'readWrite',
+  'permissionMode': 'approve',
+  'masterExecute': False,
+  'maxConcurrent': 3,
+  'rateLimitSeconds': 5,
+  'sessionTimeoutMinutes': 10,
+  'dashboardIntervalMinutes': 30,
+  'memoryIntervalMinutes': 120,
+  'whisperLanguage': '',
+  'language': 'en'
 }
-POOLJSON
-  chmod 600 "$INSTALL_DIR/bot-pool.json"
+json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
+os.chmod(os.environ['POOL'], stat.S_IRUSR | stat.S_IWUSR)
+"
   echo "✅ Config created"
 else
   # Add bot to existing config
   POOL="$INSTALL_DIR/bot-pool.json" OID="$OWNER_ID" TK="$MASTER_TOKEN" UN="$MASTER_USERNAME" PF="$PLATFORM" python3 -c "
 import json, os, stat
 pool = json.load(open(os.environ['POOL']))
-pool['platform'] = os.environ['PF']
-if not pool.get('admins'):
-    pool['admins'] = [os.environ['OID']]
-tokens = [b['token'] for b in pool['bots']]
+pf = os.environ['PF']
+pool['activePlatform'] = pf
+if pf not in pool:
+    pool[pf] = {'admins': [], 'bots': []}
+section = pool[pf]
+if not section.get('admins'):
+    section['admins'] = [os.environ['OID']]
+tokens = [b['token'] for b in section.get('bots', [])]
 if os.environ['TK'] not in tokens:
-    pool['bots'].insert(0, {'token': os.environ['TK'], 'username': os.environ['UN'], 'role': 'master'})
+    section['bots'].insert(0, {'token': os.environ['TK'], 'username': os.environ['UN'], 'role': 'master'})
 pool.setdefault('masterExecute', False)
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 os.chmod(os.environ['POOL'], stat.S_IRUSR | stat.S_IWUSR)

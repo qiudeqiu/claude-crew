@@ -1,7 +1,13 @@
 import { readFileSync, writeFileSync, statSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
-import type { BotPool, CronJob, PoolBot } from "./types.js";
+import type {
+  BotPool,
+  RawBotPool,
+  PlatformSection,
+  CronJob,
+  PoolBot,
+} from "./types.js";
 
 // ── Paths ──
 export const STATE_DIR =
@@ -39,33 +45,131 @@ export const CONTEXT_WARN_COOLDOWN_MS = 86_400_000; // 24h
 export const LOG_RETAIN_BYTES = 250_000;
 export const LOG_ROTATE_INTERVAL = 200;
 export const CONTEXT_BAR_LENGTH = 10;
+
+// ── Resilience ──
+export const CIRCUIT_BREAKER_MAX_FAILURES = 3;
+export const CIRCUIT_BREAKER_COOLDOWN_MS = 300_000; // 5 min auto-recovery
+export const DENIAL_MAX_CONSECUTIVE = 5;
+export const DENIAL_WINDOW_MS = 60_000; // sliding window
+export const MAX_TRUNCATION_RECOVERIES = 2; // max auto-continue attempts
+
+/** Platform-aware message character limit */
+export function getMessageLimit(): number {
+  return getPlatform() === "discord" ? 2000 : 4096;
+}
 export const WRITE_TOOLS = "Bash,Edit,Write,NotebookEdit,Agent,Skill";
 export const READONLY_DISALLOWED = "Bash,Edit,Write,NotebookEdit";
 
 // ── Pool I/O (cached, invalidated on save or file change) ──
-let poolCache: { data: BotPool; mtimeMs: number } | null = null;
+// On-disk format uses platform sections; loadPool() returns a flattened view
+// so all consuming code sees the same BotPool shape regardless of format.
+let rawCache: { data: RawBotPool; mtimeMs: number } | null = null;
 
-export function loadPool(): BotPool {
+export type PlatformType = "telegram" | "discord";
+
+/** Read the raw on-disk format (platform sections + shared settings). */
+export function loadPoolRaw(): RawBotPool {
   try {
     const stat = statSync(POOL_FILE);
-    if (poolCache && poolCache.mtimeMs === stat.mtimeMs) {
-      return poolCache.data;
+    if (rawCache && rawCache.mtimeMs === stat.mtimeMs) {
+      return rawCache.data;
     }
-    const data = JSON.parse(readFileSync(POOL_FILE, "utf8")) as BotPool;
-    poolCache = { data, mtimeMs: stat.mtimeMs };
+    const data = JSON.parse(readFileSync(POOL_FILE, "utf8")) as RawBotPool;
+    rawCache = { data, mtimeMs: stat.mtimeMs };
     return data;
   } catch {
-    // File missing (first run) or corrupted — return empty pool
-    return { bots: [] };
+    return { activePlatform: "telegram", telegram: { bots: [] } };
   }
 }
 
+const VALID_PLATFORMS: ReadonlySet<string> = new Set(["telegram", "discord"]);
+
+export function getPlatform(): PlatformType {
+  try {
+    const raw = loadPoolRaw();
+    // New format: activePlatform field (validated)
+    if (raw.activePlatform && VALID_PLATFORMS.has(raw.activePlatform)) {
+      return raw.activePlatform;
+    }
+    // Legacy flat format: platform field
+    const legacy = raw as Record<string, unknown>;
+    return legacy.platform === "discord" ? "discord" : "telegram";
+  } catch {
+    return "telegram";
+  }
+}
+
+/**
+ * Returns a flattened BotPool view of the active platform.
+ * All consuming code uses this — platform isolation is transparent.
+ */
+export function loadPool(): BotPool {
+  const raw = loadPoolRaw();
+  const platform = getPlatform();
+
+  // New format: read from platform section
+  if (raw.activePlatform || raw.telegram || raw.discord) {
+    const section: PlatformSection = raw[platform] ?? { bots: [] };
+    return {
+      platform,
+      bots: section.bots ?? [],
+      admins: section.admins,
+      sharedGroupId: section.sharedGroupId,
+      approvers: section.approvers,
+      // Shared settings from top level
+      accessLevel: raw.accessLevel,
+      permissionMode: raw.permissionMode,
+      memoryIntervalMinutes: raw.memoryIntervalMinutes,
+      masterExecute: raw.masterExecute,
+      maxConcurrent: raw.maxConcurrent,
+      rateLimitSeconds: raw.rateLimitSeconds,
+      sessionTimeoutMinutes: raw.sessionTimeoutMinutes,
+      dashboardIntervalMinutes: raw.dashboardIntervalMinutes,
+      whisperLanguage: raw.whisperLanguage,
+      language: raw.language,
+      model: raw.model,
+    };
+  }
+
+  // Legacy flat format fallback (pre-migration)
+  return raw as unknown as BotPool;
+}
+
+/**
+ * Save a flattened BotPool back to the platform-segmented on-disk format.
+ * Platform-specific fields go to the active section; shared fields go to top level.
+ */
 export function savePool(pool: BotPool): void {
-  writeFileSync(POOL_FILE, JSON.stringify(pool, null, 2) + "\n", {
+  const raw = loadPoolRaw();
+  const platform = pool.platform ?? raw.activePlatform ?? "telegram";
+
+  // Build new object — never mutate the cached raw
+  const updated: RawBotPool = {
+    ...raw,
+    activePlatform: platform,
+    [platform]: {
+      admins: pool.admins,
+      approvers: pool.approvers,
+      sharedGroupId: pool.sharedGroupId,
+      bots: pool.bots,
+    },
+    accessLevel: pool.accessLevel,
+    permissionMode: pool.permissionMode,
+    memoryIntervalMinutes: pool.memoryIntervalMinutes,
+    masterExecute: pool.masterExecute,
+    maxConcurrent: pool.maxConcurrent,
+    rateLimitSeconds: pool.rateLimitSeconds,
+    sessionTimeoutMinutes: pool.sessionTimeoutMinutes,
+    dashboardIntervalMinutes: pool.dashboardIntervalMinutes,
+    whisperLanguage: pool.whisperLanguage,
+    language: pool.language,
+    model: pool.model,
+  };
+
+  writeFileSync(POOL_FILE, JSON.stringify(updated, null, 2) + "\n", {
     mode: 0o600,
   });
-  // Invalidate cache so next loadPool() picks up the new data
-  poolCache = null;
+  rawCache = null;
 }
 
 export function loadCron(): CronJob[] {
@@ -166,14 +270,35 @@ export function validateConfig(): void {
   }
 }
 
-// ── Auto-migration: fill missing fields with defaults on startup ──
+// ── Auto-migration: flat→segmented format + fill missing defaults ──
 export function migrateConfig(): string[] {
-  const raw = readFileSync(POOL_FILE, "utf8");
-  const pool = JSON.parse(raw) as Record<string, unknown>;
+  const rawText = readFileSync(POOL_FILE, "utf8");
+  const pool = JSON.parse(rawText) as Record<string, unknown>;
   const added: string[] = [];
 
-  // Global defaults
-  const globalDefaults: Record<string, unknown> = {
+  // ── Phase 1: Migrate flat format → platform-segmented format ──
+  if (!("activePlatform" in pool) && Array.isArray(pool.bots)) {
+    const platform =
+      (pool.platform as string) === "discord" ? "discord" : "telegram";
+    // Move platform-specific fields into their section
+    pool.activePlatform = platform;
+    pool[platform] = {
+      admins: pool.admins,
+      approvers: pool.approvers,
+      sharedGroupId: pool.sharedGroupId,
+      bots: pool.bots,
+    };
+    // Clean up moved fields from top level
+    delete pool.admins;
+    delete pool.approvers;
+    delete pool.sharedGroupId;
+    delete pool.bots;
+    delete pool.platform;
+    added.push(`migrated to ${platform} section`);
+  }
+
+  // ── Phase 2: Fill missing shared defaults ──
+  const sharedDefaults: Record<string, unknown> = {
     accessLevel: "readWrite",
     permissionMode: "approve",
     masterExecute: false,
@@ -186,15 +311,17 @@ export function migrateConfig(): string[] {
     language: "en",
   };
 
-  for (const [key, defaultVal] of Object.entries(globalDefaults)) {
+  for (const [key, defaultVal] of Object.entries(sharedDefaults)) {
     if (!(key in pool)) {
       pool[key] = defaultVal;
       added.push(key);
     }
   }
 
-  // Per-bot defaults (project bots only)
-  const bots = pool.bots as Array<Record<string, unknown>>;
+  // ── Phase 3: Per-bot defaults (active platform only) ──
+  const platform = pool.activePlatform as string;
+  const section = pool[platform] as Record<string, unknown> | undefined;
+  const bots = (section?.bots ?? []) as Array<Record<string, unknown>>;
   if (Array.isArray(bots)) {
     for (const bot of bots) {
       if (bot.role !== "project") continue;
@@ -217,6 +344,7 @@ export function migrateConfig(): string[] {
     writeFileSync(POOL_FILE, JSON.stringify(pool, null, 2) + "\n", {
       mode: 0o600,
     });
+    rawCache = null;
   }
 
   return added;
