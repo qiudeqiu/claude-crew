@@ -294,7 +294,7 @@ print(f'✅ Permission mode set to: ' + os.environ['MD'])
     ;;
 
   help|*)
-    echo "🤖 Telegram Bot Pool Manager (multi-project architecture)"
+    echo "🤖 Claude Crew — Bot Pool Manager"
     echo ""
     echo "Usage:"
     echo "  $0 add <token>            Add project bot"
@@ -308,19 +308,14 @@ print(f'✅ Permission mode set to: ' + os.environ['MD'])
     echo "  $0 set-mode <mode>        Set permission mode (allowAll/approve)"
     echo ""
     echo "Quick start:"
-    echo "  1. Create bots in Telegram via @BotFather (recommended: 3-5 project bots + 1 master bot)"
+    echo "  1. Create a master bot via @BotFather"
     echo "  2. $0 add <master_token> --master"
-    echo "  3. $0 add <project_token1>"
-    echo "  4. $0 add <project_token2>"
-    echo "  5. Add all bots to the same Telegram group"
-    echo "  6. $0 set-group <group_id> or $0 init-group"
-    echo "  7. $0 assign <bot_user> <project> <path>"
-    echo "  8. daemon.sh start"
+    echo "  3. $0 add <project_token>"
+    echo "  4. Add bots to a Telegram group"
+    echo "  5. $0 init-group  (or set-group <id>)"
+    echo "  6. $0 assign <bot_user> <project> <path>"
+    echo "  7. daemon.sh start"
     echo ""
-    echo "Architecture:"
-    echo "  🏠 Master bot — Global management, view all projects, manage agents/skills"
-    echo "  📂 Project bot — One per project, can only write to its own project, can read others"
-    echo "  📋 Delegation — Need to modify another project? @mention the target bot in the group"
-    echo "  🧠 Periodic memory — Auto-saves session memory every 2 hours"
+    echo "After setup, manage everything from Telegram: @master menu"
     ;;
 esac

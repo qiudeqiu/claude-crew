@@ -1,10 +1,9 @@
 #!/usr/bin/env bun
 /**
- * Telegram Bot Pool Daemon v3
+ * Claude Crew Daemon v4
  *
- * Architecture: daemon polls all bots, routes messages, spawns `claude -p`
- * with --allowedTools for pre-authorized tool access. Real-time progress
- * via stream-json event parsing.
+ * Multi-platform bot pool daemon. Polls all bots, routes messages,
+ * spawns `claude -p` per task. Real-time progress via stream-json.
  */
 
 import { Bot, GrammyError } from "grammy";

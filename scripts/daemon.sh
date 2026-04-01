@@ -1,5 +1,5 @@
 #!/bin/bash
-# Telegram Bot Pool Daemon manager
+# Claude Crew — Daemon manager
 # Usage:
 #   ./daemon.sh start   — Start daemon (background)
 #   ./daemon.sh stop    — Stop daemon
@@ -157,7 +157,7 @@ PLISTEOF
       mkdir -p "$UNIT_DIR"
       cat > "$UNIT_DIR/claude-crew.service" << SVCEOF
 [Unit]
-Description=claude-crew Telegram Bot Pool Daemon
+Description=claude-crew daemon
 After=network-online.target
 
 [Service]
@@ -201,9 +201,9 @@ SVCEOF
     ;;
 
   help|*)
-    echo "🤖 Telegram Bot Pool Daemon v3"
+    echo "🤖 Claude Crew — Daemon Manager"
     echo ""
-    echo "Terminal management:"
+    echo "Usage:"
     echo "  $0 start          Start daemon"
     echo "  $0 stop           Stop daemon"
     echo "  $0 restart        Restart daemon"
@@ -212,31 +212,7 @@ SVCEOF
     echo "  $0 autostart      Enable auto-start on login"
     echo "  $0 no-autostart   Disable auto-start"
     echo ""
-    echo "Telegram group commands (@master bot):"
-    echo "  help                          Help info"
-    echo "  status                        Refresh dashboard"
-    echo "  search <keyword>              Search all project code"
-    echo "  restart                       Restart daemon"
-    echo "  cron list                     View scheduled tasks"
-    echo "  cron add @bot HH:MM task      Daily scheduled task"
-    echo "  cron add @bot */N task        Every N minutes"
-    echo "  cron del <id>                 Delete scheduled task"
-    echo ""
-    echo "How it works:"
-    echo "  Daemon holds all bot tokens and maintains long-polling."
-    echo "  When you @mention a bot in Telegram:"
-    echo "    1. Daemon detects the message"
-    echo "    2. Spawns claude -p call (pre-authorized tools)"
-    echo "    3. Parses stream-json events in real time"
-    echo "    4. Shows tool call progress in the group"
-    echo "    5. Sends result to the group when done"
-    echo ""
-    echo "  Messages without @ → ignored (must @mention a bot)"
-    echo ""
-    echo "Security:"
-    echo "  - Only OWNER_ID messages trigger sessions"
-    echo "  - Max 3 concurrent tasks"
-    echo "  - Pre-authorized tools (Bash/Edit/Write/Agent/Skill)"
-    echo "  - 10 minute timeout per task"
+    echo "After the daemon is running, manage everything from your"
+    echo "messaging app: send 'menu' to the master bot."
     ;;
 esac
