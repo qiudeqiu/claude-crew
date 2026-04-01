@@ -48,8 +48,6 @@ All requests, progress, results, and team discussions flow through one timeline.
 | **Permission Mode** | How writes are authorized | `approve` (default) — button confirmation in chat · `auto` — Claude's safety classifier · `allowAll` — pre-authorized |
 | **User Access** | Who can use each bot | `admins` — all bots · `allowedUsers` — per-bot member list · others — rejected with hint |
 | **Approvers** | Who must approve writes | `approvers: ["id1", "id2"]` — ALL listed users must approve before writes execute. Empty = any single admin |
-| **Approval delegation** | Temporary approval rights | `delegate <userId> 2h` — grants approval power, auto-expires |
-
 All configurable globally or per-bot, from button menus on your phone. Sensitive project? Set `readOnly`. Trusted solo project? Set `allowAll`. Team project? Set `approve` with specific approvers so writes require the right people to confirm.
 
 ### Phone-first management
@@ -619,7 +617,6 @@ claude-crew currently supports **Telegram**. The architecture uses a platform ab
 - **Slash commands**: `/new` (reset session), `/compact` (compress context), `/model` (switch model), `/effort` (thinking depth), `/cost` (spend stats), `/memory` (view CLAUDE.md), `/status` (bot state) — all handled at daemon level, most cost zero tokens
 - **Task queue**: busy bot queues tasks instead of rejecting — shows queue position and processes automatically when ready
 - **Approvers list**: configure specific people who must ALL approve — button shows "Allow (1/2)", resolves when everyone approves
-- **Approval delegation**: `delegate <userId> 2h` grants temporary approval rights — auto-expires
 - **Context warning**: auto-warns at 80% context usage, auto-compacts at 95% with group notification
 
 ### v0.2.0 — Multi-project cluster management
