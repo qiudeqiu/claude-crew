@@ -77,7 +77,7 @@ Use `/new` to reset when context gets stale, `/compact` to compress without losi
 | Restart = lost context | Conversation files + memory files persist on disk |
 | Headless server auth fails | Supports API key — no browser needed |
 | Bot rejects when busy | Task queue — shows position, auto-processes when ready |
-| API key expires → silent failures | Adaptive rate limiting uses real API reset times, not guesswork |
+| API key expires → repeated errors | Circuit breaker pauses after 3 failures, shows root cause |
 
 ## Table of Contents
 
