@@ -53,10 +53,10 @@ export function handleMasterCommand(
 
   // Support both: cron add HH:MM task @bot  AND  cron add @bot HH:MM task
   const cronAddOld = stripped.match(
-    /^cron\s+add\s+@(\w+)\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)$/i,
+    /^cron\s+add\s+@([\w-]+)\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)$/i,
   );
   const cronAddNew = stripped.match(
-    /^cron\s+add\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)\s+@(\w+)$/i,
+    /^cron\s+add\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)\s+@([\w-]+)$/i,
   );
   const cronAddMatch = cronAddOld
     ? { botUser: cronAddOld[1], schedule: cronAddOld[2], prompt: cronAddOld[3] }
