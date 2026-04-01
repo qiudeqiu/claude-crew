@@ -461,7 +461,8 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
   "memoryIntervalMinutes": 120,
   "whisperLanguage": "",
   "language": "en",
-  "model": "sonnet"
+  "model": "sonnet",
+  "sessionMode": "continue"
 }
 ```
 
@@ -500,6 +501,7 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | `permissionMode` | (inherit global) | Override permission mode for this bot (only when `readWrite`). |
 | `allowedUsers` | `[]` | Member user IDs who can use this bot. Admins always have access. |
 | `model` | (inherit global) | Override model for this bot. Use a different model per project complexity. |
+| `approvers` | `[]` | User IDs who must ALL approve writes for this bot. Empty = any single admin. |
 
 #### Access Control
 
@@ -579,7 +581,7 @@ This project runs as a background daemon with access to your filesystem. You sho
 
 - **Read the source** — ~7200 lines of TypeScript, no minification, no obfuscation. Small enough to audit in an afternoon.
 - **Runs from source** — `bun run src/daemon.ts` executes the TypeScript directly. No compiled binaries, no build artifacts. What you read is what runs.
-- **Minimal dependencies** — [grammY](https://grammy.dev) (Telegram) and [discord.js](https://discord.js.org) (Discord, planned). No hidden packages. Check `package.json`.
+- **Minimal dependencies** — [grammY](https://grammy.dev) (Telegram) and [discord.js](https://discord.js.org) (Discord). No hidden packages. Check `package.json`.
 - **No external network calls** — only communicates with Telegram Bot API and your local `claude` CLI. Verify: `grep -r "fetch" src/` shows only Telegram file downloads.
 - **No data collection** — no analytics, no telemetry, no remote database. Verify: `grep -r "analytics\|telemetry\|track" src/`
 - **Monitor at runtime** — check all network connections: `lsof -i -p $(cat ~/.claude/channels/telegram/daemon.pid)`
@@ -612,7 +614,17 @@ claude-crew currently supports **Telegram**. The architecture uses a platform ab
 
 ## 📋 Changelog
 
-### v0.3.0 — Core experience enhancement (current)
+### v0.4.0 — Platform abstraction & resilience (current)
+
+- **Platform-segmented config**: `bot-pool.json` restructured — platform-specific fields (admins, bots, sharedGroupId) nested under `telegram`/`discord` sections, shared settings at top level. Old flat format auto-migrated on startup.
+- **Session mode**: new `sessionMode` setting — `"continue"` (default, resumes last conversation) or `"fresh"` (clean context each time, relies on periodic memory). Configurable via button menu.
+- **Runtime resilience**: circuit breaker (3 failures → pause, 5min auto-recovery), adaptive rate limiting (uses real API reset times), output truncation recovery, approval denial tracking, error classification with per-type recovery.
+- **Guide system**: interactive guide with sub-pages — Quick Start, Tips, Master Bot, Project Bot, Cron — with navigation buttons.
+- **Cron improvements**: delete buttons in task list, project name support in `cron add` (resolves to bot username automatically), syntax guide shown alongside task list.
+- **Discord adapter** (experimental): Platform interface implementation, role mention detection, i18n Discord-aware text. Marked as planned in docs.
+- **Security hardening**: `getSafeEnv` switched to deny-by-default for unknown env vars, `setBotValue` path validation, queue dispatch race fix, `/compact` busy guard.
+
+### v0.3.0 — Core experience enhancement
 
 - **Slash commands**: `/new` (reset session), `/compact` (compress context), `/model` (switch model), `/effort` (thinking depth), `/cost` (spend stats), `/memory` (view CLAUDE.md), `/status` (bot state) — all handled at daemon level, most cost zero tokens
 - **Task queue**: busy bot queues tasks instead of rejecting — shows queue position and processes automatically when ready

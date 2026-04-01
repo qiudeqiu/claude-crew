@@ -470,7 +470,8 @@ daemon.sh no-autostart   # 禁用开机自启
   "memoryIntervalMinutes": 120,
   "whisperLanguage": "",
   "language": "en",
-  "model": "sonnet"
+  "model": "sonnet",
+  "sessionMode": "continue"
 }
 ```
 
@@ -509,6 +510,7 @@ daemon.sh no-autostart   # 禁用开机自启
 | `permissionMode` | （继承全局） | 覆盖该 bot 的权限模式（仅 `readWrite` 时生效） |
 | `allowedUsers` | `[]` | 可使用该 bot 的成员 ID 列表。管理员始终有权限 |
 | `model` | （继承全局） | 覆盖该 bot 的模型。可按项目复杂度选择不同模型 |
+| `approvers` | `[]` | 必须全部同意才能执行写操作的审批人 ID 列表。空 = 任意管理员 |
 
 #### 访问控制
 
@@ -588,7 +590,7 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 
 - **阅读源码** — 约 7200 行 TypeScript，无混淆无压缩。一个下午就能审完。
 - **从源码直接运行** — `bun run src/daemon.ts` 直接执行 TypeScript，没有编译产物。你看到什么就跑什么。
-- **极简依赖** — [grammY](https://grammy.dev)（Telegram）和 [discord.js](https://discord.js.org)（Discord，计划中），无隐藏包。查看 `package.json`。
+- **极简依赖** — [grammY](https://grammy.dev)（Telegram）和 [discord.js](https://discord.js.org)（Discord），无隐藏包。查看 `package.json`。
 - **无外部网络请求** — 只和 Telegram Bot API 以及本地 `claude` CLI 通信。验证：`grep -r "fetch" src/` 只会看到 Telegram 文件下载。
 - **无数据收集** — 无 analytics，无 telemetry，无远程数据库。验证：`grep -r "analytics\|telemetry\|track" src/`
 - **运行时监控** — 查看所有网络连接：`lsof -i -p $(cat ~/.claude/channels/telegram/daemon.pid)`
@@ -621,7 +623,17 @@ claude-crew 目前支持 **Telegram**。架构使用平台抽象层（`Platform`
 
 ## 📋 更新日志
 
-### v0.3.0 — 核心体验强化（当前版本）
+### v0.4.0 — 平台抽象与运行时容错（当前版本）
+
+- **平台分段配置**：`bot-pool.json` 重构 — 平台相关字段（admins、bots、sharedGroupId）嵌套在 `telegram`/`discord` 段内，共享设置在顶层。旧格式启动时自动迁移。
+- **会话模式**：新增 `sessionMode` — `"continue"`（默认，接续上次对话）或 `"fresh"`（每次独立上下文，靠 memory 恢复记忆）。菜单可配置。
+- **运行时容错**：熔断器（3 次失败暂停，5 分钟自动恢复）、自适应限速（使用真实 API 重置时间）、输出截断自动续写、审批跟踪、错误分类与分级恢复。
+- **指南系统**：交互式分页指南 — 快速上手、使用技巧、主控指南、项目 Bot 指南、定时任务指南，带导航按钮。
+- **定时任务增强**：列表中的删除按钮、`cron add` 支持项目名（自动解析为 bot 用户名）、任务列表附带语法说明。
+- **Discord 适配器**（实验性）：Platform 接口实现，role mention 检测，i18n Discord 适配文案。文档标记为计划中。
+- **安全加固**：`getSafeEnv` 改为默认拒绝未知环境变量、`setBotValue` 路径校验、队列调度竞态修复、`/compact` 忙碌锁。
+
+### v0.3.0 — 核心体验强化
 
 - **斜杠命令**：`/new`（重置会话）、`/compact`（压缩上下文）、`/model`（切模型）、`/effort`（思考深度）、`/cost`（花费统计）、`/memory`（查看 CLAUDE.md）、`/status`（bot 状态）— daemon 层处理，大部分零 token
 - **任务队列**：bot 忙时排队而非拒绝 — 显示队列位置，就绪后自动处理

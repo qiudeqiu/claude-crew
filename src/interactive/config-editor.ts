@@ -561,7 +561,6 @@ async function setBotValue(
 
   // Validate path if setting assignedPath
   if (field.key === "assignedPath" && value !== "inherit") {
-    const { validatePath } = await import("./validate.js");
     if (!validatePath(value)) {
       await edit(api, chatId, messageId, cm.invalidPath(value), {
         reply_markup: { inline_keyboard: menuButton(lang) },
