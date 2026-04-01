@@ -82,8 +82,7 @@ export function menuMsg(lang: Lang) {
           "  search 关键词 \u2014 搜索所有项目\n" +
           "  cron list \u2014 查看定时任务\n" +
           "  cron add @bot HH:MM 任务\n" +
-          "  cron del ID \u2014 删除定时任务\n" +
-          "  delegate 用户ID 2h \u2014 临时委托审批\n\n" +
+          "  cron del ID \u2014 删除定时任务\n\n" +
           "\ud83e\udd16 项目 Bot（@项目bot）\n" +
           "  /new \u2014 重置会话\n" +
           "  /compact \u2014 压缩上下文\n" +
@@ -112,6 +111,13 @@ export function menuMsg(lang: Lang) {
           `  @${master} cron del <id> \u2014 删除任务`,
         tasksTitle: "\ud83d\udccb 定时任务",
         last: "上次",
+        cronGuide: (master: string) =>
+          "语法:\n" +
+          `  @${master} cron add @项目bot HH:MM 任务描述\n` +
+          `  @${master} cron add @项目bot */N 任务描述\n\n` +
+          "管理:\n" +
+          `  @${master} cron list \u2014 查看任务\n` +
+          `  @${master} cron del <id> \u2014 删除任务`,
       }
     : {
         title: "\ud83e\udd16 Claude Crew",
@@ -144,8 +150,7 @@ export function menuMsg(lang: Lang) {
           "  search keyword \u2014 Search all projects\n" +
           "  cron list \u2014 View scheduled tasks\n" +
           "  cron add @bot HH:MM task\n" +
-          "  cron del ID \u2014 Delete task\n" +
-          "  delegate userId 2h \u2014 Temp approval rights\n\n" +
+          "  cron del ID \u2014 Delete task\n\n" +
           "\ud83e\udd16 Project Bot (@projectbot)\n" +
           "  /new \u2014 Reset session\n" +
           "  /compact \u2014 Compress context\n" +
@@ -174,6 +179,13 @@ export function menuMsg(lang: Lang) {
           `  @${master} cron del <id> \u2014 Delete a task`,
         tasksTitle: "\ud83d\udccb Scheduled Tasks",
         last: "Last",
+        cronGuide: (master: string) =>
+          "Syntax:\n" +
+          `  @${master} cron add @bot HH:MM task\n` +
+          `  @${master} cron add @bot */N task\n\n` +
+          "Manage:\n" +
+          `  @${master} cron list \u2014 View tasks\n` +
+          `  @${master} cron del <id> \u2014 Delete task`,
       };
 }
 
@@ -804,7 +816,7 @@ export function setupMsg(lang: Lang) {
         noOutput: "(无输出)",
         taskDone: "\u2705 任务已执行（Claude 使用了工具但未产生文字回复）",
         approvalPrompt: (tools: string, min: number) =>
-          `\ud83d\udd12 需要工具权限:\n${tools}\n\n批准后将重试\n\u23f0 ${min} 分钟内响应\n\ud83d\udca1 在 menu \u2192 配置 \u2192 permissionMode 中可切换为 allowAll 或 auto 免审批`,
+          `\ud83d\udd12 需要工具权限:\n${tools}\n\n批准后将重试\n\u23f0 超过 ${min} 分钟不操作将失效\n\ud83d\udca1 在 menu \u2192 配置 \u2192 permissionMode 中可切换为 allowAll 或 auto 免审批`,
         sessionTimedOut: (min: number) =>
           `\u23f0 任务超时（${min} 分钟限制）\n\ud83d\udca1 可在 menu \u2192 配置 \u2192 sessionTimeout 中调整时长`,
         circuitOpen: (bot: string, err: string, sec: number) =>
@@ -845,7 +857,7 @@ export function setupMsg(lang: Lang) {
         taskDone:
           "\u2705 Task executed (Claude used tools but produced no text response)",
         approvalPrompt: (tools: string, min: number) =>
-          `\ud83d\udd12 Requires tool permissions:\n${tools}\n\nWill retry after approval\n\u23f0 ${min} min to respond\n\ud83d\udca1 Switch to allowAll or auto in menu \u2192 Config \u2192 permissionMode to skip approval`,
+          `\ud83d\udd12 Requires tool permissions:\n${tools}\n\nWill retry after approval\n\u23f0 Expires after ${min} min of inaction\n\ud83d\udca1 Switch to allowAll or auto in menu \u2192 Config \u2192 permissionMode to skip approval`,
         sessionTimedOut: (min: number) =>
           `\u23f0 Task timed out (${min} min limit)\n\ud83d\udca1 Adjust in menu \u2192 Config \u2192 sessionTimeout`,
         circuitOpen: (bot: string, err: string, sec: number) =>

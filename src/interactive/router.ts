@@ -156,7 +156,8 @@ async function handleMenuCallback(
                 const last = j.lastRun ? j.lastRun.split("T")[0] : "never";
                 return `${status} [${j.id}] @${j.botUsername} ${j.schedule}\n   ${j.prompt.slice(0, 60)}\n   ${m.last}: ${last}`;
               })
-              .join("\n\n");
+              .join("\n\n") +
+            `\n\n${SEPARATOR}\n${m.cronGuide(masterName)}`;
       await edit(api, chatId, messageId, text, {
         reply_markup: { inline_keyboard: menuButton(lang) },
       }).catch(() => {});
@@ -167,11 +168,26 @@ async function handleMenuCallback(
       await showLanguageSelector(api, chatId, lang, messageId);
       return true;
 
-    case "help":
+    case "help": {
+      const c = common(lang);
       await edit(api, chatId, messageId, m.helpText, {
-        reply_markup: { inline_keyboard: menuButton(lang) },
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: m.btnBots, data: "m:bots" },
+              { text: m.btnConfig, data: "m:config" },
+              { text: m.btnCron, data: "m:cron" },
+            ],
+            [
+              { text: m.btnUsers, data: "m:users" },
+              { text: m.btnStatus, data: "m:status" },
+            ],
+            [{ text: `\u25c0\ufe0f ${c.menu}`, data: "m:menu" }],
+          ],
+        },
       }).catch(() => {});
       return true;
+    }
 
     case "restart": {
       const { spawn } = await import("child_process");
