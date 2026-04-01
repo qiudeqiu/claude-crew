@@ -69,17 +69,35 @@ export function handleMasterCommand(
       : null;
   if (cronAddMatch) {
     const { botUser, schedule, prompt } = cronAddMatch;
+
+    // Resolve: accept both Telegram username and project name
+    const pool = loadPool();
+    let resolvedUsername = botUser!;
+    const directMatch = pool.bots.find(
+      (b) => b.username?.toLowerCase() === botUser!.toLowerCase(),
+    );
+    if (!directMatch) {
+      const byProject = pool.bots.find(
+        (b) => b.assignedProject?.toLowerCase() === botUser!.toLowerCase(),
+      );
+      if (byProject?.username) {
+        resolvedUsername = byProject.username;
+      } else {
+        return `\u26a0\ufe0f Bot not found: @${botUser}\nUse the Telegram username or project name.`;
+      }
+    }
+
     const jobs = loadCron();
     const id = `job-${Date.now().toString(36)}`;
     jobs.push({
       id,
-      botUsername: botUser!,
+      botUsername: resolvedUsername,
       schedule: schedule!,
       prompt: prompt!,
       enabled: true,
     });
     saveCron(jobs);
-    return `\u2705 Scheduled task created\n  ID: ${id}\n  Bot: @${botUser}\n  Schedule: ${schedule}\n  Task: ${prompt}`;
+    return `\u2705 Scheduled task created\n  ID: ${id}\n  Bot: @${resolvedUsername}\n  Schedule: ${schedule}\n  Task: ${prompt}`;
   }
 
   const cronDelMatch = stripped.match(/^cron\s+del\s+(\S+)$/i);

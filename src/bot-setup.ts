@@ -485,6 +485,9 @@ export function setupBot(managed: ManagedBot): void {
       return;
     }
 
+    // Strip only THIS bot's @mention, preserve others (e.g. @bot in cron commands)
+    const selfMentionRe = new RegExp(`@${botName}\\b`, "gi");
+
     // Master bot: interactive conversations + commands
     if (config.role === "master") {
       const userId = String(ctx.from.id);
@@ -509,14 +512,13 @@ export function setupBot(managed: ManagedBot): void {
         managed,
         chatId,
         userId,
-        text.replace(/@[\w-]+/g, "").trim(),
+        text.replace(selfMentionRe, "").trim(),
       );
       if (interactiveHandled) return;
 
       // Interactive commands (button-driven)
-      // Strip @mentions and /command prefix
       const stripped = text
-        .replace(/@[\w-]+/g, "")
+        .replace(selfMentionRe, "")
         .trim()
         .replace(/^\//, "");
       if (/^(help|menu|start)$/i.test(stripped)) {
@@ -560,7 +562,7 @@ export function setupBot(managed: ManagedBot): void {
 
     // Project bot: intercept master-only commands
     if (config.role !== "master") {
-      const stripped = text.replace(/@[\w-]+/g, "").trim();
+      const stripped = text.replace(selfMentionRe, "").trim();
       if (
         /^cron\s/i.test(stripped) ||
         /^(help|setup|bots|config|users|restart)$/i.test(stripped) ||
@@ -577,10 +579,7 @@ export function setupBot(managed: ManagedBot): void {
 
     // Project bot slash commands (/new, /compact, /model, /effort, /cost, /memory, /status)
     {
-      const cmdText = text
-        .replace(/@[\w-]+/g, "")
-        .trim()
-        .replace(/^\//, "");
+      const cmdText = text.replace(selfMentionRe, "").trim().replace(/^\//, "");
       const handled = await handleBotSlashCommand(managed, chatId, cmdText);
       if (handled) return;
     }
