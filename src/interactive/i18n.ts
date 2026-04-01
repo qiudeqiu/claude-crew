@@ -114,7 +114,9 @@ export function menuMsg(lang: Lang) {
         cronGuide: (master: string) =>
           "语法:\n" +
           `  @${master} cron add @项目bot HH:MM 任务描述\n` +
-          `  @${master} cron add @项目bot */N 任务描述\n\n` +
+          "    \u2514 每天定时执行\n" +
+          `  @${master} cron add @项目bot */N 任务描述\n` +
+          "    \u2514 每 N 分钟执行一次\n\n" +
           "管理:\n" +
           `  @${master} cron list \u2014 查看任务\n` +
           `  @${master} cron del <id> \u2014 删除任务`,
@@ -182,7 +184,9 @@ export function menuMsg(lang: Lang) {
         cronGuide: (master: string) =>
           "Syntax:\n" +
           `  @${master} cron add @bot HH:MM task\n` +
-          `  @${master} cron add @bot */N task\n\n` +
+          "    \u2514 Run daily at HH:MM\n" +
+          `  @${master} cron add @bot */N task\n` +
+          "    \u2514 Run every N minutes\n\n" +
           "Manage:\n" +
           `  @${master} cron list \u2014 View tasks\n` +
           `  @${master} cron del <id> \u2014 Delete task`,
