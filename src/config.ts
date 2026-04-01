@@ -315,6 +315,7 @@ export function migrateConfig(): string[] {
     memoryIntervalMinutes: 120,
     whisperLanguage: "",
     language: "en",
+    sessionMode: "continue",
   };
 
   for (const [key, defaultVal] of Object.entries(sharedDefaults)) {
