@@ -125,6 +125,7 @@ export function loadPool(): BotPool {
       dashboardIntervalMinutes: raw.dashboardIntervalMinutes,
       language: raw.language,
       model: raw.model,
+      sessionMode: raw.sessionMode,
     };
   }
 
@@ -160,6 +161,7 @@ export function savePool(pool: BotPool): void {
     dashboardIntervalMinutes: pool.dashboardIntervalMinutes,
     language: pool.language,
     model: pool.model,
+    sessionMode: pool.sessionMode,
   };
 
   writeFileSync(POOL_FILE, JSON.stringify(updated, null, 2) + "\n", {
@@ -279,6 +281,10 @@ export function getMasterName(pool?: BotPool): string {
   return p.bots.find((b) => b.role === "master")?.username ?? "master";
 }
 
+export function getSessionMode(): "continue" | "fresh" {
+  return loadPool().sessionMode ?? "continue";
+}
+
 export function createProjectBot(
   token: string,
   username: string,
@@ -347,6 +353,7 @@ export function migrateConfig(): string[] {
     sessionTimeoutMinutes: DEFAULT_SESSION_TIMEOUT_MIN,
     dashboardIntervalMinutes: DEFAULT_DASHBOARD_INTERVAL_MIN,
     language: "en",
+    sessionMode: "continue",
   };
 
   for (const [key, defaultVal] of Object.entries(sharedDefaults)) {
