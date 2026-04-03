@@ -31,6 +31,8 @@ export type BotPool = {
   sharedGroupId?: string;
   /** Owner (original admin) ID — immutable after setup. */
   owner?: string;
+  /** Owner display name (e.g. "Qiu (@Larson3939)"). */
+  ownerName?: string;
   /** Secondary admins with per-feature permissions. */
   admins?: AdminConfig[];
   accessLevel?: "readWrite" | "readOnly";
@@ -51,6 +53,7 @@ export type BotPool = {
 export type PlatformSection = {
   /** Owner (original admin) — cannot be removed. */
   owner?: string;
+  ownerName?: string;
   /** Secondary admins with granular permissions. */
   admins?: AdminConfig[];
   approvers?: string[];

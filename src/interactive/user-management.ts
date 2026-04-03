@@ -63,11 +63,16 @@ export async function showUserManagement(
   const api = managed.platform;
   const pool = loadPool();
   const owner = pool.owner ?? "";
+  const ownerDisplay = pool.ownerName || owner;
   const admins = pool.admins ?? [];
   const projectBots = pool.bots.filter((b) => b.role !== "master");
   const callerIsOwner = userId ? isOwner(userId) : false;
 
-  const lines = [m.title, `${SEPARATOR}\n`, `\ud83d\udc51 Owner: ${owner}`];
+  const lines = [
+    m.title,
+    `${SEPARATOR}\n`,
+    `\ud83d\udc51 Owner: ${ownerDisplay}`,
+  ];
 
   if (admins.length > 0) {
     lines.push("", m.adminsTitle);

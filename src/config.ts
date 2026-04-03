@@ -112,6 +112,7 @@ export function loadPool(): BotPool {
       platform,
       bots: section.bots ?? [],
       owner: section.owner,
+      ownerName: section.ownerName,
       admins: section.admins,
       sharedGroupId: section.sharedGroupId,
       approvers: section.approvers,
@@ -147,6 +148,7 @@ export function savePool(pool: BotPool): void {
     activePlatform: platform,
     [platform]: {
       owner: pool.owner,
+      ownerName: pool.ownerName,
       admins: pool.admins,
       approvers: pool.approvers,
       sharedGroupId: pool.sharedGroupId,

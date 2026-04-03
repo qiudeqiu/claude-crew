@@ -144,6 +144,8 @@ if results:
     name = user.get('first_name', '')
     last = user.get('last_name', '')
     if last: name += ' ' + last
+    uname = user.get('username', '')
+    if uname: name += ' (@' + uname + ')'
     print(name)
 " 2>/dev/null)
       break
@@ -233,12 +235,13 @@ fi
 # 5. Write bot-pool.json
 # ═══════════════════════════════════
 if [ ! -f "$INSTALL_DIR/bot-pool.json" ]; then
-  POOL="$INSTALL_DIR/bot-pool.json" OID="$OWNER_ID" TK="$MASTER_TOKEN" UN="$MASTER_USERNAME" PF="$PLATFORM" python3 -c "
+  POOL="$INSTALL_DIR/bot-pool.json" OID="$OWNER_ID" ON="$OWNER_NAME" TK="$MASTER_TOKEN" UN="$MASTER_USERNAME" PF="$PLATFORM" python3 -c "
 import json, os, stat
 pool = {
   'activePlatform': os.environ['PF'],
   os.environ['PF']: {
     'owner': os.environ['OID'],
+    'ownerName': os.environ.get('ON', ''),
     'admins': [],
     'sharedGroupId': '',
     'bots': [{'token': os.environ['TK'], 'username': os.environ['UN'], 'role': 'master'}]

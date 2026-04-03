@@ -2,8 +2,10 @@ import type { ManagedBot } from "./types.js";
 import {
   canUseBot,
   isAdmin,
+  isOwner,
   hasPermission,
   loadPool,
+  savePool,
   getMasterName,
   WRITE_TOOLS,
   MAX_QUEUE_SIZE,
@@ -387,6 +389,20 @@ export function setupBot(managed: ManagedBot): void {
     // Strip only THIS bot's @mention, preserve others (e.g. @bot in cron commands)
     const selfMentionRe = new RegExp(`@${botName}\\b`, "gi");
     const userId = String(ctx.from.id);
+
+    // Auto-fill ownerName if missing (for users who set up before this feature)
+    if (config.role === "master" && isOwner(userId)) {
+      const pool = loadPool();
+      if (!pool.ownerName && ctx.from.first_name) {
+        const name = ctx.from.last_name
+          ? `${ctx.from.first_name} ${ctx.from.last_name}`
+          : ctx.from.first_name;
+        const display = ctx.from.username
+          ? `${name} (@${ctx.from.username})`
+          : name;
+        savePool({ ...pool, ownerName: display });
+      }
+    }
 
     // Master bot: interactive conversations + commands
     if (config.role === "master") {
