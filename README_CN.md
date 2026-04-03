@@ -111,12 +111,6 @@
 
 ## 🎯 三种使用模式
 
-### 分享你的 Agent
-
-用 Claude Code 构建了自定义 Agent（CLAUDE.md + 记忆 + 指令）？创建一个 project bot，配置访问权限，团队成员直接在 Telegram 里使用 —— 他们无需任何安装。
-
-![Share Agent](docs/scene-share.png)
-
 ### 1:N 集中模式
 
 把所有 bot 拉进一个群，@mention 切换项目 —— 不用来回跳转。
@@ -128,6 +122,12 @@
 2–10 人共用一个群，per-bot 权限控制谁能操作什么项目 —— 协作不冲突。
 
 ![Team Mode](docs/scene-team.png)
+
+### 分享你的 Agent
+
+用 Claude Code 构建了自定义 Agent（CLAUDE.md + 记忆 + 指令）？创建一个 project bot，配置访问权限，团队成员直接在 Telegram 里使用 —— 他们无需任何安装。
+
+![Share Agent](docs/scene-share.png)
 
 ## 🤖 主控机器人 — 你的控制中心
 
@@ -491,30 +491,34 @@ daemon.sh no-autostart   # 禁用开机自启
 
 #### 全局配置
 
+所有选项均可通过 `@master config` 按钮菜单或直接编辑 `bot-pool.json` 配置。
+
 | 字段 | 默认值 | 说明 |
 |------|--------|------|
-| `accessLevel` | `"readWrite"` | 全局默认。`"readWrite"` = 读写。`"readOnly"` = 仅读取搜索，禁止写入 |
-| `permissionMode` | `"approve"` | 全局默认（仅 readWrite 时生效）。`"approve"` = 按钮确认。`"auto"` = 后台安全分类器。`"allowAll"` = 预授权所有工具 |
-| `language` | `"en"` | 菜单语言。`"en"` 或 `"zh"`。可通过菜单按钮切换。 |
-
-| `masterExecute` | `false` | 允许 master bot 执行非命令任务 |
-| `maxConcurrent` | `3` | 最大并发 Claude 调用数。实际上限取决于你的订阅套餐或 API 额度。 |
-| `rateLimitSeconds` | `5` | 同一 bot 调用间隔（秒） |
-| `sessionTimeoutMinutes` | `10` | 单次调用超时（分钟） |
-| `dashboardIntervalMinutes` | `30` | 看板刷新间隔（分钟） |
-
-| `model` | （默认） | Claude 模型：`"sonnet"`（均衡）、`"opus"`（最强）、`"haiku"`（最快最便宜） |
-| `sessionMode` | `"continue"` | `"continue"` — 接续上次对话。`"fresh"` — 每次独立上下文（单次成本更低） |
+| `accessLevel` | `"readWrite"` | `"readWrite"` = 读写。`"readOnly"` = 仅读取搜索，禁止写入。 |
+| `permissionMode` | `"approve"` | 写操作授权方式。`"approve"` = 按钮确认。`"auto"` = Claude 安全分类器。`"allowAll"` = 预授权所有工具。 |
+| `language` | `"en"` | 菜单和消息语言。`"en"` 或 `"zh"`。可通过菜单按钮切换。 |
+| `model` | （Claude 默认） | 全局 Claude 模型。`"sonnet"`（均衡）、`"opus"`（最强）、`"haiku"`（最快最便宜）。 |
+| `sessionMode` | `"continue"` | `"continue"` = 接续上次对话。`"fresh"` = 每次独立上下文（单次成本更低）。 |
+| `maxConcurrent` | `3` | 所有 bot 的最大并发 Claude 调用数。 |
+| `rateLimitSeconds` | `5` | 同一 bot 两次调用最小间隔（秒），防止刷屏。 |
+| `sessionTimeoutMinutes` | `10` | 单次 Claude 调用最大时长（分钟），超时自动终止。 |
+| `dashboardIntervalMinutes` | `30` | 置顶看板自动刷新间隔（分钟），修改需重启。 |
+| `masterExecute` | `false` | 允许 master bot 也执行 Claude 任务（不仅限管理命令）。 |
 
 #### 单 Bot 配置
 
+每个 project bot 可覆盖全局设置。通过 `@master bots` → 选择 bot → 编辑。
+
 | 字段 | 默认值 | 说明 |
 |------|--------|------|
-| `accessLevel` | （继承全局） | 覆盖该 bot 的访问级别。`"readOnly"` 为仅查看 |
-| `permissionMode` | （继承全局） | 覆盖该 bot 的权限模式（仅 `readWrite` 时生效） |
-| `allowedUsers` | `[]` | 可使用该 bot 的成员 ID 列表。管理员始终有权限 |
-| `model` | （继承全局） | 覆盖该 bot 的模型。可按项目复杂度选择不同模型 |
-| `approvers` | `[]` | 必须全部同意才能执行写操作的审批人 ID 列表。空 = 任意管理员 |
+| `assignedProject` | — | 项目显示名称（如 `"my-api"`、`"frontend"`）。 |
+| `assignedPath` | — | 项目目录在磁盘上的绝对路径。 |
+| `accessLevel` | （继承全局） | 覆盖访问级别。`"readOnly"` 为仅查看。 |
+| `permissionMode` | （继承全局） | 覆盖该 bot 的权限模式。 |
+| `model` | （继承全局） | 覆盖模型。可按项目复杂度选择不同模型。 |
+| `allowedUsers` | `[]` | 可使用该 bot 的用户 ID 列表。Owner 和管理员始终有权限。 |
+| `approvers` | `[]` | 必须全部同意才能执行写操作的审批人。空 = 任意管理员可审批。 |
 
 #### 访问控制
 

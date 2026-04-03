@@ -111,12 +111,6 @@ Use `/new` to reset when context gets stale, `/compact` to compress without losi
 
 ## 🎯 Three Ways to Use
 
-### Share Your Agent
-
-Built a Claude Code agent with custom instructions, CLAUDE.md, and memory? Create a project bot, configure access permissions, and let your team use it directly from Telegram — no setup on their side.
-
-![Share Agent](docs/scene-share.png)
-
 ### 1:N Hub Mode
 
 Pull all bots into one group. @mention to switch between projects — no context switching.
@@ -128,6 +122,12 @@ Pull all bots into one group. @mention to switch between projects — no context
 2–10 people in a shared group. Per-bot permissions keep everyone in their lane.
 
 ![Team Mode](docs/scene-team.png)
+
+### Share Your Agent
+
+Built a Claude Code agent with custom instructions, CLAUDE.md, and memory? Create a project bot, configure access permissions, and let your team use it directly from Telegram — no setup on their side.
+
+![Share Agent](docs/scene-share.png)
 
 ## 🤖 Master Bot — Your Control Center
 
@@ -483,30 +483,34 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 
 #### Global Settings
 
+All configurable via `@master config` button menu or directly in `bot-pool.json`.
+
 | Field | Default | Description |
 |-------|---------|-------------|
-| `accessLevel` | `"readWrite"` | Global default. `"readWrite"` = full access. `"readOnly"` = read/search only, no writes. |
-| `permissionMode` | `"approve"` | Global default (only when readWrite). `"approve"` = button confirmation. `"auto"` = background safety classifier. `"allowAll"` = pre-authorize all tools. |
-| `language` | `"en"` | Menu language. `"en"` or `"zh"`. Switchable via menu button. |
-
-| `masterExecute` | `false` | Allow master bot to run Claude tasks (not just admin commands). |
-| `maxConcurrent` | `3` | Maximum parallel Claude invocations across all bots. Actual limit depends on your subscription or API quota. |
-| `rateLimitSeconds` | `5` | Minimum gap between invocations for the same bot. |
-| `sessionTimeoutMinutes` | `10` | Claude invocation timeout. |
-| `dashboardIntervalMinutes` | `30` | Dashboard auto-refresh interval. |
-
-| `model` | (default) | Claude model: `"sonnet"` (balanced), `"opus"` (strongest), `"haiku"` (fastest/cheapest). |
-| `sessionMode` | `"continue"` | `"continue"` — resume last conversation. `"fresh"` — clean context each time (lower cost per task). |
+| `accessLevel` | `"readWrite"` | `"readWrite"` = full access. `"readOnly"` = read/search only, no writes. |
+| `permissionMode` | `"approve"` | How writes are authorized. `"approve"` = button confirmation. `"auto"` = Claude's safety classifier. `"allowAll"` = pre-authorize all tools. |
+| `language` | `"en"` | Menu and message language. `"en"` or `"zh"`. Switchable via menu button. |
+| `model` | (Claude default) | Claude model for all bots. `"sonnet"` (balanced), `"opus"` (strongest), `"haiku"` (fastest/cheapest). |
+| `sessionMode` | `"continue"` | `"continue"` = resume last conversation. `"fresh"` = clean context each time (lower cost per task). |
+| `maxConcurrent` | `3` | Maximum parallel Claude invocations across all bots. |
+| `rateLimitSeconds` | `5` | Minimum gap between invocations for the same bot. Prevents flooding. |
+| `sessionTimeoutMinutes` | `10` | Maximum duration per Claude invocation. Auto-killed if exceeded. |
+| `dashboardIntervalMinutes` | `30` | Dashboard auto-refresh interval (requires restart to change). |
+| `masterExecute` | `false` | Allow master bot to also run Claude tasks (not just admin commands). |
 
 #### Per-Bot Settings
 
+Each project bot can override global settings. Configurable via `@master bots` → select bot → edit.
+
 | Field | Default | Description |
 |-------|---------|-------------|
-| `accessLevel` | (inherit global) | Override access level for this bot. `"readOnly"` for view-only access. |
-| `permissionMode` | (inherit global) | Override permission mode for this bot (only when `readWrite`). |
-| `allowedUsers` | `[]` | Member user IDs who can use this bot. Admins always have access. |
-| `model` | (inherit global) | Override model for this bot. Use a different model per project complexity. |
-| `approvers` | `[]` | User IDs who must ALL approve writes for this bot. Empty = any single admin. |
+| `assignedProject` | — | Display name for the project (e.g. `"my-api"`, `"frontend"`). |
+| `assignedPath` | — | Absolute path to the project directory on disk. |
+| `accessLevel` | (inherit global) | Override access level. `"readOnly"` for view-only access. |
+| `permissionMode` | (inherit global) | Override permission mode for this bot. |
+| `model` | (inherit global) | Override model. Use different models per project complexity. |
+| `allowedUsers` | `[]` | User IDs who can use this bot. Owner and admins always have access. |
+| `approvers` | `[]` | User IDs who must ALL approve writes. Empty = any single admin can approve. |
 
 #### Access Control
 
