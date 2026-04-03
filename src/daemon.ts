@@ -389,6 +389,7 @@ async function main(): Promise<void> {
             userId,
             event.data,
             event.messageId,
+            event.id,
           );
           if (handled) return;
         }

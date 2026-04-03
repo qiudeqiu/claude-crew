@@ -1,5 +1,6 @@
 import type { ConversationState, ConversationStep } from "../types.js";
 import { CONVERSATION_TTL_MS } from "../config.js";
+import { menuOwners } from "../state.js";
 
 const conversations = new Map<string, ConversationState>();
 
@@ -45,5 +46,12 @@ export function cleanupExpired(): void {
   const now = Date.now();
   for (const [k, v] of conversations) {
     if (v.expiresAt < now) conversations.delete(k);
+  }
+  // Cap menuOwners to prevent unbounded growth (keep newest 100)
+  if (menuOwners.size > 100) {
+    const keys = [...menuOwners.keys()];
+    for (let i = 0; i < keys.length - 100; i++) {
+      menuOwners.delete(keys[i]);
+    }
   }
 }

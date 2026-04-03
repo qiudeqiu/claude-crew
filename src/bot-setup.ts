@@ -140,6 +140,7 @@ export function setupBot(managed: ManagedBot): void {
         userId,
         data,
         messageId,
+        cbId,
       );
       if (handled) {
         await platform.answerCallback(cbId).catch(() => {});

@@ -9,6 +9,7 @@ import {
   getMasterName,
 } from "../config.js";
 import { getConversation, clearConversation } from "./state.js";
+import { menuOwners } from "../state.js";
 import { handleOnboardCallback, handleOnboardText } from "./onboarding.js";
 import { handleBotCallback, handleBotText } from "./bot-management.js";
 import { handleConfigCallback, handleConfigText } from "./config-editor.js";
@@ -72,11 +73,30 @@ export async function routeCallback(
   userId: string,
   data: string,
   messageId: number | string,
+  cbId?: string,
 ): Promise<boolean> {
   if (!isAdmin(userId)) return false;
 
   const isInteractive = INTERACTIVE_PREFIXES.some((p) => data.startsWith(p));
   if (!isInteractive) return false;
+
+  // Menu ownership: prevent other users from clicking someone else's menu
+  const msgKey = String(messageId);
+  const owner = menuOwners.get(msgKey);
+  if (owner && owner !== userId) {
+    if (cbId) {
+      const lang = getLang();
+      const hint =
+        lang === "zh"
+          ? "请发送 menu 打开自己的菜单"
+          : "Send 'menu' to open your own";
+      await managed.platform.answerCallback(cbId, hint).catch(() => {});
+    }
+    return true;
+  }
+  if (!owner) {
+    menuOwners.set(msgKey, userId);
+  }
 
   if (data.startsWith("o:")) {
     return await handleOnboardCallback(

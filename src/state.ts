@@ -21,6 +21,9 @@ export const sessionStats: SessionStats = {
   tokensByModel: {},
 };
 
+/** Menu message ownership: messageId → userId. Prevents other users from clicking someone else's menu. */
+export const menuOwners = new Map<string, string>();
+
 export const pendingApprovals = new Map<
   string,
   {
