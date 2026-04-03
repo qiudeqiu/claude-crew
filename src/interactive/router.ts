@@ -248,21 +248,40 @@ async function handleMenuCallback(
     }
 
     case "restart": {
-      const { spawn } = await import("child_process");
-      const { join } = await import("path");
-      const { STATE_DIR } = await import("../config.js");
-      await edit(api, chatId, messageId, m.restarting).catch(() => {});
-      setTimeout(() => {
-        spawn(join(STATE_DIR, "daemon.sh"), ["restart"], {
-          detached: true,
-          stdio: "ignore",
-        }).unref();
-      }, 1500);
+      const confirmText =
+        lang === "zh"
+          ? "\u26a0\ufe0f 确认重启？\n\n所有进行中的任务将被中断。\n重启后首个 menu 菜单权限属于 Owner。"
+          : "\u26a0\ufe0f Confirm restart?\n\nAll in-progress tasks will be interrupted.\nThe first menu after restart will belong to the Owner.";
+      await edit(api, chatId, messageId, confirmText, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: `\u2705 ${c.confirm}`, data: "m:restart:yes" },
+              { text: `\u274c ${c.cancel}`, data: "m:menu" },
+            ],
+          ],
+        },
+      }).catch(() => {});
       return true;
     }
 
     default:
       break;
+  }
+
+  // Restart confirmed
+  if (action === "restart:yes") {
+    const { spawn } = await import("child_process");
+    const { join } = await import("path");
+    const { STATE_DIR } = await import("../config.js");
+    await edit(api, chatId, messageId, m.restarting).catch(() => {});
+    setTimeout(() => {
+      spawn(join(STATE_DIR, "daemon.sh"), ["restart"], {
+        detached: true,
+        stdio: "ignore",
+      }).unref();
+    }, 1500);
+    return true;
   }
 
   // Cron delete: m:cdel:JOB_ID
