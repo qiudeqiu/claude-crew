@@ -21,6 +21,7 @@ export type AdminPermission = "bots" | "config" | "users" | "restart" | "cron";
 /** Secondary admin with granular menu permissions. */
 export type AdminConfig = {
   id: string;
+  name?: string;
   permissions: AdminPermission[];
 };
 

@@ -77,13 +77,14 @@ export async function showUserManagement(
   if (admins.length > 0) {
     lines.push("", m.adminsTitle);
     for (const a of admins) {
+      const display = a.name || a.id;
       const perms =
         a.permissions.length > 0
           ? a.permissions.map((p) => PERM_LABELS[lang]?.[p] ?? p).join(", ")
           : lang === "zh"
             ? "无权限"
             : "no permissions";
-      lines.push(`  \u2022 ${a.id}  [${perms}]`);
+      lines.push(`  \u2022 ${display}  [${perms}]`);
     }
   }
 
@@ -104,12 +105,11 @@ export async function showUserManagement(
     buttons.push([{ text: m.addAdmin, data: "u:aa" }]);
   }
 
-  // Admin management buttons (owner only)
+  // Admin buttons — click to enter detail page (permissions + delete)
   if (callerIsOwner && admins.length > 0) {
     for (const a of admins) {
       buttons.push([
-        { text: `\u2699\ufe0f ${a.id}`, data: `u:ep:${a.id}` },
-        { text: `\u274c ${a.id}`, data: `u:ra:${a.id}` },
+        { text: `\u2699\ufe0f ${a.name || a.id}`, data: `u:ep:${a.id}` },
       ]);
     }
   }
@@ -197,9 +197,10 @@ async function showPermissionEditor(
   const admin = (pool.admins ?? []).find((a) => a.id === adminId);
   if (!admin) return;
 
+  const display = admin.name || adminId;
   const labels = PERM_LABELS[lang] ?? PERM_LABELS.en;
   const lines = [
-    m.editPermsTitle?.(adminId) ?? `\u2699\ufe0f ${adminId}`,
+    m.editPermsTitle?.(display) ?? `\u2699\ufe0f ${display}`,
     `${SEPARATOR}\n`,
   ];
 
@@ -216,6 +217,12 @@ async function showPermissionEditor(
     ]);
   }
 
+  // Delete button at bottom of permission page
+  const removeLabel =
+    lang === "zh"
+      ? `\ud83d\uddd1 移除 ${display}`
+      : `\ud83d\uddd1 Remove ${display}`;
+  buttons.push([{ text: removeLabel, data: `u:ra:${adminId}` }]);
   buttons.push([{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]);
 
   await edit(api, chatId, messageId, lines.join("\n"), {

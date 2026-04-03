@@ -390,18 +390,32 @@ export function setupBot(managed: ManagedBot): void {
     const selfMentionRe = new RegExp(`@${botName}\\b`, "gi");
     const userId = String(ctx.from.id);
 
-    // Auto-fill ownerName if missing (for users who set up before this feature)
-    if (config.role === "master" && isOwner(userId)) {
+    // Auto-fill display names for owner/admins if missing
+    if (config.role === "master" && isAdmin(userId) && ctx.from.first_name) {
       const pool = loadPool();
-      if (!pool.ownerName && ctx.from.first_name) {
-        const name = ctx.from.last_name
-          ? `${ctx.from.first_name} ${ctx.from.last_name}`
-          : ctx.from.first_name;
-        const display = ctx.from.username
-          ? `${name} (@${ctx.from.username})`
-          : name;
-        savePool({ ...pool, ownerName: display });
+      const name = ctx.from.last_name
+        ? `${ctx.from.first_name} ${ctx.from.last_name}`
+        : ctx.from.first_name;
+      const display = ctx.from.username
+        ? `${name} (@${ctx.from.username})`
+        : name;
+      let updated = false;
+      let newPool = pool;
+      if (isOwner(userId) && !pool.ownerName) {
+        newPool = { ...newPool, ownerName: display };
+        updated = true;
       }
+      const admin = (pool.admins ?? []).find((a) => a.id === userId);
+      if (admin && !admin.name) {
+        newPool = {
+          ...newPool,
+          admins: (pool.admins ?? []).map((a) =>
+            a.id === userId ? { ...a, name: display } : a,
+          ),
+        };
+        updated = true;
+      }
+      if (updated) savePool(newPool);
     }
 
     // Master bot: interactive conversations + commands
