@@ -692,7 +692,7 @@ export function usersMsg(lang: Lang) {
         invalidId: "\u26a0\ufe0f 用户 ID 必须是数字（如 123456789）。\n请重试:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} 已是管理员。`,
         adminAdded: (id: string) =>
-          `\u2705 管理员已添加: ${id}\n\n默认拥有全部菜单权限，点击下方编辑。`,
+          `\u2705 管理员已添加: ${id}\n\n默认权限：用户管理、定时任务。点击下方编辑更多权限。`,
         userMgmt: "用户管理",
         alreadyUser: (id: string, u: string) =>
           `\u26a0\ufe0f ${id} 已有 @${u} 的权限。`,
@@ -727,7 +727,7 @@ export function usersMsg(lang: Lang) {
           "\u26a0\ufe0f User ID must be numeric (e.g. 123456789).\nTry again:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} is already an admin.`,
         adminAdded: (id: string) =>
-          `\u2705 Admin added: ${id}\n\nAll menu permissions granted by default. Tap below to edit.`,
+          `\u2705 Admin added: ${id}\n\nDefault permissions: Users, Cron. Tap below to grant more.`,
         userMgmt: "User management",
         alreadyUser: (id: string, u: string) =>
           `\u26a0\ufe0f ${id} already has access to @${u}.`,

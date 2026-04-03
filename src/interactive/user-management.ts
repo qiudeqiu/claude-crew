@@ -436,10 +436,9 @@ export async function handleUserText(
       return true;
     }
 
-    // Add with all permissions by default
     const newAdmin: AdminConfig = {
       id: input,
-      permissions: [...ALL_PERMS],
+      permissions: ["users", "cron"],
     };
     savePool({ ...pool, admins: [...admins, newAdmin] });
     log(`USERS: added admin ${input} by ${userId}`);
