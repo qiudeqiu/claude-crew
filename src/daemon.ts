@@ -550,15 +550,25 @@ async function main(): Promise<void> {
       }
     }
 
-    // Send startup message (no menu — menu should be user-initiated to have correct ownership)
+    // Send startup message + menu (bound to owner)
     try {
       const { getLang, menuMsg } = await import("./interactive/i18n.js");
+      const { showMainMenu } = await import("./interactive/index.js");
+      const { getOwner } = await import("./config.js");
       const lang = getLang();
       const m = menuMsg(lang);
+      const ownerId = getOwner();
       await daemon.masterBot!.platform.sendMessage(
         pool.sharedGroupId,
         m.started,
       );
+      await showMainMenu(
+        daemon.masterBot!,
+        pool.sharedGroupId,
+        undefined,
+        ownerId,
+      );
+      // Pre-bind the menu to owner (will be set on first click via routeCallback)
     } catch (e) {
       log(`WARN: startup notification failed: ${e}`);
     }

@@ -18,7 +18,7 @@ export async function sendOrEdit(
   text: string,
   messageId?: number | string,
   opts?: { reply_markup?: { inline_keyboard: Row[] } },
-): Promise<void> {
+): Promise<string | undefined> {
   const buttons = opts?.reply_markup?.inline_keyboard;
   if (messageId) {
     if (buttons) {
@@ -30,11 +30,16 @@ export async function sendOrEdit(
         .editMessage(chatId, String(messageId), text)
         .catch(() => {});
     }
+    return String(messageId);
   } else {
     if (buttons) {
-      await platform.sendButtons(chatId, text, buttons).catch(() => {});
+      const sent = await platform
+        .sendButtons(chatId, text, buttons)
+        .catch(() => null);
+      return sent?.id;
     } else {
-      await platform.sendMessage(chatId, text).catch(() => {});
+      const sent = await platform.sendMessage(chatId, text).catch(() => null);
+      return sent?.id;
     }
   }
 }

@@ -60,9 +60,13 @@ export async function showMainMenu(
     `${m.projects}\n${projects}\n\n` +
     m.textCmds(masterName);
 
-  await sendOrEdit(managed.platform, chatId, text, messageId, {
+  const sentId = await sendOrEdit(managed.platform, chatId, text, messageId, {
     reply_markup: { inline_keyboard: mainMenuKeyboard(lang, userId) },
   });
+  // Pre-bind ownership if userId is known
+  if (sentId && userId) {
+    menuOwners.set(sentId, userId);
+  }
 }
 
 // ── Callback router ──
