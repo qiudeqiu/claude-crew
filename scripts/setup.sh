@@ -61,15 +61,15 @@ echo ""
 echo "Choose your messaging platform:"
 echo ""
 echo "  [1] Telegram  — recommended"
-echo "  [2] Discord   — experimental (in testing)"
+echo "  [2] Discord   — coming soon"
 echo "  [3] Feishu    — coming soon"
 echo ""
 read -p "Platform (1/2/3): " PLATFORM_CHOICE
 
 case "$PLATFORM_CHOICE" in
   2)
-    PLATFORM="discord"
-    echo "⚠️  Discord support is experimental. Some features may not work as expected."
+    echo "❌ Discord support is coming soon."
+    exit 1
     ;;
   3)
     echo "❌ Feishu support is coming soon."
