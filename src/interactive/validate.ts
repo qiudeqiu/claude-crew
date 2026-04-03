@@ -154,7 +154,9 @@ export async function handleTokenValidation(
   }
 
   const suffix =
-    nextStep === "bot:awaitProject" ? common(getLang()).replyHint : "";
+    nextStep === "bot:awaitProject" || nextStep === "onboard:awaitProject"
+      ? common(getLang()).replyHint
+      : "";
   if (statusMsg) {
     await edit(
       api,

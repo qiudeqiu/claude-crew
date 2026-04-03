@@ -41,8 +41,6 @@ if echo "$CLAUDE_AUTH" | grep -qi "not logged in\|unauthenticated\|login require
 fi
 echo "✅ Claude Code CLI ready"
 
-command -v ffmpeg >/dev/null 2>&1 || echo "⚠️  ffmpeg not found — voice features need it (brew install ffmpeg)"
-command -v whisper >/dev/null 2>&1 || echo "⚠️  whisper not found — voice features need it (pipx install openai-whisper)"
 echo "✅ Dependencies OK"
 echo ""
 
@@ -119,11 +117,13 @@ setup_telegram() {
   curl -s "https://api.telegram.org/bot${MASTER_TOKEN}/getUpdates?offset=-1" > /dev/null 2>&1
   sleep 1
 
-  # Poll for new message (timeout 60s)
+  # Poll for new message (timeout 120s)
   OWNER_ID=""
   OWNER_NAME=""
-  for i in $(seq 1 30); do
-    UPDATES=$(curl -s "https://api.telegram.org/bot${MASTER_TOKEN}/getUpdates?timeout=2&allowed_updates=[\"message\"]")
+  ELAPSED=0
+  for i in $(seq 1 40); do
+    UPDATES=$(curl -s "https://api.telegram.org/bot${MASTER_TOKEN}/getUpdates?timeout=3")
+    ELAPSED=$((i * 3))
     OWNER_ID=$(echo "$UPDATES" | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
@@ -238,7 +238,8 @@ import json, os, stat
 pool = {
   'activePlatform': os.environ['PF'],
   os.environ['PF']: {
-    'admins': [os.environ['OID']],
+    'owner': os.environ['OID'],
+    'admins': [],
     'sharedGroupId': '',
     'bots': [{'token': os.environ['TK'], 'username': os.environ['UN'], 'role': 'master'}]
   },
@@ -249,8 +250,6 @@ pool = {
   'rateLimitSeconds': 5,
   'sessionTimeoutMinutes': 10,
   'dashboardIntervalMinutes': 30,
-  'memoryIntervalMinutes': 120,
-  'whisperLanguage': '',
   'language': 'en'
 }
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
@@ -265,10 +264,10 @@ pool = json.load(open(os.environ['POOL']))
 pf = os.environ['PF']
 pool['activePlatform'] = pf
 if pf not in pool:
-    pool[pf] = {'admins': [], 'bots': []}
+    pool[pf] = {'owner': '', 'admins': [], 'bots': []}
 section = pool[pf]
-if not section.get('admins'):
-    section['admins'] = [os.environ['OID']]
+if not section.get('owner'):
+    section['owner'] = os.environ['OID']
 tokens = [b['token'] for b in section.get('bots', [])]
 if os.environ['TK'] not in tokens:
     section['bots'].insert(0, {'token': os.environ['TK'], 'username': os.environ['UN'], 'role': 'master'})

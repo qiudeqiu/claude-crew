@@ -15,31 +15,42 @@ export type PoolBot = {
   approvers?: string[];
 };
 
+/** Menu permission that can be granted to secondary admins. */
+export type AdminPermission = "bots" | "config" | "users" | "restart" | "cron";
+
+/** Secondary admin with granular menu permissions. */
+export type AdminConfig = {
+  id: string;
+  permissions: AdminPermission[];
+};
+
 /** Flattened view of the active platform's config — what all consuming code sees. */
 export type BotPool = {
   platform?: "telegram" | "discord";
   bots: PoolBot[];
   sharedGroupId?: string;
-  admins?: string[];
+  /** Owner (original admin) ID — immutable after setup. */
+  owner?: string;
+  /** Secondary admins with per-feature permissions. */
+  admins?: AdminConfig[];
   accessLevel?: "readWrite" | "readOnly";
   permissionMode?: "allowAll" | "approve" | "auto";
-  memoryIntervalMinutes?: number;
   masterExecute?: boolean;
   maxConcurrent?: number;
   rateLimitSeconds?: number;
   sessionTimeoutMinutes?: number;
   dashboardIntervalMinutes?: number;
-  whisperLanguage?: string;
   language?: string;
   model?: string;
   approvers?: string[];
-  /** Session context mode: "continue" resumes last session, "fresh" starts clean each time. */
-  sessionMode?: "continue" | "fresh";
 };
 
 /** Platform-specific section in the on-disk config. */
 export type PlatformSection = {
-  admins?: string[];
+  /** Owner (original admin) — cannot be removed. */
+  owner?: string;
+  /** Secondary admins with granular permissions. */
+  admins?: AdminConfig[];
   approvers?: string[];
   sharedGroupId?: string;
   bots: PoolBot[];
@@ -53,16 +64,13 @@ export type RawBotPool = {
   // Shared settings (platform-agnostic)
   accessLevel?: "readWrite" | "readOnly";
   permissionMode?: "allowAll" | "approve" | "auto";
-  memoryIntervalMinutes?: number;
   masterExecute?: boolean;
   maxConcurrent?: number;
   rateLimitSeconds?: number;
   sessionTimeoutMinutes?: number;
   dashboardIntervalMinutes?: number;
-  whisperLanguage?: string;
   language?: string;
   model?: string;
-  sessionMode?: "continue" | "fresh";
 };
 
 export type ManagedBot = {
@@ -72,7 +80,6 @@ export type ManagedBot = {
   busy: boolean;
   lastInvoke: number;
   lastActivity: number;
-  lastMemorySave: number;
   contextUsed: number;
   contextWindow: number;
   lastModel: string;
@@ -83,8 +90,6 @@ export type ManagedBot = {
   effort?: string;
   /** Task queue for when bot is busy */
   queue: QueuedTask[];
-  /** Last context warning timestamp (prevent spamming) */
-  lastContextWarning?: number;
 };
 
 export type QueuedTask = {
@@ -140,7 +145,8 @@ export type ConversationStep =
   | "config:awaitValue"
   // User management
   | "user:awaitAdmin"
-  | "user:awaitUser";
+  | "user:awaitUser"
+  | "user:awaitAdminPerms";
 
 export type ConversationState = {
   step: ConversationStep;

@@ -12,6 +12,7 @@ import { validatePath } from "./validate.js";
 import {
   cancelButton,
   menuButton,
+  restartRow,
   sendOrEdit,
   SEPARATOR,
   send,
@@ -92,15 +93,6 @@ const GLOBAL_FIELDS: Record<string, FieldDef> = {
     restart: true,
     hintKey: "di",
   },
-  mi: {
-    key: "memoryIntervalMinutes",
-    descKey: "mi",
-    type: "number",
-    min: 0,
-    max: 1440,
-    hintKey: "mi",
-  },
-  wl: { key: "whisperLanguage", descKey: "wl", type: "string", hintKey: "wl" },
   md: {
     key: "model",
     descKey: "md",
@@ -160,8 +152,6 @@ function getFieldLabel(key: string): string {
     rateLimitSeconds: "rateLimitSeconds",
     sessionTimeoutMinutes: "sessionTimeout",
     dashboardIntervalMinutes: "dashboardInterval",
-    memoryIntervalMinutes: "memoryInterval",
-    whisperLanguage: "whisperLanguage",
     assignedProject: "project",
     assignedPath: "path",
     approvers: "approvers",
@@ -196,8 +186,6 @@ export async function showGlobalConfig(
     `\u23f1\ufe0f rateLimitSeconds: ${pool.rateLimitSeconds ?? 5}\n   ${fd.rl}\n\n` +
     `\u23f0 sessionTimeout: ${pool.sessionTimeoutMinutes ?? 10} min\n   ${fd.st}\n\n` +
     `\ud83d\udcca dashboardInterval: ${pool.dashboardIntervalMinutes ?? 30} min \u26a1\n   ${fd.di}\n\n` +
-    `\ud83e\udde0 memoryInterval: ${pool.memoryIntervalMinutes ?? 120} min\n   ${fd.mi}\n\n` +
-    `\ud83c\udfa4 whisperLanguage: ${pool.whisperLanguage || "(auto)"}\n   ${fd.wl}\n\n` +
     `\ud83e\udd16 model: ${pool.model || "(default)"}\n   ${fd.md}\n\n` +
     `\ud83d\udd10 approvers: ${pool.approvers?.length ? pool.approvers.join(", ") : "(any admin)"}\n   ${fd.ap_list}\n\n` +
     `\ud83d\udd04 sessionMode: ${pool.sessionMode ?? "continue"}\n   ${fd.sm}`;
@@ -215,11 +203,9 @@ export async function showGlobalConfig(
     ],
     [
       { text: "dashboardInterval \u26a1", data: "c:ge:di" },
-      { text: "memoryInterval", data: "c:ge:mi" },
-      { text: "whisperLanguage", data: "c:ge:wl" },
+      { text: "model", data: "c:ge:md" },
     ],
     [
-      { text: "model", data: "c:ge:md" },
       { text: "approvers", data: "c:ge:ap_list" },
       { text: "sessionMode", data: "c:ge:sm" },
     ],
@@ -461,7 +447,7 @@ async function showFieldEditor(
     api,
     chatId,
     messageId,
-    `${cm.editTitle(label)}\n${desc}\n\n${cm.current}: ${currentValue}${rangeHint}${tipHint}${restartNote}\n\n${cm.sendValue}`,
+    `${cm.editTitle(label)}\n${desc}\n\n${cm.current}: ${currentValue}${rangeHint}${tipHint}${restartNote}\n\n${cm.sendValue}${common(lang).replyHint}`,
     { reply_markup: { inline_keyboard: cancelButton(backData, lang) } },
   ).catch(() => {});
 
@@ -524,6 +510,10 @@ async function setGlobalValue(
   }
 
   const restartNote = field.restart ? `\n${cm.restartNeeded}` : "";
+  const backRow = [{ text: `\u25c0\ufe0f ${cm.backConfig}`, data: "c:g" }];
+  const buttons = field.restart
+    ? [...restartRow(lang), [backRow[0]]]
+    : [backRow];
 
   await edit(
     api,
@@ -531,11 +521,7 @@ async function setGlobalValue(
     messageId,
     `${cm.saved(label, value)}${impact}${restartNote}`,
     {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: `\u25c0\ufe0f ${cm.backConfig}`, data: "c:g" }],
-        ],
-      },
+      reply_markup: { inline_keyboard: buttons },
     },
   ).catch(() => {});
   return true;
@@ -663,17 +649,15 @@ export async function handleConfigText(
     clearConversation(userId, chatId);
 
     const restartNote = field.restart ? `\n${cm.restartNeeded}` : "";
+    const backBtn = {
+      text: `\u25c0\ufe0f ${common(lang).back}`,
+      data: backData,
+    };
+    const buttons = field.restart
+      ? [...restartRow(lang), [backBtn]]
+      : [[backBtn]];
     await send(api, chatId, `${cm.saved(label, String(num))}${restartNote}`, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: `\u25c0\ufe0f ${common(lang).back}`,
-              data: backData,
-            },
-          ],
-        ],
-      },
+      reply_markup: { inline_keyboard: buttons },
     }).catch(() => {});
     return true;
   }
@@ -683,24 +667,6 @@ export async function handleConfigText(
 
   if (field.key === "assignedPath" && value && !validatePath(value)) {
     await send(api, chatId, cm.invalidPath(value), cancelKb).catch(() => {});
-    return true;
-  }
-
-  // Validate whisperLanguage — only allow short alpha codes
-  if (
-    field.key === "whisperLanguage" &&
-    value &&
-    !/^[a-z]{2,10}$/i.test(value)
-  ) {
-    const lang = getLang();
-    await send(
-      api,
-      chatId,
-      lang === "zh"
-        ? '⚠️ 无效语言代码。请输入 2-10 位字母，如 "en"、"zh"、"ja"'
-        : '⚠️ Invalid language code. Enter 2-10 letters, e.g. "en", "zh", "ja"',
-      cancelKb,
-    ).catch(() => {});
     return true;
   }
 

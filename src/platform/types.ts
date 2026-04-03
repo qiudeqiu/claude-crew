@@ -14,8 +14,6 @@ export interface PlatformMessage {
   caption?: string;
   /** Platform-specific file reference for photo */
   photoFileId?: string;
-  /** Platform-specific file reference for voice */
-  voiceFileId?: string;
   /** The message this is replying to */
   replyTo?: PlatformMessage;
   /** Text entities (mentions, links, etc.) */

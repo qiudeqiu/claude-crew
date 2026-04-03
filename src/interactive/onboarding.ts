@@ -221,7 +221,10 @@ async function handleProjectInput(
   }
 
   setConversation(userId, chatId, "onboard:awaitPath", { project });
-  await send(api, chatId, m.askPath(project), cancelKb).catch(() => {});
+  const c = common(lang);
+  await send(api, chatId, m.askPath(project) + c.replyHint, cancelKb).catch(
+    () => {},
+  );
   return true;
 }
 

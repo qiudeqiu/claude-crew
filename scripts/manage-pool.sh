@@ -12,7 +12,7 @@ POOL_FILE="$HOME/.claude/channels/telegram/bot-pool.json"
 
 # Ensure pool file exists (new segmented format)
 if [ ! -f "$POOL_FILE" ]; then
-  echo '{"activePlatform":"telegram","telegram":{"admins":[],"bots":[]}}' > "$POOL_FILE"
+  echo '{"activePlatform":"telegram","telegram":{"owner":"","admins":[],"bots":[]}}' > "$POOL_FILE"
   chmod 600 "$POOL_FILE"
 fi
 
@@ -71,7 +71,7 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 sec = os.environ['SEC']
 if sec not in pool:
-    pool[sec] = {'admins': [], 'bots': []}
+    pool[sec] = {'owner': '', 'admins': [], 'bots': []}
 bot = {'token': os.environ['TK'], 'username': os.environ['UN'], 'role': os.environ['RL']}
 if os.environ['RL'] == 'project':
     bot['assignedProject'] = ''
@@ -180,7 +180,7 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 sec = os.environ['SEC']
 if sec not in pool:
-    pool[sec] = {'admins': [], 'bots': []}
+    pool[sec] = {'owner': '', 'admins': [], 'bots': []}
 pool[sec]['sharedGroupId'] = os.environ['GID']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 os.chmod(os.environ['POOL'], 0o600)
@@ -260,7 +260,7 @@ import json, os
 pool = json.load(open(os.environ['POOL']))
 sec = os.environ['SEC']
 if sec not in pool:
-    pool[sec] = {'admins': [], 'bots': []}
+    pool[sec] = {'owner': '', 'admins': [], 'bots': []}
 pool[sec]['sharedGroupId'] = os.environ['GID']
 json.dump(pool, open(os.environ['POOL'], 'w'), indent=2, ensure_ascii=False)
 os.chmod(os.environ['POOL'], 0o600)

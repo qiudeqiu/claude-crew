@@ -1,13 +1,6 @@
-import {
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-  existsSync,
-  unlinkSync,
-} from "fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
 import { execFileSync } from "child_process";
-import { INBOX_DIR, loadPool } from "./config.js";
 import { log } from "./logger.js";
 
 // ── Git helpers ──
@@ -100,67 +93,6 @@ export function splitMessage(text: string, limit = 4096): string[] {
     remaining = remaining.slice(cut).replace(/^\n+/, "");
   }
   return chunks;
-}
-
-// ── Download and transcribe voice ──
-export async function transcribeVoice(
-  downloadFile: (fileId: string) => Promise<string | undefined>,
-  fileId: string,
-): Promise<{ path: string; text: string } | undefined> {
-  try {
-    const oggPath = await downloadFile(fileId);
-    if (!oggPath) return undefined;
-
-    // Strip extension and force .wav — voice files may be .ogg, .oga, etc.
-    const basePath = oggPath.replace(/\.[^.]+$/, "");
-    const wavPath = `${basePath}.wav`;
-    try {
-      execFileSync(
-        "ffmpeg",
-        ["-y", "-i", oggPath, "-ar", "16000", "-ac", "1", wavPath],
-        { timeout: 15000, stdio: ["pipe", "pipe", "pipe"] },
-      );
-    } catch {
-      return { path: oggPath, text: "" };
-    }
-
-    try {
-      const pool = loadPool();
-      const whisperArgs = [
-        wavPath,
-        "--model",
-        "turbo",
-        "--output_format",
-        "txt",
-        "--output_dir",
-        INBOX_DIR,
-      ];
-      if (pool.whisperLanguage && /^[a-z]{2,10}$/i.test(pool.whisperLanguage)) {
-        whisperArgs.push("--language", pool.whisperLanguage);
-      }
-      execFileSync("whisper", whisperArgs, {
-        timeout: 60000,
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-      const txtPath = `${basePath}.txt`;
-      const text = existsSync(txtPath)
-        ? readFileSync(txtPath, "utf8").trim()
-        : "";
-      try {
-        unlinkSync(oggPath);
-        unlinkSync(wavPath);
-        unlinkSync(txtPath);
-      } catch {
-        // best-effort cleanup — ignore if files already deleted
-      }
-      return { path: wavPath, text };
-    } catch (err) {
-      log(`WHISPER_ERROR: ${err}`);
-      return { path: oggPath, text: "" };
-    }
-  } catch {
-    return undefined;
-  }
 }
 
 // ── Safe environment for Claude subprocesses ──

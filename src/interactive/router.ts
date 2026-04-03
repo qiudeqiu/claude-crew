@@ -1,6 +1,7 @@
 import type { ManagedBot } from "../types.js";
 import {
   isAdmin,
+  hasPermission,
   loadPool,
   loadCron,
   savePool,
@@ -33,6 +34,7 @@ export async function showMainMenu(
   managed: ManagedBot,
   chatId: string,
   messageId?: number | string,
+  userId?: string,
 ): Promise<void> {
   const lang = getLang();
   const m = menuMsg(lang);
@@ -57,7 +59,7 @@ export async function showMainMenu(
     m.textCmds(masterName);
 
   await sendOrEdit(managed.platform, chatId, text, messageId, {
-    reply_markup: { inline_keyboard: mainMenuKeyboard(lang) },
+    reply_markup: { inline_keyboard: mainMenuKeyboard(lang, userId) },
   });
 }
 
@@ -112,7 +114,7 @@ export async function routeCallback(
 async function handleMenuCallback(
   managed: ManagedBot,
   chatId: string,
-  _userId: string,
+  userId: string,
   data: string,
   messageId: number | string,
 ): Promise<boolean> {
@@ -120,10 +122,31 @@ async function handleMenuCallback(
   const action = data.slice(2);
   const lang = getLang();
   const m = menuMsg(lang);
+  const c = common(lang);
+
+  // Permission-gated menu sections
+  const permGate: Record<
+    string,
+    "bots" | "config" | "users" | "restart" | "cron"
+  > = {
+    bots: "bots",
+    config: "config",
+    users: "users",
+    restart: "restart",
+    cron: "cron",
+  };
+  const requiredPerm =
+    permGate[action] ?? (action.startsWith("cdel:") ? "cron" : undefined);
+  if (requiredPerm && !hasPermission(userId, requiredPerm)) {
+    await edit(api, chatId, messageId, c.noPermission ?? "\u26d4", {
+      reply_markup: { inline_keyboard: menuButton(lang) },
+    }).catch(() => {});
+    return true;
+  }
 
   switch (action) {
     case "menu":
-      await showMainMenu(managed, chatId, messageId);
+      await showMainMenu(managed, chatId, messageId, userId);
       return true;
 
     case "bots":
@@ -135,7 +158,7 @@ async function handleMenuCallback(
       return true;
 
     case "users":
-      await showUserManagement(managed, chatId, messageId);
+      await showUserManagement(managed, chatId, messageId, userId);
       return true;
 
     case "status":

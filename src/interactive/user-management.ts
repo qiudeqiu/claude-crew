@@ -1,7 +1,13 @@
 import type { Platform } from "../platform/types.js";
 import type { Button } from "../platform/types.js";
-import type { ManagedBot } from "../types.js";
-import { loadPool, savePool } from "../config.js";
+import type { ManagedBot, AdminConfig, AdminPermission } from "../types.js";
+import {
+  loadPool,
+  savePool,
+  isOwner,
+  getOwner,
+  hasPermission,
+} from "../config.js";
 import { log } from "../logger.js";
 import {
   getConversation,
@@ -19,27 +25,64 @@ import {
 } from "./keyboards.js";
 import { getLang, usersMsg, common } from "./i18n.js";
 
+const ALL_PERMS: AdminPermission[] = [
+  "bots",
+  "config",
+  "users",
+  "restart",
+  "cron",
+];
+
+const PERM_LABELS: Record<string, Record<AdminPermission, string>> = {
+  zh: {
+    bots: "机器人管理",
+    config: "配置编辑",
+    users: "用户管理",
+    restart: "重启",
+    cron: "定时任务",
+  },
+  en: {
+    bots: "Bot management",
+    config: "Config",
+    users: "User management",
+    restart: "Restart",
+    cron: "Cron",
+  },
+};
+
 // ── User management view ──
 
 export async function showUserManagement(
   managed: ManagedBot,
   chatId: string,
   messageId?: number | string,
+  userId?: string,
 ): Promise<void> {
   const lang = getLang();
   const m = usersMsg(lang);
   const api = managed.platform;
   const pool = loadPool();
+  const owner = pool.owner ?? "";
   const admins = pool.admins ?? [];
   const projectBots = pool.bots.filter((b) => b.role !== "master");
+  const callerIsOwner = userId ? isOwner(userId) : false;
 
-  const lines = [
-    m.title,
-    `${SEPARATOR}\n`,
-    m.adminsTitle,
-    ...admins.map((a) => `  \u2022 ${a}`),
-    "",
-  ];
+  const lines = [m.title, `${SEPARATOR}\n`, `\ud83d\udc51 Owner: ${owner}`];
+
+  if (admins.length > 0) {
+    lines.push("", m.adminsTitle);
+    for (const a of admins) {
+      const perms =
+        a.permissions.length > 0
+          ? a.permissions.map((p) => PERM_LABELS[lang]?.[p] ?? p).join(", ")
+          : lang === "zh"
+            ? "无权限"
+            : "no permissions";
+      lines.push(`  \u2022 ${a.id}  [${perms}]`);
+    }
+  }
+
+  lines.push("");
 
   if (projectBots.length > 0) {
     lines.push(m.perBotTitle);
@@ -49,26 +92,44 @@ export async function showUserManagement(
     }
   }
 
-  const buttons: Button[][] = [[{ text: m.addAdmin, data: "u:aa" }]];
+  const buttons: Button[][] = [];
 
-  if (admins.length > 0) {
-    buttons.push(
-      ...chunkRows(
-        admins.map((a) => ({
-          text: `\u274c ${a}`,
-          data: `u:ra:${a}`,
-        })),
-      ),
-    );
+  // Only owner can add admins
+  if (callerIsOwner) {
+    buttons.push([{ text: m.addAdmin, data: "u:aa" }]);
   }
 
-  for (const b of projectBots) {
-    if (b.username) {
+  // Admin management buttons (owner only)
+  if (callerIsOwner && admins.length > 0) {
+    for (const a of admins) {
       buttons.push([
-        { text: m.botUsers(b.username), data: `u:b:${b.username}` },
+        { text: `\u2699\ufe0f ${a.id}`, data: `u:ep:${a.id}` },
+        { text: `\u274c ${a.id}`, data: `u:ra:${a.id}` },
       ]);
     }
   }
+
+  // Non-owner admin: show "leave admin" button
+  if (userId && !isOwner(userId) && admins.some((a) => a.id === userId)) {
+    buttons.push([
+      { text: m.leaveAdmin ?? "\ud83d\udeaa", data: `u:ra:${userId}` },
+    ]);
+  }
+
+  // Per-bot user management (owner or admin with "users" permission)
+  const canManageUsers = userId
+    ? isOwner(userId) || hasPermission(userId, "users")
+    : true;
+  if (canManageUsers) {
+    for (const b of projectBots) {
+      if (b.username) {
+        buttons.push([
+          { text: m.botUsers(b.username), data: `u:b:${b.username}` },
+        ]);
+      }
+    }
+  }
+
   buttons.push(...menuButton(lang));
 
   await sendOrEdit(api, chatId, lines.join("\n"), messageId, {
@@ -116,6 +177,47 @@ async function showBotUsers(
   await sendOrEdit(api, chatId, lines.join("\n"), messageId, opts);
 }
 
+// ── Permission editor ──
+
+async function showPermissionEditor(
+  api: Platform,
+  chatId: string,
+  adminId: string,
+  messageId: number | string,
+): Promise<void> {
+  const lang = getLang();
+  const m = usersMsg(lang);
+  const c = common(lang);
+  const pool = loadPool();
+  const admin = (pool.admins ?? []).find((a) => a.id === adminId);
+  if (!admin) return;
+
+  const labels = PERM_LABELS[lang] ?? PERM_LABELS.en;
+  const lines = [
+    m.editPermsTitle?.(adminId) ?? `\u2699\ufe0f ${adminId}`,
+    `${SEPARATOR}\n`,
+  ];
+
+  const buttons: Button[][] = [];
+  for (const perm of ALL_PERMS) {
+    const has = admin.permissions.includes(perm);
+    const icon = has ? "\u2705" : "\u274c";
+    lines.push(`${icon} ${labels[perm]}`);
+    buttons.push([
+      {
+        text: `${icon} ${labels[perm]}`,
+        data: `u:tp:${adminId}:${perm}`,
+      },
+    ]);
+  }
+
+  buttons.push([{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]);
+
+  await edit(api, chatId, messageId, lines.join("\n"), {
+    reply_markup: { inline_keyboard: buttons },
+  }).catch(() => {});
+}
+
 // ── Callback handler ──
 
 export async function handleUserCallback(
@@ -131,25 +233,35 @@ export async function handleUserCallback(
   const c = common(lang);
 
   if (data === "u:l") {
-    await showUserManagement(managed, chatId, messageId);
+    await showUserManagement(managed, chatId, messageId, userId);
     return true;
   }
 
+  // Add admin (owner only)
   if (data === "u:aa") {
-    await edit(api, chatId, messageId, m.addAdminPrompt, {
+    if (!isOwner(userId)) {
+      await edit(api, chatId, messageId, m.ownerOnly, {
+        reply_markup: {
+          inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]],
+        },
+      }).catch(() => {});
+      return true;
+    }
+    await edit(api, chatId, messageId, m.addAdminPrompt + c.replyHint, {
       reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
     }).catch(() => {});
     setConversation(userId, chatId, "user:awaitAdmin");
     return true;
   }
 
+  // Remove admin
   if (data.startsWith("u:ra:")) {
     const adminId = data.slice(5);
     const pool = loadPool();
-    const admins = pool.admins ?? [];
 
-    if (admins.length <= 1) {
-      await edit(api, chatId, messageId, m.cantRemoveLast, {
+    // Cannot remove owner
+    if (adminId === getOwner()) {
+      await edit(api, chatId, messageId, m.cantRemoveOwner, {
         reply_markup: {
           inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]],
         },
@@ -157,7 +269,18 @@ export async function handleUserCallback(
       return true;
     }
 
-    savePool({ ...pool, admins: admins.filter((a) => a !== adminId) });
+    // Non-owner can only remove themselves
+    if (!isOwner(userId) && adminId !== userId) {
+      await edit(api, chatId, messageId, m.ownerOnly, {
+        reply_markup: {
+          inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]],
+        },
+      }).catch(() => {});
+      return true;
+    }
+
+    const admins = pool.admins ?? [];
+    savePool({ ...pool, admins: admins.filter((a) => a.id !== adminId) });
     log(`USERS: removed admin ${adminId} by ${userId}`);
 
     await edit(api, chatId, messageId, m.adminRemoved(adminId), {
@@ -165,6 +288,48 @@ export async function handleUserCallback(
         inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]],
       },
     }).catch(() => {});
+    return true;
+  }
+
+  // Edit permissions (owner only)
+  if (data.startsWith("u:ep:")) {
+    if (!isOwner(userId)) {
+      await edit(api, chatId, messageId, m.ownerOnly, {
+        reply_markup: {
+          inline_keyboard: [[{ text: `\u25c0\ufe0f ${c.back}`, data: "u:l" }]],
+        },
+      }).catch(() => {});
+      return true;
+    }
+    const adminId = data.slice(5);
+    await showPermissionEditor(api, chatId, adminId, messageId);
+    return true;
+  }
+
+  // Toggle permission (owner only)
+  if (data.startsWith("u:tp:")) {
+    if (!isOwner(userId)) return true;
+    const rest = data.slice(5);
+    const colonIdx = rest.indexOf(":");
+    const adminId = rest.slice(0, colonIdx);
+    const perm = rest.slice(colonIdx + 1) as AdminPermission;
+    if (!ALL_PERMS.includes(perm)) return true;
+
+    const pool = loadPool();
+    const admins = pool.admins ?? [];
+    const updatedAdmins = admins.map((a) => {
+      if (a.id !== adminId) return a;
+      const has = a.permissions.includes(perm);
+      return {
+        ...a,
+        permissions: has
+          ? a.permissions.filter((p) => p !== perm)
+          : [...a.permissions, perm],
+      };
+    });
+    savePool({ ...pool, admins: updatedAdmins });
+    log(`USERS: toggled ${perm} for admin ${adminId} by ${userId}`);
+    await showPermissionEditor(api, chatId, adminId, messageId);
     return true;
   }
 
@@ -176,11 +341,17 @@ export async function handleUserCallback(
 
   if (data.startsWith("u:au:")) {
     const username = data.slice(5);
-    await edit(api, chatId, messageId, m.addUserPrompt(username), {
-      reply_markup: {
-        inline_keyboard: cancelButton(`u:b:${username}`, lang),
+    await edit(
+      api,
+      chatId,
+      messageId,
+      m.addUserPrompt(username) + c.replyHint,
+      {
+        reply_markup: {
+          inline_keyboard: cancelButton(`u:b:${username}`, lang),
+        },
       },
-    }).catch(() => {});
+    ).catch(() => {});
     setConversation(userId, chatId, "user:awaitUser", { targetBot: username });
     return true;
   }
@@ -239,21 +410,33 @@ export async function handleUserText(
       return true;
     }
 
+    // Check if already owner or admin
     const pool = loadPool();
+    if (input === getOwner()) {
+      await send(api, chatId, m.alreadyAdmin(input)).catch(() => {});
+      clearConversation(userId, chatId);
+      return true;
+    }
     const admins = pool.admins ?? [];
-    if (admins.includes(input)) {
+    if (admins.some((a) => a.id === input)) {
       await send(api, chatId, m.alreadyAdmin(input)).catch(() => {});
       clearConversation(userId, chatId);
       return true;
     }
 
-    savePool({ ...pool, admins: [...admins, input] });
+    // Add with all permissions by default
+    const newAdmin: AdminConfig = {
+      id: input,
+      permissions: [...ALL_PERMS],
+    };
+    savePool({ ...pool, admins: [...admins, newAdmin] });
     log(`USERS: added admin ${input} by ${userId}`);
     clearConversation(userId, chatId);
 
     await send(api, chatId, m.adminAdded(input), {
       reply_markup: {
         inline_keyboard: [
+          [{ text: `\u2699\ufe0f ${m.editPerms}`, data: `u:ep:${input}` }],
           [{ text: `\u25c0\ufe0f ${m.userMgmt}`, data: "u:l" }],
         ],
       },

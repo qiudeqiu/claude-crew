@@ -7,6 +7,8 @@ import type {
   PlatformSection,
   CronJob,
   PoolBot,
+  AdminConfig,
+  AdminPermission,
 } from "./types.js";
 
 // ── Paths ──
@@ -27,7 +29,6 @@ export const DEFAULT_RATE_LIMIT_S = 5;
 export const DEFAULT_SESSION_TIMEOUT_MIN = 10;
 export const DEFAULT_DASHBOARD_INTERVAL_MIN = 30;
 export const CRON_CHECK_INTERVAL_MS = 60_000;
-export const MEMORY_CHECK_MS = 600_000;
 export const TYPING_INTERVAL_MS = 4_000;
 export const PROGRESS_THROTTLE_MS = 2_000;
 export const APPROVAL_TIMEOUT_MS = 120_000;
@@ -39,9 +40,6 @@ export const DASHBOARD_INITIAL_DELAY_MS = 15_000;
 export const RESTART_NOTIFY_DELAY_MS = 16_000;
 export const LOG_MAX_BYTES = 500_000;
 export const MAX_QUEUE_SIZE = 5;
-export const CONTEXT_WARN_THRESHOLD = 0.8;
-export const CONTEXT_COMPACT_THRESHOLD = 0.95;
-export const CONTEXT_WARN_COOLDOWN_MS = 86_400_000; // 24h
 export const LOG_RETAIN_BYTES = 250_000;
 export const LOG_ROTATE_INTERVAL = 200;
 export const CONTEXT_BAR_LENGTH = 10;
@@ -113,22 +111,20 @@ export function loadPool(): BotPool {
     return {
       platform,
       bots: section.bots ?? [],
+      owner: section.owner,
       admins: section.admins,
       sharedGroupId: section.sharedGroupId,
       approvers: section.approvers,
       // Shared settings from top level
       accessLevel: raw.accessLevel,
       permissionMode: raw.permissionMode,
-      memoryIntervalMinutes: raw.memoryIntervalMinutes,
       masterExecute: raw.masterExecute,
       maxConcurrent: raw.maxConcurrent,
       rateLimitSeconds: raw.rateLimitSeconds,
       sessionTimeoutMinutes: raw.sessionTimeoutMinutes,
       dashboardIntervalMinutes: raw.dashboardIntervalMinutes,
-      whisperLanguage: raw.whisperLanguage,
       language: raw.language,
       model: raw.model,
-      sessionMode: raw.sessionMode,
     };
   }
 
@@ -149,6 +145,7 @@ export function savePool(pool: BotPool): void {
     ...raw,
     activePlatform: platform,
     [platform]: {
+      owner: pool.owner,
       admins: pool.admins,
       approvers: pool.approvers,
       sharedGroupId: pool.sharedGroupId,
@@ -156,16 +153,13 @@ export function savePool(pool: BotPool): void {
     },
     accessLevel: pool.accessLevel,
     permissionMode: pool.permissionMode,
-    memoryIntervalMinutes: pool.memoryIntervalMinutes,
     masterExecute: pool.masterExecute,
     maxConcurrent: pool.maxConcurrent,
     rateLimitSeconds: pool.rateLimitSeconds,
     sessionTimeoutMinutes: pool.sessionTimeoutMinutes,
     dashboardIntervalMinutes: pool.dashboardIntervalMinutes,
-    whisperLanguage: pool.whisperLanguage,
     language: pool.language,
     model: pool.model,
-    sessionMode: pool.sessionMode,
   };
 
   writeFileSync(POOL_FILE, JSON.stringify(updated, null, 2) + "\n", {
@@ -205,13 +199,57 @@ export function getConfig() {
 }
 
 // ── Auth ──
-export function getAdmins(): string[] {
+
+/** Get the owner (original admin) ID. Falls back to first secondary admin if missing. */
+export function getOwner(): string {
   const pool = loadPool();
-  return pool.admins ?? [];
+  if (pool.owner) return pool.owner;
+  // Fallback: first admin becomes owner
+  const first = pool.admins?.[0];
+  return first?.id ?? "";
 }
 
+/** Check if userId is the owner (original admin). */
+export function isOwner(userId: string): boolean {
+  return getOwner() === userId;
+}
+
+/** Get all admin IDs (owner + secondary admins). */
+export function getAdminIds(): string[] {
+  const pool = loadPool();
+  const ids: string[] = [];
+  if (pool.owner) ids.push(pool.owner);
+  for (const a of pool.admins ?? []) {
+    if (!ids.includes(a.id)) ids.push(a.id);
+  }
+  return ids;
+}
+
+/** Check if userId is any admin (owner or secondary). */
 export function isAdmin(userId: string): boolean {
-  return getAdmins().includes(userId);
+  return getAdminIds().includes(userId);
+}
+
+/** All admin permissions. */
+const ALL_PERMISSIONS: AdminPermission[] = [
+  "bots",
+  "config",
+  "users",
+  "restart",
+  "cron",
+];
+
+/** Get permissions for a given user. Owner gets all; secondary admins get their configured set. */
+export function getAdminPermissions(userId: string): AdminPermission[] {
+  if (isOwner(userId)) return ALL_PERMISSIONS;
+  const pool = loadPool();
+  const admin = (pool.admins ?? []).find((a) => a.id === userId);
+  return admin?.permissions ?? [];
+}
+
+/** Check if userId has a specific menu permission. */
+export function hasPermission(userId: string, perm: AdminPermission): boolean {
+  return getAdminPermissions(userId).includes(perm);
 }
 
 export function canUseBot(userId: string, botConfig: PoolBot): boolean {
@@ -234,10 +272,6 @@ export function getBotPermissionMode(
 export function getBotModel(botConfig: PoolBot): string | undefined {
   const model = botConfig.model ?? loadPool().model;
   return model || undefined;
-}
-
-export function getSessionMode(): "continue" | "fresh" {
-  return loadPool().sessionMode ?? "continue";
 }
 
 export function getMasterName(pool?: BotPool): string {
@@ -266,11 +300,11 @@ export function createProjectBot(
 }
 
 export function validateConfig(): void {
-  const admins = getAdmins();
-  if (admins.length === 0) {
+  const owner = getOwner();
+  if (!owner) {
     // Can't use log() here (circular), use stderr
     process.stderr.write(
-      "FATAL: no admins configured — set admins in bot-pool.json\n",
+      "FATAL: no owner configured — set owner in bot-pool.json\n",
     );
     process.exit(1);
   }
@@ -312,10 +346,7 @@ export function migrateConfig(): string[] {
     rateLimitSeconds: DEFAULT_RATE_LIMIT_S,
     sessionTimeoutMinutes: DEFAULT_SESSION_TIMEOUT_MIN,
     dashboardIntervalMinutes: DEFAULT_DASHBOARD_INTERVAL_MIN,
-    memoryIntervalMinutes: 120,
-    whisperLanguage: "",
     language: "en",
-    sessionMode: "continue",
   };
 
   for (const [key, defaultVal] of Object.entries(sharedDefaults)) {
@@ -343,6 +374,32 @@ export function migrateConfig(): string[] {
       if (!("allowedUsers" in bot)) {
         bot.allowedUsers = [];
         added.push(`${bot.username}.allowedUsers`);
+      }
+    }
+  }
+
+  // ── Phase 4: Migrate admins string[] → owner + AdminConfig[] ──
+  if (section) {
+    const oldAdmins = section.admins as unknown;
+    if (Array.isArray(oldAdmins) && oldAdmins.length > 0) {
+      const first = oldAdmins[0];
+      // If admins is still string[] (old format), convert
+      if (typeof first === "string") {
+        section.owner = first;
+        section.admins = oldAdmins.slice(1).map((id: string) => ({
+          id,
+          permissions: ["bots", "config", "users", "restart", "cron"],
+        }));
+        added.push("migrated admins → owner + AdminConfig[]");
+      }
+    }
+    // Ensure owner exists
+    if (!section.owner && Array.isArray(section.admins)) {
+      const firstAdmin = (section.admins as Array<{ id?: string }>)[0];
+      if (firstAdmin?.id) {
+        section.owner = firstAdmin.id;
+        section.admins = (section.admins as Array<{ id: string }>).slice(1);
+        added.push("promoted first admin to owner");
       }
     }
   }

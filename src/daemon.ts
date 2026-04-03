@@ -20,7 +20,8 @@ import { execFileSync } from "child_process";
 import type { ManagedBot } from "./types.js";
 import {
   loadPool,
-  getAdmins,
+  getAdminIds,
+  getOwner,
   getConfig,
   canUseBot,
   isAdmin,
@@ -36,7 +37,6 @@ import {
   DASHBOARD_INITIAL_DELAY_MS,
   RESTART_NOTIFY_DELAY_MS,
   CRON_CHECK_INTERVAL_MS,
-  MEMORY_CHECK_MS,
   CONVERSATION_CLEANUP_MS,
 } from "./config.js";
 import { log } from "./logger.js";
@@ -44,7 +44,6 @@ import { managedBots, botByUsername, daemon } from "./state.js";
 import { setupBot } from "./bot-setup.js";
 import { updateDashboard } from "./dashboard.js";
 import { checkCron } from "./cron.js";
-import { checkMemory } from "./memory.js";
 import { cleanupExpired } from "./interactive/index.js";
 import { setupMsg, getLang } from "./interactive/i18n.js";
 
@@ -78,12 +77,12 @@ import { setupMsg, getLang } from "./interactive/i18n.js";
 }
 
 // ── Startup validation & migration ──
-validateConfig();
 const migrated = migrateConfig();
+validateConfig();
 if (migrated.length > 0) {
   process.stderr.write(`[migrate] added defaults: ${migrated.join(", ")}\n`);
 }
-log(`Auth: ${getAdmins().length} admin(s): ${getAdmins().join(", ")}`);
+log(`Auth: owner=${getOwner()}, admins=${getAdminIds().join(", ")}`);
 
 // ══════════════════════════════════════
 // ── Main ──
@@ -106,7 +105,7 @@ async function main(): Promise<void> {
   const platformType = pool.platform ?? "telegram";
   log(`Starting daemon v3 with ${pool.bots.length} bot(s) [${platformType}]`);
   log(
-    `Admins: ${getAdmins().join(", ")} | Max concurrent: ${getConfig().maxConcurrent}`,
+    `Admins: ${getAdminIds().join(", ")} | Max concurrent: ${getConfig().maxConcurrent}`,
   );
 
   for (let i = 0; i < pool.bots.length; i++) {
@@ -129,7 +128,6 @@ async function main(): Promise<void> {
       busy: false,
       lastInvoke: 0,
       lastActivity: 0,
-      lastMemorySave: 0,
       contextUsed: 0,
       contextWindow: 0,
       lastModel: "",
@@ -395,19 +393,9 @@ async function main(): Promise<void> {
         }
 
         // Approval callbacks (approve:yes:id / approve:no:id)
-        const { pendingApprovals, delegatedApprovers } =
-          await import("./state.js");
-        const isDelegated = (() => {
-          const expires = delegatedApprovers.get(userId);
-          if (!expires) return false;
-          if (Date.now() > expires) {
-            delegatedApprovers.delete(userId);
-            return false;
-          }
-          return true;
-        })();
+        const { pendingApprovals } = await import("./state.js");
 
-        if (!isAdmin(userId) && !isDelegated) {
+        if (!isAdmin(userId)) {
           await adapter
             .answerCallback(event.id, setupMsg(getLang()).adminOnly)
             .catch(() => {});
@@ -569,7 +557,6 @@ async function main(): Promise<void> {
   // Periodic tasks
   setInterval(() => updateDashboard(), getConfig().dashboardIntervalMs);
   setInterval(() => checkCron(), CRON_CHECK_INTERVAL_MS);
-  setInterval(() => checkMemory(), MEMORY_CHECK_MS);
   setInterval(() => cleanupExpired(), CONVERSATION_CLEANUP_MS);
 
   log("Daemon v3 running.");

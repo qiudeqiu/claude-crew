@@ -6,21 +6,16 @@ import type { ClaudeResult, ManagedBot } from "./types.js";
 import {
   getConfig,
   loadPool,
-  getAdmins,
   canUseBot,
   getBotAccessLevel,
   getBotPermissionMode,
   getBotModel,
-  getSessionMode,
   WRITE_TOOLS,
   READONLY_DISALLOWED,
   TYPING_INTERVAL_MS,
   PROGRESS_THROTTLE_MS,
   APPROVAL_TIMEOUT_MS,
   RESTART_NOTE_FILE,
-  CONTEXT_WARN_THRESHOLD,
-  CONTEXT_COMPACT_THRESHOLD,
-  CONTEXT_WARN_COOLDOWN_MS,
   CIRCUIT_BREAKER_COOLDOWN_MS,
   CIRCUIT_BREAKER_MAX_FAILURES,
   MAX_TRUNCATION_RECOVERIES,
@@ -430,8 +425,7 @@ export async function invokeClaudeAndReply(
   const mode = getBotPermissionMode(config);
   const botModel = getBotModel(config);
   const botEffort = managed.effort;
-  const shouldContinue =
-    !managed.skipContinue && getSessionMode() === "continue";
+  const shouldContinue = !managed.skipContinue;
   managed.skipContinue = false; // reset after reading
   const cfg = getConfig();
 
@@ -673,49 +667,6 @@ export async function invokeClaudeAndReply(
     log(
       `DONE: ${project} — ${result.text.length} chars, $${result.costUSD.toFixed(4)}, context ${result.contextWindow ? Math.round((result.contextUsed / result.contextWindow) * 100) : "?"}%`,
     );
-
-    // Context usage warning
-    if (result.contextWindow > 0) {
-      const pct = result.contextUsed / result.contextWindow;
-      const now = Date.now();
-      const cooledDown =
-        !managed.lastContextWarning ||
-        now - managed.lastContextWarning > CONTEXT_WARN_COOLDOWN_MS;
-
-      if (pct >= CONTEXT_COMPACT_THRESHOLD && cooledDown) {
-        managed.lastContextWarning = now;
-        const lang = getLang();
-        await platform
-          .sendMessage(
-            chatId,
-            lang === "zh"
-              ? `🔄 @${config.username} 上下文已用 ${Math.round(pct * 100)}%，正在自动压缩...`
-              : `🔄 @${config.username} context at ${Math.round(pct * 100)}%, auto-compacting...`,
-          )
-          .catch(() => {});
-        // Silent compact — run Claude directly, don't send result to group
-        runClaude(dir, "/compact", { resume: true })
-          .then(async () => {
-            await platform
-              .sendMessage(
-                chatId,
-                lang === "zh"
-                  ? `✅ @${config.username} 上下文已压缩`
-                  : `✅ @${config.username} context compacted`,
-              )
-              .catch(() => {});
-          })
-          .catch(() => {});
-      } else if (pct >= CONTEXT_WARN_THRESHOLD && cooledDown) {
-        managed.lastContextWarning = now;
-        const lang = getLang();
-        const msg =
-          lang === "zh"
-            ? `⚠️ @${config.username} 上下文已用 ${Math.round(pct * 100)}%，建议 /new 重置或 /compact 压缩`
-            : `⚠️ @${config.username} context at ${Math.round(pct * 100)}% — consider /new to reset or /compact to compress`;
-        await platform.sendMessage(chatId, msg).catch(() => {});
-      }
-    }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     log(`FAIL: ${project} — ${errMsg}`);
@@ -743,12 +694,6 @@ export async function invokeClaudeAndReply(
             ),
           )
           .catch(() => {});
-        break;
-      case "context_full":
-        await platform
-          .sendMessage(chatId, s.contextAutoCompact(botKey))
-          .catch(() => {});
-        runClaude(dir, "/compact", { resume: true }).catch(() => {});
         break;
       default: {
         // Record failure for circuit breaker

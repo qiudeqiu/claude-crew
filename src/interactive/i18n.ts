@@ -29,6 +29,7 @@ export function common(lang: Lang) {
         restartNow: "立即重启",
         save: "保存",
         cancelled: "\u274c 已取消。",
+        noPermission: "\u26d4 无权限",
         replyHint: isDiscord()
           ? "\n\n\ud83d\udca1 请 @主控 发送"
           : "\n\n\ud83d\udca1 请回复此消息或 @主控 发送",
@@ -41,6 +42,7 @@ export function common(lang: Lang) {
         restartNow: "Restart Now",
         save: "Save",
         cancelled: "\u274c Cancelled.",
+        noPermission: "\u26d4 No permission",
         replyHint: isDiscord()
           ? "\n\n\ud83d\udca1 @mention master to respond"
           : "\n\n\ud83d\udca1 Reply to this message or @mention master to respond",
@@ -137,9 +139,6 @@ export function menuMsg(lang: Lang) {
           "\ud83d\udca1 所有管理操作在主控 bot 的 menu 中完成",
         helpTips:
           "\ud83d\udca1 使用技巧\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "\ud83c\udfa4 语音指令\n" +
-          "  发送语音消息给项目 bot，自动转写为文字执行\n" +
-          "  在 config \u2192 whisperLanguage 指定语言提高准确率\n\n" +
           "\ud83d\uddbc 图片分析\n" +
           "  发送截图 + @项目bot 描述，Claude 会先读图再回答\n" +
           "  \u26a0\ufe0f 单张图片可能消耗 50K+ tokens\n\n" +
@@ -270,9 +269,6 @@ export function menuMsg(lang: Lang) {
           "\ud83d\udca1 All management is done via the master bot's menu",
         helpTips:
           "\ud83d\udca1 Tips & Tricks\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "\ud83c\udfa4 Voice commands\n" +
-          "  Send a voice message to a project bot \u2014 auto-transcribed\n" +
-          "  Set config \u2192 whisperLanguage for better accuracy\n\n" +
           "\ud83d\uddbc Photo analysis\n" +
           "  Send screenshot + @projectbot description\n" +
           "  Claude reads the image before responding\n" +
@@ -288,7 +284,7 @@ export function menuMsg(lang: Lang) {
           "\ud83d\udd04 Session management\n" +
           "  /compact \u2014 compress without losing key info\n" +
           "  /cost \u2014 track cumulative spend\n" +
-          "  Auto-warns at 80%, auto-compacts at 95%",
+          "  Use /compact when context is high to free up space",
         refreshing: "\ud83d\udcca Refreshing dashboard...",
         restarting: "\ud83d\udd04 Restarting daemon...",
         started: "\u2705 Master bot is online",
@@ -395,7 +391,12 @@ export function botsMsg(lang: Lang) {
         summaryTitle: "\ud83d\udcdd 添加机器人摘要",
         bot: "机器人",
         added: (u: string, proj: string, path: string) =>
-          `\u2705 @${u} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n重启后上线。`,
+          `\u2705 @${u} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+          `\ud83d\udc49 下一步：\n` +
+          `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
+          `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
+          `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+          `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 邀请机器人进服务器：\n" +
           "1\ufe0f\u20e3 点击下方链接授权\n" +
@@ -459,7 +460,12 @@ export function botsMsg(lang: Lang) {
         summaryTitle: "\ud83d\udcdd Add Bot Summary",
         bot: "Bot",
         added: (u: string, proj: string, path: string) =>
-          `\u2705 @${u} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\nRestart to bring it online.`,
+          `\u2705 @${u} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+          `\ud83d\udc49 Next steps:\n` +
+          `1\ufe0f\u20e3 Add @${u} to this group\n` +
+          `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
+          `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+          `3\ufe0f\u20e3 Click Restart below to bring it online`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 Invite bot to server:\n" +
           "1\ufe0f\u20e3 Click the link below to authorize\n" +
@@ -505,8 +511,6 @@ export function configMsg(lang: Lang) {
         rateLimitSeconds: "rateLimitSeconds",
         sessionTimeout: "sessionTimeout",
         dashboardInterval: "dashboardInterval",
-        memoryInterval: "memoryInterval",
-        whisperLanguage: "whisperLanguage",
         sessionMode: "sessionMode",
         assignedProject: "assignedProject",
         assignedPath: "assignedPath",
@@ -542,8 +546,6 @@ export function configMsg(lang: Lang) {
         rateLimitSeconds: "rateLimitSeconds",
         sessionTimeout: "sessionTimeout",
         dashboardInterval: "dashboardInterval",
-        memoryInterval: "memoryInterval",
-        whisperLanguage: "whisperLanguage",
         sessionMode: "sessionMode",
         assignedProject: "assignedProject",
         assignedPath: "assignedPath",
@@ -562,8 +564,6 @@ export function fieldDesc(lang: Lang) {
         rl: "同一机器人两次调用之间的最小冷却秒数，防止刷屏。",
         st: "单次 Claude 调用的最大时长（分钟），超时将被终止。",
         di: "置顶看板消息的自动刷新间隔（分钟）。",
-        mi: "活跃项目自动保存对话记忆的间隔（分钟）。0 = 禁用。",
-        wl: "语音转写的语言提示（Whisper）。空 = 自动检测。",
         ap: "此机器人管理的项目显示名称",
         ph: "项目目录在磁盘上的绝对路径",
         md: "Claude 模型选择。不同模型在速度、能力和成本之间有不同取舍。",
@@ -579,8 +579,6 @@ export function fieldDesc(lang: Lang) {
         rl: "Minimum cooldown between invocations for the same bot. Prevents accidental spam.",
         st: "Maximum duration for a single Claude invocation before it's killed.",
         di: "How often the pinned dashboard message auto-refreshes.",
-        mi: "How often active projects auto-save conversation memory. 0 = disabled.",
-        wl: "Language hint for voice transcription (Whisper). Empty = auto-detect.",
         ap: "Display name for the project this bot manages",
         ph: "Absolute path to the project directory on disk",
         md: "Claude model selection. Different models trade off speed, capability, and cost.",
@@ -647,8 +645,6 @@ export function fieldHint(lang: Lang) {
         rl: "0 = 无冷却, 5 = 推荐默认值",
         st: "10 = 默认值, 长任务可调高",
         di: "30 = 默认值。值越小 API 调用越频繁",
-        mi: "120 = 默认值。保存上下文以便 Claude 记住过去对话",
-        wl: '如 "en"、"zh"、"ja"、"ko"，或留空自动检测',
         ap: '如 "my-api"、"frontend"',
         ph: "如 /home/user/projects/my-api",
         ap_list:
@@ -659,8 +655,6 @@ export function fieldHint(lang: Lang) {
         rl: "0 = no cooldown, 5 = recommended default",
         st: "10 = default, increase for long-running tasks",
         di: "30 = default. Lower values increase API calls",
-        mi: "120 = default. Saves context so Claude remembers past conversations",
-        wl: 'e.g. "en", "zh", "ja", "ko", or empty for auto',
         ap: 'e.g. "my-api", "frontend"',
         ph: "e.g. /home/user/projects/my-api",
         ap_list:
@@ -674,19 +668,22 @@ export function usersMsg(lang: Lang) {
   return lang === "zh"
     ? {
         title: "\ud83d\udc65 用户管理",
-        adminsTitle: "\ud83d\udc51 管理员（全局权限）:",
+        adminsTitle: "\ud83d\udd27 管理员:",
         perBotTitle: "\ud83e\udd16 机器人用户:",
         userCount: (n: number) => (n > 0 ? `${n} 个用户` : "无"),
         addAdmin: "\u2795 添加管理员",
         botUsers: (u: string) => `\ud83d\udc65 @${u} 用户`,
         addAdminPrompt: isDiscord()
-          ? "\ud83d\udc51 添加管理员\n\n发送 Discord 用户 ID（数字）。\n\n提示: 开启开发者模式后右键用户 → 复制用户 ID"
-          : "\ud83d\udc51 添加管理员\n\n发送 Telegram 用户 ID（数字）。\n\n提示: 可通过 @userinfobot 获取 ID",
-        cantRemoveLast:
-          "\u26a0\ufe0f 不能删除最后一个管理员。\n\n请先添加其他管理员。",
+          ? "\ud83d\udc51 添加管理员\n\n发送 Discord 用户 ID（数字）。\n\n提示: 开启开发者模式后右键用户 \u2192 复制用户 ID"
+          : "\ud83d\udc51 添加管理员\n\n发送 Telegram 用户 ID（数字）。\n\n提示: 可通过 @userinfobot 获取 ID\n\n添加后可编辑其菜单权限。",
+        ownerOnly: "\u26d4 仅 Owner 可执行此操作。",
+        cantRemoveOwner: "\u26d4 Owner 不可被移除。",
         adminRemoved: (id: string) => `\u2705 管理员 ${id} 已移除。`,
+        editPermsTitle: (id: string) => `\u2699\ufe0f 编辑 ${id} 的权限`,
+        editPerms: "编辑权限",
+        leaveAdmin: "\ud83d\udeaa 退出管理员",
         botUsersTitle: (u: string) => `\ud83d\udc65 @${u} 用户`,
-        noUsers: "  (无用户 — 管理员始终有权限)",
+        noUsers: "  (无用户 \u2014 管理员始终有权限)",
         addUser: "\u2795 添加用户",
         addUserPrompt: (u: string) =>
           isDiscord()
@@ -694,7 +691,8 @@ export function usersMsg(lang: Lang) {
             : `\ud83d\udc65 添加用户到 @${u}\n\n发送 Telegram 用户 ID（数字）:`,
         invalidId: "\u26a0\ufe0f 用户 ID 必须是数字（如 123456789）。\n请重试:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} 已是管理员。`,
-        adminAdded: (id: string) => `\u2705 管理员已添加: ${id}`,
+        adminAdded: (id: string) =>
+          `\u2705 管理员已添加: ${id}\n\n默认拥有全部菜单权限，点击下方编辑。`,
         userMgmt: "用户管理",
         alreadyUser: (id: string, u: string) =>
           `\u26a0\ufe0f ${id} 已有 @${u} 的权限。`,
@@ -703,17 +701,21 @@ export function usersMsg(lang: Lang) {
       }
     : {
         title: "\ud83d\udc65 User Management",
-        adminsTitle: "\ud83d\udc51 Admins (global access):",
+        adminsTitle: "\ud83d\udd27 Admins:",
         perBotTitle: "\ud83e\udd16 Per-bot users:",
         userCount: (n: number) => (n > 0 ? `${n} user(s)` : "none"),
         addAdmin: "\u2795 Add Admin",
         botUsers: (u: string) => `\ud83d\udc65 @${u} users`,
         addAdminPrompt: isDiscord()
           ? "\ud83d\udc51 Add Admin\n\nSend the Discord user ID (numeric).\n\nTip: enable Developer Mode, right-click user \u2192 Copy User ID"
-          : "\ud83d\udc51 Add Admin\n\nSend the Telegram user ID (numeric).\n\nTip: users can find their ID with @userinfobot",
-        cantRemoveLast:
-          "\u26a0\ufe0f Can't remove the last admin.\n\nAdd another admin first.",
+          : "\ud83d\udc51 Add Admin\n\nSend the Telegram user ID (numeric).\n\nTip: users can find their ID via @userinfobot\n\nYou can edit their menu permissions after adding.",
+        ownerOnly: "\u26d4 Only the Owner can do this.",
+        cantRemoveOwner: "\u26d4 The Owner cannot be removed.",
         adminRemoved: (id: string) => `\u2705 Admin ${id} removed.`,
+        editPermsTitle: (id: string) =>
+          `\u2699\ufe0f Edit permissions for ${id}`,
+        editPerms: "Edit permissions",
+        leaveAdmin: "\ud83d\udeaa Leave admin",
         botUsersTitle: (u: string) => `\ud83d\udc65 @${u} Users`,
         noUsers: "  (no users \u2014 admins always have access)",
         addUser: "\u2795 Add User",
@@ -724,7 +726,8 @@ export function usersMsg(lang: Lang) {
         invalidId:
           "\u26a0\ufe0f User ID must be numeric (e.g. 123456789).\nTry again:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} is already an admin.`,
-        adminAdded: (id: string) => `\u2705 Admin added: ${id}`,
+        adminAdded: (id: string) =>
+          `\u2705 Admin added: ${id}\n\nAll menu permissions granted by default. Tap below to edit.`,
         userMgmt: "User management",
         alreadyUser: (id: string, u: string) =>
           `\u26a0\ufe0f ${id} already has access to @${u}.`,
@@ -818,7 +821,12 @@ export function onboardMsg(lang: Lang) {
         summary: "\ud83d\udcdd 设置摘要",
         saveConfig: "保存此配置?",
         added: (u: string, proj: string, path: string) =>
-          `\u2705 @${u} 已添加到池中！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n重启以上线。`,
+          `\u2705 @${u} 已添加到池中！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+          `\ud83d\udc49 下一步：\n` +
+          `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
+          `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
+          `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+          `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 邀请机器人进服务器：\n" +
           "1\ufe0f\u20e3 点击下方链接授权\n" +
@@ -910,7 +918,12 @@ export function onboardMsg(lang: Lang) {
         summary: "\ud83d\udcdd Setup Summary",
         saveConfig: "Save this configuration?",
         added: (u: string, proj: string, path: string) =>
-          `\u2705 @${u} added to pool!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\nRestart the daemon to bring the bot online.`,
+          `\u2705 @${u} added to pool!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+          `\ud83d\udc49 Next steps:\n` +
+          `1\ufe0f\u20e3 Add @${u} to this group\n` +
+          `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
+          `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+          `3\ufe0f\u20e3 Click Restart below to bring it online`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 Invite bot to server:\n" +
           "1\ufe0f\u20e3 Click the link below to authorize\n" +
@@ -936,10 +949,6 @@ export function setupMsg(lang: Lang) {
         expired: "\u23f0 已过期",
         authorized: "\u2705 已授权，正在重试...",
         skipped: "\u274c 已跳过",
-        transcribing: "\ud83c\udfa4 正在转写语音...",
-        transcribeFailed:
-          "\u26a0\ufe0f 语音转写失败\n\ud83d\udca1 可在 menu \u2192 配置 \u2192 whisperLanguage 中指定语言提高准确率",
-        transcription: (text: string) => `\ud83c\udfa4 转写: ${text}`,
         rateLimited:
           "\u23f3 请稍等几秒...\n\ud83d\udca1 冷却间隔可在 menu \u2192 配置 \u2192 rateLimitSeconds 中调整",
         queueFull: (active: number, max: number) =>
@@ -956,8 +965,6 @@ export function setupMsg(lang: Lang) {
           `\ud83d\udea8 @${bot} 连续 ${count} 次失败，已熔断\n\ud83d\udca1 排查后 5 分钟内自动恢复`,
         authError: (bot: string) =>
           `\ud83d\udd11 @${bot} API 认证失败，已暂停\n\ud83d\udca1 请检查 ANTHROPIC_API_KEY`,
-        contextAutoCompact: (bot: string) =>
-          `\ud83d\udd04 @${bot} 上下文溢出，自动压缩中...`,
         truncationContinue: (attempt: number, max: number) =>
           `\u2702\ufe0f 输出被截断，自动续写 (${attempt}/${max})...`,
         adaptiveRateLimit: (sec: number) => `\u23f3 API 限速中，${sec}s 后恢复`,
@@ -976,10 +983,6 @@ export function setupMsg(lang: Lang) {
         expired: "\u23f0 Expired",
         authorized: "\u2705 Authorized, retrying...",
         skipped: "\u274c Skipped",
-        transcribing: "\ud83c\udfa4 Transcribing voice...",
-        transcribeFailed:
-          "\u26a0\ufe0f Voice transcription failed\n\ud83d\udca1 Set language in menu \u2192 Config \u2192 whisperLanguage for better accuracy",
-        transcription: (text: string) => `\ud83c\udfa4 Transcription: ${text}`,
         rateLimited:
           "\u23f3 Please wait a few seconds...\n\ud83d\udca1 Adjust cooldown in menu \u2192 Config \u2192 rateLimitSeconds",
         queueFull: (active: number, max: number) =>
@@ -997,8 +1000,6 @@ export function setupMsg(lang: Lang) {
           `\ud83d\udea8 @${bot} circuit breaker tripped after ${count} consecutive failures\n\ud83d\udca1 Auto-recovers in 5 minutes`,
         authError: (bot: string) =>
           `\ud83d\udd11 @${bot} API authentication failed, paused\n\ud83d\udca1 Check ANTHROPIC_API_KEY`,
-        contextAutoCompact: (bot: string) =>
-          `\ud83d\udd04 @${bot} context overflow, auto-compacting...`,
         truncationContinue: (attempt: number, max: number) =>
           `\u2702\ufe0f Output truncated, auto-continuing (${attempt}/${max})...`,
         adaptiveRateLimit: (sec: number) =>

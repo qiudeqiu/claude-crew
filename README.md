@@ -60,7 +60,7 @@ All requests, progress, results, and team discussions flow through one timeline.
 |-------|-----------------|---------|
 | **Access Level** | What the bot CAN do | `readWrite` — full access · `readOnly` — read, search, analyze only |
 | **Permission Mode** | How writes are authorized | `approve` (default) — button confirmation in chat · `auto` — Claude's safety classifier · `allowAll` — pre-authorized |
-| **User Access** | Who can use each bot | `admins` — all bots · `allowedUsers` — per-bot member list · others — rejected with hint |
+| **User Access** | Who can use each bot | `owner` — full control · `admins` — all bots + configurable menu permissions · `allowedUsers` — per-bot member list · others — rejected |
 | **Approvers** | Who must approve writes | `approvers: ["id1", "id2"]` — ALL listed users must approve before writes execute. Empty = any single admin |
 All configurable globally or per-bot, from button menus on your phone. Sensitive project? Set `readOnly`. Trusted solo project? Set `allowAll`. Team project? Set `approve` with specific approvers so writes require the right people to confirm.
 
@@ -74,7 +74,7 @@ Background daemon with watchdog auto-restart and auto-start on login. No tmux, n
 
 ### Project continuity
 
-Each bot remembers its project's state across sessions through three layers: `--continue` resumes the last conversation, periodic memory saves persist key context to disk, and the pinned dashboard shows every project's git branch, last commit, context usage, and cost at a glance. No matter who changed what or when — open the group and you're up to date.
+Each bot remembers its project's state across sessions: `--continue` resumes the last conversation, and the pinned dashboard shows every project's git branch, last commit, context usage, and cost at a glance. No matter who changed what or when — open the group and you're up to date.
 
 Use `/new` to reset when context gets stale, `/compact` to compress without losing key info, `/model` and `/effort` to tune per task, `/cost` and `/status` to monitor — all from chat, zero token overhead.
 
@@ -87,8 +87,8 @@ Use `/new` to reset when context gets stale, `/compact` to compress without losi
 | No push notifications | Every bot reply pushes to your phone |
 | Single repo limitation | One bot per project, unlimited projects |
 | Requires active terminal / tmux | Built-in daemon + watchdog + auto-start |
-| Context bloats after a day of use | Independent short-process sessions, periodic memory saves |
-| Restart = lost context | Conversation files + memory files persist on disk |
+| Context bloats after a day of use | Independent short-process sessions, `/compact` command |
+| Restart = lost context | `--continue` resumes conversation, Claude Code auto-memory persists on disk |
 | Headless server auth fails | Supports API key — no browser needed |
 | Bot rejects when busy | Task queue — shows position, auto-processes when ready |
 | API key expires → repeated errors | Circuit breaker pauses after 3 failures, shows root cause |
@@ -111,11 +111,11 @@ Use `/new` to reset when context gets stale, `/compact` to compress without losi
 
 ## 🎯 Three Ways to Use
 
-### 1:1 Focus Mode
+### Share Your Agent
 
-DM a project bot for private, focused control — one bot, one project, no interference.
+Built a Claude Code agent with custom instructions, CLAUDE.md, and memory? Create a project bot, configure access permissions, and let your team use it directly from Telegram — no setup on their side.
 
-![Focus Mode](docs/scene-focus.png)
+![Share Agent](docs/scene-share.png)
 
 ### 1:N Hub Mode
 
@@ -145,9 +145,9 @@ A pinned message that auto-refreshes with all your projects at a glance — git 
 
 ![Dashboard](docs/feat-dashboard.png)
 
-### Scheduled tasks & persistent memory
+### Scheduled tasks
 
-Set up recurring tasks per bot (daily or every N minutes) — code reviews, health checks, report generation. Combined with automatic memory saves, Claude remembers project context across sessions, so every task picks up where the last one left off.
+Set up recurring tasks per bot (daily or every N minutes) — code reviews, health checks, report generation. With `--continue` session resumption, every task picks up where the last one left off.
 
 ## ⚡ Project Bots — Your Dev Team
 
@@ -175,13 +175,13 @@ Three permission modes, configurable per bot or globally:
 
 ![Permission](docs/feat-permission.png)
 
-### Voice & photo
+### Photo analysis
 
-Send a photo for visual analysis, or reply with a voice message for hands-free commands. Voice is transcribed via Whisper and passed to Claude.
+Send a photo with a caption @mentioning a bot for visual analysis. Claude reads the image before responding.
 
 ### Quote anything
 
-Reply to any message — text, photo, voice, file, or sticker — while @mentioning a bot. The quoted content is automatically included in the prompt.
+Reply to any message — text, photo, file, or sticker — while @mentioning a bot. The quoted content is automatically included in the prompt.
 
 ## 📋 Recommendations
 
@@ -200,15 +200,14 @@ Reply to any message — text, photo, voice, file, or sticker — while @mention
 - **Set `readOnly` on sensitive projects** to let team members browse code without write risk
 - **Use `allowedUsers` per bot** rather than adding everyone to `admins` — admins can use all bots
 - **Lower `maxConcurrent`** if you're on a rate-limited Claude plan (default 3 may be too many)
-- **Set `whisperLanguage`** explicitly (e.g. `"zh"`, `"en"`) for better voice recognition accuracy
 
 ### Cost awareness
 
-Each task runs as an independent session. Claude recovers context by reading your code, git history, and memory files — but there are a few cost implications to be aware of:
+Each task runs as an independent session. Claude recovers context by reading your code and git history — but there are a few cost implications to be aware of:
 
 - **`approve` mode costs more** — each task that needs write access runs Claude twice (read-only first, then retry with approved tools). Use `allowAll` or `auto` if you trust the environment.
 - **Quoting images is expensive** — a single screenshot can use 50K+ tokens. Prefer text descriptions when possible.
-- **Memory files grow over time** — they are loaded into every session. Periodically clean up `~/.claude/projects/*/memory/` if costs increase.
+- **Memory files grow over time** — Claude Code auto-memory files are loaded into every session. Periodically clean up `~/.claude/projects/*/memory/` if costs increase.
 - **Cron tasks are full sessions** — each scheduled task is a complete Claude invocation. Use longer intervals for non-urgent tasks.
 
 > **Tip:** The dashboard shows cost per invocation and cumulative session cost. Monitor it to understand your usage patterns.
@@ -230,13 +229,6 @@ Each task runs as an independent session. Claude recovers context by reading you
 | **[Claude Code CLI](https://claude.ai/claude-code)** | Core runtime — all AI tasks run through `claude -p` | `npm install -g @anthropic-ai/claude-code` |
 | **Authenticated CLI** | Subscription (Pro/Max), API key, or cloud provider | Run `claude` to login, or set `ANTHROPIC_API_KEY` |
 | **[Bun](https://bun.sh)** >= 1.0 | Daemon runtime | `curl -fsSL https://bun.sh/install \| bash` |
-
-### Optional
-
-| Dependency | Why | Install |
-|-----------|-----|---------|
-| [ffmpeg](https://ffmpeg.org) | Voice message transcription | `brew install ffmpeg` |
-| [whisper](https://github.com/openai/whisper) | Speech-to-text engine | `pipx install openai-whisper` |
 
 ### Verify before proceeding
 
@@ -288,7 +280,7 @@ bash scripts/setup.sh
 ```
 
 This will:
-- Check dependencies (bun, claude, ffmpeg, whisper)
+- Check dependencies (bun, claude)
 - Ask for your master bot token (validates via Telegram API)
 - Auto-detect your Telegram User ID (just send a message to the bot)
 - Create `bot-pool.json` config file at `~/.claude/channels/telegram/`
@@ -348,7 +340,6 @@ bash scripts/daemon.sh restart
 | Continue conversation | Reply to bot's message | Reply with follow-up |
 | Quote + ask | Reply to any message + `@bot` | Select message → Reply → `@bot explain this` |
 | Photo analysis | Photo + `@bot caption` | Photo + `@api_bot what's this error?` |
-| Voice command | Reply to bot with voice | Record voice on bot's message |
 
 ### Master Bot Commands
 
@@ -430,7 +421,7 @@ Combined with access control:
 
 | User role | Bot has `allowedUsers` | Can use bot | Effective access |
 |-----------|----------------------|:-----------:|-----------------|
-| **Admin** (`admins` list) | Any | ✅ | Bot's `accessLevel` + `permissionMode` |
+| **Owner / Admin** | Any | ✅ | Bot's `accessLevel` + `permissionMode` |
 | **Member** (in `allowedUsers`) | Lists this user | ✅ | Bot's `accessLevel` + `permissionMode` |
 | **Member** (not in list) | Doesn't list user | ❌ | No access |
 | **Others** | Any | ❌ | Rejected with permission hint |
@@ -445,7 +436,8 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 {
   "activePlatform": "telegram",
   "telegram": {
-    "admins": ["123456789"],
+    "owner": "123456789",
+    "admins": [{"id": "987654321", "permissions": ["bots", "config", "users", "restart", "cron"]}],
     "sharedGroupId": "-100123456789",
     "bots": [
       {
@@ -472,8 +464,6 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
   "rateLimitSeconds": 5,
   "sessionTimeoutMinutes": 10,
   "dashboardIntervalMinutes": 30,
-  "memoryIntervalMinutes": 120,
-  "whisperLanguage": "",
   "language": "en",
   "model": "sonnet",
   "sessionMode": "continue"
@@ -486,7 +476,8 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 
 | Field | Description |
 |-------|-------------|
-| `admins` | **(required)** Admin user IDs for this platform. Admins can use **all** bots. |
+| `owner` | **(required)** Original admin ID. Cannot be removed. Has all permissions. |
+| `admins` | Secondary admins with granular permissions. Each entry: `{"id": "...", "permissions": [...]}`. |
 | `sharedGroupId` | Group/channel ID where all bots operate. |
 | `bots` | Array of bot configs (see Per-Bot Settings below). |
 
@@ -497,15 +488,15 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 | `accessLevel` | `"readWrite"` | Global default. `"readWrite"` = full access. `"readOnly"` = read/search only, no writes. |
 | `permissionMode` | `"approve"` | Global default (only when readWrite). `"approve"` = button confirmation. `"auto"` = background safety classifier. `"allowAll"` = pre-authorize all tools. |
 | `language` | `"en"` | Menu language. `"en"` or `"zh"`. Switchable via menu button. |
-| `memoryIntervalMinutes` | `120` | Auto-save conversation memory for active projects (minutes). `0` = disabled. |
+
 | `masterExecute` | `false` | Allow master bot to run Claude tasks (not just admin commands). |
 | `maxConcurrent` | `3` | Maximum parallel Claude invocations across all bots. Actual limit depends on your subscription or API quota. |
 | `rateLimitSeconds` | `5` | Minimum gap between invocations for the same bot. |
 | `sessionTimeoutMinutes` | `10` | Claude invocation timeout. |
 | `dashboardIntervalMinutes` | `30` | Dashboard auto-refresh interval. |
-| `whisperLanguage` | (auto-detect) | Whisper language code for voice (e.g. `"zh"`, `"en"`, `"ja"`). |
+
 | `model` | (default) | Claude model: `"sonnet"` (balanced), `"opus"` (strongest), `"haiku"` (fastest/cheapest). |
-| `sessionMode` | `"continue"` | `"continue"` — resume last conversation (context accumulates). `"fresh"` — clean context each time (relies on periodic memory for continuity, lower cost per task). |
+| `sessionMode` | `"continue"` | `"continue"` — resume last conversation. `"fresh"` — clean context each time (lower cost per task). |
 
 #### Per-Bot Settings
 
@@ -519,11 +510,14 @@ The setup wizard and `manage-pool.sh add` generate a complete config with all de
 
 #### Access Control
 
-| Role | Access | Can approve permissions |
-|------|--------|----------------------|
-| **Admin** (`admins` list) | All bots | Yes |
-| **Member** (per-bot `allowedUsers`) | Only bots that list them | No |
-| **Others** | None — rejected with permission hint | No |
+| Role | Bot Access | Menu Access | Can Approve |
+|------|-----------|-------------|-------------|
+| **Owner** | All bots | Full menu + manage admins | Yes |
+| **Admin** | All bots | Per-permission (`bots`, `config`, `users`, `restart`, `cron`) | Yes |
+| **Member** (per-bot `allowedUsers`) | Only listed bots | None | No |
+| **Others** | Rejected | None | No |
+
+> **Owner** is set during initial setup and cannot be removed. Admins are added by the Owner with configurable menu permissions (editable anytime via `@master users`).
 
 > Most configuration changes take effect immediately (permissions, rate limits, timeouts, etc.). **Exceptions that require restart:** `dashboardIntervalMinutes` and adding/removing bots. The interactive setup (`@master bots`, `@master config`) offers a one-click restart button when needed.
 
@@ -630,12 +624,15 @@ claude-crew currently supports **Telegram**. The architecture uses a platform ab
 
 ### v0.4.0 — Platform abstraction & resilience (current)
 
-- **Platform-segmented config**: `bot-pool.json` restructured — platform-specific fields (admins, bots, sharedGroupId) nested under `telegram`/`discord` sections, shared settings at top level. Old flat format auto-migrated on startup.
-- **Session mode**: new `sessionMode` setting — `"continue"` (default, resumes last conversation) or `"fresh"` (clean context each time, relies on periodic memory). Configurable via button menu.
-- **Runtime resilience**: circuit breaker (3 failures → pause, 5min auto-recovery), adaptive rate limiting (uses real API reset times), output truncation recovery, approval denial tracking, error classification with per-type recovery.
+- **Three-tier permission system**: Owner (immutable, full control) → Admin (configurable menu permissions: bots/config/users/restart/cron) → User (per-bot access). Owner manages admins via button menu with per-permission toggles. Old flat `admins` array auto-migrated.
+- **Platform-segmented config**: `bot-pool.json` restructured — platform-specific fields (`owner`, `admins`, `bots`, `sharedGroupId`) nested under `telegram`/`discord` sections, shared settings at top level. Old flat format auto-migrated on startup.
+- **Session mode**: new `sessionMode` setting — `"continue"` (default, resumes last conversation) or `"fresh"` (clean context each time). Configurable via button menu.
+- **Runtime resilience**: circuit breaker (3 failures → pause, 5min auto-recovery), adaptive rate limiting (uses real API reset times), output truncation recovery, error classification with per-type recovery.
 - **Guide system**: interactive guide with sub-pages — Quick Start, Tips, Master Bot, Project Bot, Cron — with navigation buttons.
 - **Cron improvements**: delete buttons in task list, project name support in `cron add` (resolves to bot username automatically), syntax guide shown alongside task list.
+- **Post-add guidance**: after adding a project bot, Telegram users see clear next steps (add to group, disable Group Privacy, restart).
 - **Discord adapter** (experimental): Platform interface implementation, role mention detection, i18n Discord-aware text. Marked as planned in docs.
+- **Removed**: voice/whisper feature (heavy dependency, not core), periodic memory saves (redundant with Claude Code built-in memory).
 - **Security hardening**: `getSafeEnv` switched to deny-by-default for unknown env vars, `setBotValue` path validation, queue dispatch race fix, `/compact` busy guard.
 
 ### v0.3.0 — Core experience enhancement
@@ -643,7 +640,7 @@ claude-crew currently supports **Telegram**. The architecture uses a platform ab
 - **Slash commands**: `/new` (reset session), `/compact` (compress context), `/model` (switch model), `/effort` (thinking depth), `/cost` (spend stats), `/memory` (view CLAUDE.md), `/status` (bot state) — all handled at daemon level, most cost zero tokens
 - **Task queue**: busy bot queues tasks instead of rejecting — shows queue position and processes automatically when ready
 - **Approvers list**: configure specific people who must ALL approve — button shows "Allow (1/2)", resolves when everyone approves
-- **Context warning**: auto-warns at 80% context usage, auto-compacts at 95% with group notification
+- **Context warning**: warns at 80% context usage with `/compact` hint
 
 ### v0.2.0 — Multi-project cluster management
 
@@ -653,7 +650,7 @@ claude-crew currently supports **Telegram**. The architecture uses a platform ab
 - **Real-time progress**: see what Claude is doing as it works — file reads, edits, commands
 - **Pinned dashboard**: git branch, last commit, context usage, cost — all projects at a glance
 - **Cron scheduler**: daily or interval-based recurring tasks
-- **Project memory**: automatic periodic saves, context persists across sessions
+- **Project memory**: `--continue` resumes last conversation, context persists across sessions
 - **Background daemon**: watchdog auto-restart, auto-start on login — no tmux needed
 - **#project hashtags**: click to filter any project's full timeline
 - **Bilingual UI**: English and Chinese

@@ -5,15 +5,18 @@ import {
   loadCron,
   saveCron,
   getMasterName,
+  hasPermission,
   STATE_DIR,
 } from "./config.js";
 import { log } from "./logger.js";
 import { updateDashboard } from "./dashboard.js";
 import { getLang, menuMsg } from "./interactive/i18n.js";
-import { delegatedApprovers } from "./state.js";
+
+const NO_PERM = "\u26d4";
 
 export function handleMasterCommand(
   stripped: string,
+  userId?: string,
 ): string | null | undefined {
   if (/^status$/i.test(stripped)) {
     void updateDashboard();
@@ -21,6 +24,7 @@ export function handleMasterCommand(
   }
 
   if (/^restart$/i.test(stripped)) {
+    if (userId && !hasPermission(userId, "restart")) return NO_PERM;
     log("RESTART: triggered via Telegram command");
     const daemonSh = join(STATE_DIR, "daemon.sh");
     setTimeout(() => {
@@ -30,6 +34,10 @@ export function handleMasterCommand(
       }).unref();
     }, 2000);
     return "\ud83d\udd04 Daemon restarting...";
+  }
+
+  if (/^cron\s/i.test(stripped) && userId && !hasPermission(userId, "cron")) {
+    return NO_PERM;
   }
 
   if (/^cron\s+list$/i.test(stripped)) {
@@ -109,30 +117,6 @@ export function handleMasterCommand(
       return `\u26a0\ufe0f Task not found: ${cronDelMatch[1]}`;
     saveCron(filtered);
     return `\u2705 Task deleted: ${cronDelMatch[1]}`;
-  }
-
-  // delegate @user 2h — temporary approval delegation
-  const delegateMatch = stripped.match(
-    /^delegate\s+(\d+)\s+(\d+)\s*(h|m|min|hour|hours|小时|分钟)?$/i,
-  );
-  if (delegateMatch) {
-    const targetUser = delegateMatch[1]!;
-    const amount = parseInt(delegateMatch[2]!, 10);
-    const unit = delegateMatch[3]?.toLowerCase() ?? "h";
-    const ms =
-      unit === "m" || unit === "min" || unit === "分钟"
-        ? amount * 60_000
-        : amount * 3_600_000;
-    const expiresAt = Date.now() + ms;
-    delegatedApprovers.set(targetUser, expiresAt);
-    const expireTime = new Date(expiresAt).toLocaleTimeString("zh-CN", {
-      hour12: false,
-    });
-    const lang = getLang();
-    log(`DELEGATE: ${targetUser} until ${expireTime}`);
-    return lang === "zh"
-      ? `✅ ${targetUser} 已获得审批权限，到 ${expireTime} 自动回收`
-      : `✅ ${targetUser} can now approve until ${expireTime}`;
   }
 
   const searchMatch = stripped.match(/^search\s+(.+)$/i);

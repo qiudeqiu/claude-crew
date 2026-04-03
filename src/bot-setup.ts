@@ -2,14 +2,15 @@ import type { ManagedBot } from "./types.js";
 import {
   canUseBot,
   isAdmin,
+  hasPermission,
   loadPool,
   getMasterName,
   WRITE_TOOLS,
   MAX_QUEUE_SIZE,
 } from "./config.js";
 import { log } from "./logger.js";
-import { splitMessage, transcribeVoice } from "./helpers.js";
-import { pendingApprovals, delegatedApprovers } from "./state.js";
+import { splitMessage } from "./helpers.js";
+import { pendingApprovals } from "./state.js";
 import { invokeClaudeAndReply } from "./claude.js";
 import { handleMasterCommand } from "./commands.js";
 import { handleBotSlashCommand } from "./bot-commands.js";
@@ -54,16 +55,6 @@ async function buildQuotedContext(
     parts.push(
       `File: ${replyDoc.file_name ?? "unknown"} (${replyDoc.mime_type ?? ""})`,
     );
-  }
-
-  // Quoted voice
-  const replyVoice = replyMsg.voice as { file_id: string } | undefined;
-  if (replyVoice) {
-    const voiceResult = await transcribeVoice(
-      (fid) => platform.downloadFile(fid),
-      replyVoice.file_id,
-    );
-    if (voiceResult?.text) parts.push(`Voice: ${voiceResult.text}`);
   }
 
   // Quoted video note / sticker
@@ -155,18 +146,7 @@ export function setupBot(managed: ManagedBot): void {
     }
 
     // Approval callbacks (approve:yes:id / approve:no:id)
-    // Check: admin OR delegated approver
-    const isDelegated = (() => {
-      const expires = delegatedApprovers.get(userId);
-      if (!expires) return false;
-      if (Date.now() > expires) {
-        delegatedApprovers.delete(userId);
-        return false;
-      }
-      return true;
-    })();
-
-    if (!isAdmin(userId) && !isDelegated) {
+    if (!isAdmin(userId)) {
       const s = setupMsg(getLang());
       await platform.answerCallback(cbId, s.adminOnly);
       return;
@@ -373,87 +353,6 @@ export function setupBot(managed: ManagedBot): void {
     );
   });
 
-  // Voice handler
-  tgBot.on("message:voice", async (ctx) => {
-    if (!ctx.from) return;
-    const chatType = ctx.chat?.type;
-    const chatId = String(ctx.chat!.id);
-
-    if (chatType === "group" || chatType === "supergroup") {
-      const replyTo = ctx.message.reply_to_message;
-      if (
-        !replyTo ||
-        replyTo.from?.username?.toLowerCase() !== botName.toLowerCase()
-      )
-        return;
-    }
-
-    if (!canUseBot(String(ctx.from.id), config)) {
-      await platform
-        .sendMessage(chatId, setupMsg(getLang()).noPermission)
-        .catch(() => {});
-      return;
-    }
-
-    void platform
-      .setReaction(chatId, String(ctx.message.message_id), "\ud83c\udfa7")
-      .catch(() => {});
-
-    const sv = setupMsg(getLang());
-    const statusMsg = await platform
-      .sendMessage(chatId, sv.transcribing)
-      .catch(() => null);
-
-    const result = await transcribeVoice(
-      (fid) => platform.downloadFile(fid),
-      ctx.message.voice.file_id,
-    );
-    if (!result || !result.text) {
-      if (statusMsg) {
-        await platform
-          .editMessage(chatId, statusMsg.id, sv.transcribeFailed)
-          .catch(() => {});
-      }
-      return;
-    }
-
-    if (statusMsg) {
-      await platform
-        .editMessage(chatId, statusMsg.id, sv.transcription(result.text))
-        .catch(() => {});
-    }
-
-    if (managed.busy) {
-      if (managed.queue.length < MAX_QUEUE_SIZE) {
-        managed.queue.push({
-          chatId,
-          userId: String(ctx.from.id),
-          message: result.text,
-          queuedAt: Date.now(),
-          requesterName: ctx.from.username ?? ctx.from.first_name,
-        });
-        const pos = managed.queue.length;
-        const lang = getLang();
-        const hint =
-          lang === "zh"
-            ? `⏳ 语音已转写，排队中（第 ${pos + 1} 个）`
-            : `⏳ Voice transcribed, queued (#${pos + 1})`;
-        await platform.sendMessage(chatId, hint).catch(() => {});
-      } else {
-        await platform.sendMessage(chatId, sv.busy).catch(() => {});
-      }
-      return;
-    }
-
-    void invokeClaudeAndReply(
-      managed,
-      chatId,
-      result.text,
-      undefined,
-      ctx.from.username ?? ctx.from.first_name,
-    );
-  });
-
   // Text handler
   tgBot.on("message:text", async (ctx) => {
     if (!ctx.from) return;
@@ -522,7 +421,7 @@ export function setupBot(managed: ManagedBot): void {
         .trim()
         .replace(/^\//, "");
       if (/^(help|menu|start)$/i.test(stripped)) {
-        await showMainMenu(managed, chatId);
+        await showMainMenu(managed, chatId, undefined, userId);
         return;
       }
       if (/^setup$/i.test(stripped)) {
@@ -530,20 +429,38 @@ export function setupBot(managed: ManagedBot): void {
         return;
       }
       if (/^(bots|addbot)$/i.test(stripped)) {
+        if (!hasPermission(userId, "bots")) {
+          await platform
+            .sendMessage(chatId, setupMsg(getLang()).noPermission)
+            .catch(() => {});
+          return;
+        }
         await showBotList(managed, chatId);
         return;
       }
       if (/^config$/i.test(stripped)) {
+        if (!hasPermission(userId, "config")) {
+          await platform
+            .sendMessage(chatId, setupMsg(getLang()).noPermission)
+            .catch(() => {});
+          return;
+        }
         await showGlobalConfig(managed, chatId);
         return;
       }
       if (/^users$/i.test(stripped)) {
-        await showUserManagement(managed, chatId);
+        if (!hasPermission(userId, "users")) {
+          await platform
+            .sendMessage(chatId, setupMsg(getLang()).noPermission)
+            .catch(() => {});
+          return;
+        }
+        await showUserManagement(managed, chatId, undefined, userId);
         return;
       }
 
       // Text-only master commands (search, cron, restart, status)
-      const directReply = handleMasterCommand(stripped);
+      const directReply = handleMasterCommand(stripped, userId);
       if (directReply !== undefined) {
         if (directReply !== null) {
           for (const chunk of splitMessage(directReply)) {
@@ -556,7 +473,7 @@ export function setupBot(managed: ManagedBot): void {
 
     if (config.role === "master" && !loadPool().masterExecute) {
       // Unrecognized input → show menu with buttons
-      await showMainMenu(managed, chatId);
+      await showMainMenu(managed, chatId, undefined, userId);
       return;
     }
 

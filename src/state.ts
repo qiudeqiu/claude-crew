@@ -30,6 +30,3 @@ export const pendingApprovals = new Map<
     requiredApprovers: string[];
   }
 >();
-
-/** Delegated approval: userId → expiresAt timestamp */
-export const delegatedApprovers = new Map<string, number>();

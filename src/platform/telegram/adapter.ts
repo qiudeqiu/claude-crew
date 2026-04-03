@@ -266,9 +266,6 @@ export class TelegramAdapter implements Platform {
       ? photos[photos.length - 1].file_id
       : undefined;
 
-    // Extract voice
-    const voice = msg?.voice as { file_id: string } | undefined;
-
     return {
       id: String((msg?.message_id as number) ?? 0),
       chatId,
@@ -278,7 +275,6 @@ export class TelegramAdapter implements Platform {
       text: (msg?.text as string) ?? undefined,
       caption: (msg?.caption as string) ?? undefined,
       photoFileId,
-      voiceFileId: voice?.file_id,
       entities:
         (msg?.entities as PlatformMessage["entities"]) ??
         (msg?.caption_entities as PlatformMessage["entities"]),
