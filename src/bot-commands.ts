@@ -10,7 +10,7 @@ import {
 } from "./config.js";
 import { log } from "./logger.js";
 import { formatCost, splitMessage } from "./helpers.js";
-import { sessionStats } from "./state.js";
+import { sessionStats, daemon } from "./state.js";
 import { getLang } from "./interactive/i18n.js";
 import { runClaude } from "./claude.js";
 
@@ -55,6 +55,7 @@ export async function handleBotSlashCommand(
     // Silent compact — run Claude directly, just notify when done
     const dir = config.assignedPath ?? "";
     managed.busy = true;
+    daemon.activeInvocations++;
     await p
       .sendMessage(chatId, zh ? "🔄 正在压缩..." : "🔄 Compacting...")
       .catch(() => {});
@@ -71,6 +72,7 @@ export async function handleBotSlashCommand(
       })
       .finally(() => {
         managed.busy = false;
+        daemon.activeInvocations--;
       });
     return true;
   }

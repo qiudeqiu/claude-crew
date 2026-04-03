@@ -4,6 +4,7 @@ import {
   hasPermission,
   loadPool,
   loadCron,
+  saveCron,
   savePool,
   getMasterName,
 } from "../config.js";
@@ -252,7 +253,7 @@ async function handleMenuCallback(
     return await handleMenuCallback(
       managed,
       chatId,
-      _userId,
+      userId,
       "m:cron",
       messageId,
     );

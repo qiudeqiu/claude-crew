@@ -38,6 +38,7 @@ import {
   RESTART_NOTIFY_DELAY_MS,
   CRON_CHECK_INTERVAL_MS,
   CONVERSATION_CLEANUP_MS,
+  WRITE_TOOLS,
 } from "./config.js";
 import { log } from "./logger.js";
 import { managedBots, botByUsername, daemon } from "./state.js";
@@ -103,7 +104,7 @@ async function main(): Promise<void> {
   }
 
   const platformType = pool.platform ?? "telegram";
-  log(`Starting daemon v3 with ${pool.bots.length} bot(s) [${platformType}]`);
+  log(`Starting daemon v4 with ${pool.bots.length} bot(s) [${platformType}]`);
   log(
     `Admins: ${getAdminIds().join(", ")} | Max concurrent: ${getConfig().maxConcurrent}`,
   );
@@ -169,7 +170,7 @@ async function main(): Promise<void> {
                 `ONLINE: @${info.username} → ${config.assignedProject ?? config.role ?? "?"}`,
               );
               if (!config.username) {
-                config.username = info.username;
+                managed.config = { ...config, username: info.username };
                 botByUsername.set(info.username, managed);
               }
             },
@@ -412,7 +413,6 @@ async function main(): Promise<void> {
           return;
         }
 
-        const { WRITE_TOOLS } = await import("./config.js");
         const s = setupMsg(getLang());
 
         if (action === "no") {
@@ -512,7 +512,7 @@ async function main(): Promise<void> {
               `ONLINE: ${info.username} → ${config.assignedProject ?? config.role ?? "?"}`,
             );
             if (!config.username) {
-              config.username = info.username;
+              managed.config = { ...config, username: info.username };
               botByUsername.set(info.username, managed);
             }
           });
@@ -559,7 +559,7 @@ async function main(): Promise<void> {
   setInterval(() => checkCron(), CRON_CHECK_INTERVAL_MS);
   setInterval(() => cleanupExpired(), CONVERSATION_CLEANUP_MS);
 
-  log("Daemon v3 running.");
+  log("Daemon v4 running.");
 }
 
 // ── Shutdown ──

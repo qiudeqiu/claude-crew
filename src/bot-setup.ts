@@ -386,11 +386,10 @@ export function setupBot(managed: ManagedBot): void {
 
     // Strip only THIS bot's @mention, preserve others (e.g. @bot in cron commands)
     const selfMentionRe = new RegExp(`@${botName}\\b`, "gi");
+    const userId = String(ctx.from.id);
 
     // Master bot: interactive conversations + commands
     if (config.role === "master") {
-      const userId = String(ctx.from.id);
-
       // No group bound yet → guide user
       if (!loadPool().sharedGroupId) {
         if (chatType === "private") {
