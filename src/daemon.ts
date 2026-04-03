@@ -539,17 +539,15 @@ async function main(): Promise<void> {
       }
     }
 
-    // Send startup message + menu
+    // Send startup message (no menu — menu should be user-initiated to have correct ownership)
     try {
       const { getLang, menuMsg } = await import("./interactive/i18n.js");
-      const { showMainMenu } = await import("./interactive/index.js");
       const lang = getLang();
       const m = menuMsg(lang);
       await daemon.masterBot!.platform.sendMessage(
         pool.sharedGroupId,
         m.started,
       );
-      await showMainMenu(daemon.masterBot!, pool.sharedGroupId);
     } catch (e) {
       log(`WARN: startup notification failed: ${e}`);
     }
