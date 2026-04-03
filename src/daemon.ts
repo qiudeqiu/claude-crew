@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 /**
  * Claude Crew Daemon v4
  *

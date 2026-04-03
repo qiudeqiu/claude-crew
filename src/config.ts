@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import { readFileSync, writeFileSync, statSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";

@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import type { ManagedBot, SessionStats } from "./types.js";
 
 // ── Shared mutable state ──

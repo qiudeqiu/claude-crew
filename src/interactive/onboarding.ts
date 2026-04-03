@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import type { Platform } from "../platform/types.js";
 import type { ManagedBot } from "../types.js";
 import { loadPool, savePool, createProjectBot } from "../config.js";

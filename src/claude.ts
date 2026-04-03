@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import { existsSync } from "fs";
 import { randomBytes } from "crypto";
 import { homedir } from "os";

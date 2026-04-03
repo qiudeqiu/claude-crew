@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import type { ConversationState, ConversationStep } from "../types.js";
 import { CONVERSATION_TTL_MS } from "../config.js";
 import { menuOwners } from "../state.js";

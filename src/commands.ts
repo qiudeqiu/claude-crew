@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import { execFileSync, spawn } from "child_process";
 import { join } from "path";
 import {

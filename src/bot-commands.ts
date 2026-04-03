@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import type { ManagedBot } from "./types.js";

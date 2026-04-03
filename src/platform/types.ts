@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 /**
  * Platform abstraction — all messaging platform adapters implement this interface.
  * Core logic (claude.ts, commands.ts, interactive/*) calls these methods,

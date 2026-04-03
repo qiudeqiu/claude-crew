@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 /**
  * Discord Platform Adapter — wraps discord.js Client into the Platform interface.
  */

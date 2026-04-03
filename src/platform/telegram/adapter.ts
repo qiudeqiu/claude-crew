@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 /**
  * Telegram Platform Adapter — wraps grammY Bot into the Platform interface.
  */

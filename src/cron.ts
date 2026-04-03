@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import { loadPool, loadCron, saveCron, getConfig } from "./config.js";
 import { log } from "./logger.js";
 import { botByUsername, daemon } from "./state.js";

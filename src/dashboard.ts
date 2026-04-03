@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import { readFileSync, writeFileSync } from "fs";
 import {
   loadPool,

@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import { existsSync, statSync } from "fs";
 import { resolve } from "path";
 import { homedir } from "os";

@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import type { Platform } from "../platform/types.js";
 import type { Button } from "../platform/types.js";
 import type { ManagedBot, AdminConfig, AdminPermission } from "../types.js";

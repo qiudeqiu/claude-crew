@@ -1,3 +1,4 @@
+// Copyright 2026 qiudeqiu. Licensed under Apache-2.0.
 import { loadPool, getPlatform } from "../config.js";
 
 const EXAMPLE_HOME =
