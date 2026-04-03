@@ -247,7 +247,7 @@ async function main(): Promise<void> {
 
           if (/^(help|menu|start)$/i.test(stripped)) {
             const { showMainMenu } = await import("./interactive/index.js");
-            await showMainMenu(managed, msg.chatId);
+            await showMainMenu(managed, msg.chatId, undefined, msg.userId);
             return;
           }
           if (/^setup$/i.test(stripped)) {
@@ -257,27 +257,38 @@ async function main(): Promise<void> {
             return;
           }
           if (/^(bots|addbot)$/i.test(stripped)) {
+            const { hasPermission } = await import("./config.js");
+            if (!hasPermission(msg.userId, "bots")) return;
             const { showBotList } =
               await import("./interactive/bot-management.js");
             await showBotList(managed, msg.chatId);
             return;
           }
           if (/^config$/i.test(stripped)) {
+            const { hasPermission } = await import("./config.js");
+            if (!hasPermission(msg.userId, "config")) return;
             const { showGlobalConfig } =
               await import("./interactive/config-editor.js");
             await showGlobalConfig(managed, msg.chatId);
             return;
           }
           if (/^users$/i.test(stripped)) {
+            const { hasPermission } = await import("./config.js");
+            if (!hasPermission(msg.userId, "users")) return;
             const { showUserManagement } =
               await import("./interactive/user-management.js");
-            await showUserManagement(managed, msg.chatId);
+            await showUserManagement(
+              managed,
+              msg.chatId,
+              undefined,
+              msg.userId,
+            );
             return;
           }
 
-          // Text-only master commands (status, restart, cron, search, delegate)
+          // Text-only master commands (status, restart, cron, search)
           const { handleMasterCommand } = await import("./commands.js");
-          const directReply = handleMasterCommand(stripped);
+          const directReply = handleMasterCommand(stripped, msg.userId);
           if (directReply !== undefined) {
             if (directReply !== null) {
               const { splitMessage } = await import("./helpers.js");
@@ -295,7 +306,7 @@ async function main(): Promise<void> {
           // Unrecognized input → show menu (if masterExecute disabled)
           if (!loadPool().masterExecute) {
             const { showMainMenu } = await import("./interactive/index.js");
-            await showMainMenu(managed, msg.chatId);
+            await showMainMenu(managed, msg.chatId, undefined, msg.userId);
             return;
           }
         }
