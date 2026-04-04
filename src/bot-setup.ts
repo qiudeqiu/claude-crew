@@ -379,6 +379,17 @@ export function setupBot(managed: ManagedBot): void {
         botName.toLowerCase();
 
       if (!isMentioned && !isReplyToMe) return;
+
+      // Project bot: skip if master bot is also @mentioned (e.g. cron commands)
+      if (config.role !== "master" && isMentioned) {
+        const masterName = getMasterName();
+        const masterMentioned = entities.some((e) => {
+          if (e.type !== "mention") return false;
+          const mentioned = text.slice(e.offset, e.offset + e.length);
+          return mentioned.toLowerCase() === `@${masterName}`.toLowerCase();
+        });
+        if (masterMentioned) return;
+      }
     }
 
     if (!canUseBot(String(ctx.from.id), config)) {
