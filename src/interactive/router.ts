@@ -125,11 +125,20 @@ export async function routeCallback(
     return await handleMenuCallback(managed, chatId, userId, data, messageId);
   }
 
-  // x: = cancel + navigate back
+  // x: = cancel + navigate back (strip all x: prefixes, no recursion)
   if (data.startsWith("x:")) {
     clearConversation(userId, chatId);
-    const backData = data.slice(2);
-    return await routeCallback(managed, chatId, userId, backData, messageId);
+    let backData = data;
+    while (backData.startsWith("x:")) backData = backData.slice(2);
+    if (!backData) return false;
+    return await routeCallback(
+      managed,
+      chatId,
+      userId,
+      backData,
+      messageId,
+      cbId,
+    );
   }
 
   return false;

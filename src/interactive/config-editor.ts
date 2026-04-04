@@ -2,7 +2,7 @@
 import type { Platform } from "../platform/types.js";
 import type { Button } from "../platform/types.js";
 import type { ManagedBot } from "../types.js";
-import { loadPool, savePool } from "../config.js";
+import { loadPool, savePool, hasPermission } from "../config.js";
 import { log } from "../logger.js";
 import {
   getConversation,
@@ -284,6 +284,7 @@ export async function handleConfigCallback(
   data: string,
   messageId: number | string,
 ): Promise<boolean> {
+  if (!hasPermission(userId, "config")) return false;
   const api = managed.platform;
 
   if (data === "c:g") {

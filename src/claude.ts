@@ -407,7 +407,7 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
   const isDaemonProject = existsSync(join(dir, "src", "daemon.ts"));
   if (!isDaemonProject) return undefined;
 
-  const safeProject = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff _-]/g, "_");
+  const safeProject = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff_-]/g, "_");
   return `WARNING: You are running inside the telegram-pool daemon. If you modify daemon.ts or related files, you MUST: 1) finish ALL edits first, 2) send your reply/summary to the user, 3) write a restart note: echo '{"project":"${safeProject}","summary":"<what you did>"}' > ${RESTART_NOTE_FILE}, 4) ONLY THEN run daemon.sh restart as the very last command. Restarting kills your process — anything after it will not execute.`;
 }
 

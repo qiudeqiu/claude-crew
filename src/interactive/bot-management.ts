@@ -2,7 +2,12 @@
 import type { Platform } from "../platform/types.js";
 import type { ManagedBot } from "../types.js";
 import { mkdirSync } from "fs";
-import { loadPool, savePool, createProjectBot } from "../config.js";
+import {
+  loadPool,
+  savePool,
+  createProjectBot,
+  hasPermission,
+} from "../config.js";
 import { log } from "../logger.js";
 import { botByUsername } from "../state.js";
 import {
@@ -136,6 +141,7 @@ export async function handleBotCallback(
   data: string,
   messageId: number | string,
 ): Promise<boolean> {
+  if (!hasPermission(userId, "bots")) return false;
   const api = managed.platform;
   const lang = getLang();
   const m = botsMsg(lang);

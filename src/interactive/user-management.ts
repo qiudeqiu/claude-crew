@@ -240,6 +240,7 @@ export async function handleUserCallback(
   data: string,
   messageId: number | string,
 ): Promise<boolean> {
+  if (!hasPermission(userId, "users")) return false;
   const api = managed.platform;
   const lang = getLang();
   const m = usersMsg(lang);
