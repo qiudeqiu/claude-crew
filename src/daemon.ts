@@ -192,7 +192,10 @@ async function main(): Promise<void> {
       // Discord: register message handlers via Platform interface
       adapter.onMessage(async (msg) => {
         if (!msg.userId || (!msg.text && !msg.photoFileId)) return;
-        const authorized = canUseBot(msg.userId, config);
+        // Use live config for access check (reflects runtime allowedUsers changes)
+        const liveConf =
+          loadPool().bots.find((b) => b.username === config.username) ?? config;
+        const authorized = canUseBot(msg.userId, liveConf);
 
         // Interactive text flow: active conversation takes priority (no @mention needed)
         // Strip Discord mentions before routing (same as Telegram strips @mentions)

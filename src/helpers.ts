@@ -149,6 +149,7 @@ const SENSITIVE_PATTERNS = [
   "_PASSWORD",
   "_KEY",
   "_CREDENTIAL",
+  "ASKPASS",
   "TELEGRAM_",
   "BOT_",
   "OPENAI_",

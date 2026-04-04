@@ -89,11 +89,6 @@ export function tripCircuit(botKey: string, reason: string): void {
   log(`CIRCUIT: ${botKey} — FORCE TRIPPED: ${reason.slice(0, 200)}`);
 }
 
-/** Manual reset (e.g., admin command or config change). */
-export function resetCircuit(botKey: string): void {
-  circuits.delete(botKey);
-}
-
 /** Get circuit state for dashboard/display (no side effects, no logging). */
 export function getCircuitInfo(botKey: string): {
   failures: number;

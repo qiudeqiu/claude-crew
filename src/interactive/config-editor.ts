@@ -671,12 +671,34 @@ export async function handleConfigText(
     return true;
   }
 
+  // Parse approvers as array of numeric IDs
+  let parsedValue: unknown = value;
+  if (field.key === "approvers" && value) {
+    const ids = value
+      .split(/[,\s]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const invalid = ids.filter((id) => !/^\d+$/.test(id));
+    if (invalid.length > 0) {
+      await send(
+        api,
+        chatId,
+        lang === "zh"
+          ? `\u26a0\ufe0f 无效 ID: ${invalid.join(", ")}。请输入数字用户 ID`
+          : `\u26a0\ufe0f Invalid ID: ${invalid.join(", ")}. Please enter numeric user IDs`,
+        cancelKb,
+      ).catch(() => {});
+      return true;
+    }
+    parsedValue = ids;
+  }
+
   const pool = loadPool();
   if (isGlobal) {
-    savePool({ ...pool, [field.key]: value });
+    savePool({ ...pool, [field.key]: parsedValue });
   } else {
     const updatedBots = pool.bots.map((b) =>
-      b.username === editScope ? { ...b, [field.key]: value } : b,
+      b.username === editScope ? { ...b, [field.key]: parsedValue } : b,
     );
     savePool({ ...pool, bots: updatedBots });
   }
