@@ -189,7 +189,7 @@ async function handleMenuCallback(
 
     case "status":
       void updateDashboard();
-      await edit(api, chatId, messageId, m.refreshing).catch(() => {});
+      await send(api, chatId, m.refreshing).catch(() => {});
       return true;
 
     case "cron": {
