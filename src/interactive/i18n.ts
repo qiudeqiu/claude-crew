@@ -81,12 +81,12 @@ export function menuMsg(lang: Lang) {
           "点击下方按钮查看各模块详细指南:",
         helpMaster:
           "\ud83d\udc51 主控机器人指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "按钮菜单:\n" +
+          "按钮菜单（发送以下文字给主控 bot）:\n" +
           "  menu \u2014 打开管理菜单\n" +
           "  bots \u2014 管理项目 Bot\n" +
           "  config \u2014 全局配置\n" +
           "  users \u2014 管理管理员和用户\n\n" +
-          "文字命令:\n" +
+          "文字命令（需 @主控bot + 命令）:\n" +
           "  status \u2014 刷新仪表盘\n" +
           "  restart \u2014 重启 daemon\n" +
           "  search 关键词 \u2014 搜索所有项目",
@@ -211,12 +211,12 @@ export function menuMsg(lang: Lang) {
           "Tap a button below for detailed guides:",
         helpMaster:
           "\ud83d\udc51 Master Bot Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "Button menu:\n" +
+          "Button menu (send text to master bot):\n" +
           "  menu \u2014 Open management menu\n" +
           "  bots \u2014 Manage project bots\n" +
           "  config \u2014 Global settings\n" +
           "  users \u2014 Manage admins & users\n\n" +
-          "Text commands:\n" +
+          "Text commands (@mention master bot + command):\n" +
           "  status \u2014 Refresh dashboard\n" +
           "  restart \u2014 Restart daemon\n" +
           "  search keyword \u2014 Search all projects",
