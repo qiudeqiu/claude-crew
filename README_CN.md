@@ -5,13 +5,15 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/runtime-Bun_%3E%3D1.0-f9f1e1" alt="Bun">
   <img src="https://img.shields.io/badge/Claude_Code-CLI-blueviolet" alt="Claude Code">
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
 </p>
 
 **Claude Code — Every Project, Anywhere.**
+
+用项目管理的视角安排你的 Claude Code 工作：一个项目一个 bot，项目之间边界清晰，多项目工作结构化且有条不紊。
 
 基于 Claude Code CLI，这个项目专注于两件事：
 
