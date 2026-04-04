@@ -279,8 +279,9 @@ async function handleMenuCallback(
       break;
   }
 
-  // Restart confirmed
+  // Restart confirmed (re-check permission)
   if (action === "restart:yes") {
+    if (!hasPermission(userId, "restart")) return true;
     const { spawn } = await import("child_process");
     const { join } = await import("path");
     const { STATE_DIR } = await import("../config.js");

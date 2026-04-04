@@ -124,6 +124,8 @@ export async function handleOnboardCallback(
   }
 
   if (data === "o:restart") {
+    const { hasPermission } = await import("../config.js");
+    if (!hasPermission(userId, "restart")) return true;
     const { spawn } = await import("child_process");
     const { join } = await import("path");
     const { STATE_DIR } = await import("../config.js");
