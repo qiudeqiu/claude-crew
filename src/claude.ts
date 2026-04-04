@@ -499,8 +499,9 @@ export async function invokeClaudeAndReply(
 
   try {
     const cleanMsg = userMessage.replace(/@[\w-]+/g, "").trim();
-    const prompt = imagePath
-      ? `The user sent an image at path: ${imagePath}. Please use the Read tool to view the image first, then respond: ${cleanMsg || "Analyze this image"}`
+    const safeImagePath = imagePath?.replace(/[^\w/.\-]/g, "_");
+    const prompt = safeImagePath
+      ? `The user sent an image at path: ${safeImagePath}. Please use the Read tool to view the image first, then respond: ${cleanMsg || "Analyze this image"}`
       : cleanMsg;
 
     const systemPrompt = buildSystemPrompt(project, dir);
