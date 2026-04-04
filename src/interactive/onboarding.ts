@@ -79,6 +79,8 @@ export async function handleOnboardCallback(
   const api = managed.platform;
 
   if (data === "o:setgroup") {
+    const { isOwner } = await import("../config.js");
+    if (!isOwner(userId)) return true;
     const pool = loadPool();
     savePool({ ...pool, sharedGroupId: chatId });
     log(`ONBOARD: sharedGroupId set to ${chatId} by ${userId}`);
