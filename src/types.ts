@@ -153,8 +153,7 @@ export type ConversationStep =
   | "config:awaitValue"
   // User management
   | "user:awaitAdmin"
-  | "user:awaitUser"
-  | "user:awaitAdminPerms";
+  | "user:awaitUser";
 
 export type ConversationState = {
   step: ConversationStep;

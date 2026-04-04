@@ -257,7 +257,7 @@ async function handlePathInput(
     chatId,
     `${m.summary}\n${SEPARATOR}\n\n` +
       `Bot: @${username}\nProject: ${project}\nPath: ${path}\n` +
-      `Access: readWrite\nPermission: allowAll\n\n${m.saveConfig}`,
+      `Access: readWrite\nPermission: ${loadPool().permissionMode ?? "approve"}\n\n${m.saveConfig}`,
     {
       reply_markup: {
         inline_keyboard: confirmRow(

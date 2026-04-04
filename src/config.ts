@@ -378,7 +378,7 @@ export function migrateConfig(): string[] {
         added.push(`${bot.username}.accessLevel`);
       }
       if (!("permissionMode" in bot)) {
-        bot.permissionMode = pool.permissionMode ?? "allowAll";
+        bot.permissionMode = pool.permissionMode ?? "approve";
         added.push(`${bot.username}.permissionMode`);
       }
       if (!("allowedUsers" in bot)) {

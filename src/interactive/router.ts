@@ -164,7 +164,7 @@ async function handleMenuCallback(
   const requiredPerm =
     permGate[action] ?? (action.startsWith("cdel:") ? "cron" : undefined);
   if (requiredPerm && !hasPermission(userId, requiredPerm)) {
-    await edit(api, chatId, messageId, c.noPermission ?? "\u26d4", {
+    await edit(api, chatId, messageId, c.noPermission, {
       reply_markup: { inline_keyboard: menuButton(lang) },
     }).catch(() => {});
     return true;

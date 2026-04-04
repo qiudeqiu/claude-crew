@@ -174,7 +174,7 @@ export async function showGlobalConfig(
   const api = managed.platform;
   const pool = loadPool();
 
-  const pm = pool.permissionMode ?? "allowAll";
+  const pm = pool.permissionMode ?? "approve";
   const al = pool.accessLevel ?? "readWrite";
   const me = pool.masterExecute ?? false;
 
@@ -234,7 +234,7 @@ export async function showBotConfig(
   const bot = pool.bots.find((b) => b.username === username);
   if (!bot) return;
 
-  const globalPm = pool.permissionMode ?? "allowAll";
+  const globalPm = pool.permissionMode ?? "approve";
   const globalAl = pool.accessLevel ?? "readWrite";
 
   const pmDisplay =

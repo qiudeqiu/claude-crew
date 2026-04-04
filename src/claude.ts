@@ -735,14 +735,18 @@ export async function invokeClaudeAndReply(
     // Set busy BEFORE dispatching to prevent concurrent message acceptance
     while (managed.queue.length > 0) {
       const next = managed.queue.shift()!;
-      if (next.userId !== "system" && !canUseBot(next.userId, config)) {
+      // Use live config for access check (user may have been added/removed since queued)
+      const liveConf =
+        loadPool().bots.find((b) => b.username === managed.config.username) ??
+        managed.config;
+      if (next.userId !== "system" && !canUseBot(next.userId, liveConf)) {
         log(`QUEUE: ${project} — skipped revoked user ${next.userId}`);
         continue;
       }
+      managed.busy = true; // Set BEFORE dispatch to prevent concurrent acceptance
       log(
         `QUEUE: ${project} — processing next (${managed.queue.length} remaining)`,
       );
-      managed.busy = true;
       void invokeClaudeAndReply(
         managed,
         next.chatId,

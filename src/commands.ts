@@ -17,7 +17,7 @@ const NO_PERM = "\u26d4";
 
 export function handleMasterCommand(
   stripped: string,
-  userId?: string,
+  userId: string,
 ): string | null | undefined {
   if (/^status$/i.test(stripped)) {
     void updateDashboard();
@@ -25,7 +25,7 @@ export function handleMasterCommand(
   }
 
   if (/^restart$/i.test(stripped)) {
-    if (userId && !hasPermission(userId, "restart")) return NO_PERM;
+    if (!hasPermission(userId, "restart")) return NO_PERM;
     log("RESTART: triggered via Telegram command");
     const daemonSh = join(STATE_DIR, "daemon.sh");
     setTimeout(() => {
@@ -37,7 +37,7 @@ export function handleMasterCommand(
     return "\ud83d\udd04 Daemon restarting...";
   }
 
-  if (/^cron\s/i.test(stripped) && userId && !hasPermission(userId, "cron")) {
+  if (/^cron\s/i.test(stripped) && !hasPermission(userId, "cron")) {
     return NO_PERM;
   }
 

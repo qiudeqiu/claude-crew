@@ -92,7 +92,7 @@ export async function showBotDetail(
     return;
   }
 
-  const globalPm = pool.permissionMode ?? "allowAll";
+  const globalPm = pool.permissionMode ?? "approve";
   const globalAl = pool.accessLevel ?? "readWrite";
   const pmNote =
     bot.permissionMode === globalPm
@@ -108,7 +108,7 @@ export async function showBotDetail(
     `${m.project}: ${bot.assignedProject ?? m.none}\n` +
     `${m.path}: ${bot.assignedPath ?? m.none}\n` +
     `${m.access}: ${bot.accessLevel ?? "readWrite"}${alNote}\n` +
-    `${m.permission}: ${bot.permissionMode ?? "allowAll"}${pmNote}\n` +
+    `${m.permission}: ${bot.permissionMode ?? "approve"}${pmNote}\n` +
     `${m.users}: ${bot.allowedUsers?.length ?? 0}`;
 
   const keyboard = [

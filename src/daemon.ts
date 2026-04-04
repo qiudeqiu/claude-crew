@@ -259,7 +259,12 @@ async function main(): Promise<void> {
           }
           if (/^(bots|addbot)$/i.test(stripped)) {
             const { hasPermission } = await import("./config.js");
-            if (!hasPermission(msg.userId, "bots")) return;
+            if (!hasPermission(msg.userId, "bots")) {
+              await adapter
+                .sendMessage(msg.chatId, setupMsg(getLang()).noPermission)
+                .catch(() => {});
+              return;
+            }
             const { showBotList } =
               await import("./interactive/bot-management.js");
             await showBotList(managed, msg.chatId);
@@ -267,7 +272,12 @@ async function main(): Promise<void> {
           }
           if (/^config$/i.test(stripped)) {
             const { hasPermission } = await import("./config.js");
-            if (!hasPermission(msg.userId, "config")) return;
+            if (!hasPermission(msg.userId, "config")) {
+              await adapter
+                .sendMessage(msg.chatId, setupMsg(getLang()).noPermission)
+                .catch(() => {});
+              return;
+            }
             const { showGlobalConfig } =
               await import("./interactive/config-editor.js");
             await showGlobalConfig(managed, msg.chatId);
@@ -275,7 +285,12 @@ async function main(): Promise<void> {
           }
           if (/^users$/i.test(stripped)) {
             const { hasPermission } = await import("./config.js");
-            if (!hasPermission(msg.userId, "users")) return;
+            if (!hasPermission(msg.userId, "users")) {
+              await adapter
+                .sendMessage(msg.chatId, setupMsg(getLang()).noPermission)
+                .catch(() => {});
+              return;
+            }
             const { showUserManagement } =
               await import("./interactive/user-management.js");
             await showUserManagement(
