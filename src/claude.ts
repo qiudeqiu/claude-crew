@@ -421,7 +421,12 @@ export async function invokeClaudeAndReply(
   imagePath?: string,
   requesterName?: string,
 ): Promise<void> {
-  const { config, platform } = managed;
+  const { platform } = managed;
+  // Read live config — reflects runtime changes (permissionMode, accessLevel, model, approvers)
+  const pool = loadPool();
+  const config =
+    pool.bots.find((b) => b.username === managed.config.username) ??
+    managed.config;
   const project = config.assignedProject ?? config.username ?? "?";
   const dir = config.assignedPath ?? homedir();
   const mode = getBotPermissionMode(config);
