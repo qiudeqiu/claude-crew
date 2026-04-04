@@ -76,7 +76,7 @@ Background daemon with watchdog auto-restart and auto-start on login. No tmux, n
 
 Each bot remembers its project's state across sessions: `--continue` resumes the last conversation, and the pinned dashboard shows every project's git branch, last commit, context usage, and cost at a glance. No matter who changed what or when — open the group and you're up to date.
 
-Use `/new` to reset when context gets stale, `/compact` to compress without losing key info, `/model` and `/effort` to tune per task, `/cost` and `/status` to monitor — all from chat, zero token overhead.
+Use `/new` to reset when context gets stale, `/compact` to compress without losing key info (admin), `/model` to switch models (admin), `/effort` to tune thinking depth, `/cost` and `/status` to monitor — all from chat, zero token overhead.
 
 ### Solves real pain points
 
@@ -619,7 +619,7 @@ claude-crew currently supports **Telegram**. The architecture uses a platform ab
 | Platform | Status | Notes |
 |----------|--------|-------|
 | **Telegram** | Supported | Full feature parity, production-tested |
-| **Discord** | Planned | Adapter implemented, in testing |
+| **Discord** | Experimental | Adapter shipped, core features working |
 | **Feishu (Lark)** | Planned | Architecture ready, adapter not started |
 
 > The Platform interface (`src/platform/types.ts`) defines all capabilities — messaging, buttons, files, threads. Adding a new platform means implementing this interface. Core logic (task execution, permissions, queue, dashboard) is platform-agnostic.
@@ -678,4 +678,4 @@ Dashboard design inspired by [claude-hud](https://github.com/jarrodwatts/claude-
 
 ## 📄 License
 
-MIT
+Apache 2.0
