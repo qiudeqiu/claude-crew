@@ -45,8 +45,8 @@ export function common(lang: Lang) {
         cancelled: "\u274c Cancelled.",
         noPermission: "\u26d4 No permission",
         replyHint: isDiscord()
-          ? "\n\n\ud83d\udca1 @mention master to respond"
-          : "\n\n\ud83d\udca1 Reply to this message or @mention master to respond",
+          ? "\n\n\ud83d\udca1 Mention the master bot to respond"
+          : "\n\n\ud83d\udca1 Reply to this message or mention the master bot",
       };
 }
 
@@ -257,7 +257,7 @@ export function menuMsg(lang: Lang) {
         helpStart:
           "\ud83d\ude80 Quick Start\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
           "1\ufe0f\u20e3 Send a task to a project bot\n" +
-          "  @projectbot fix this login bug\n\n" +
+          "  「project bot」 fix this login bug\n\n" +
           "2\ufe0f\u20e3 Wait for execution (live progress)\n" +
           "  Bot reacts with \ud83d\udc40 when it picks up your task\n" +
           "  Shows files being read/edited in real time\n\n" +
@@ -271,7 +271,7 @@ export function menuMsg(lang: Lang) {
         helpTips:
           "\ud83d\udca1 Tips & Tricks\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
           "\ud83d\uddbc Photo analysis\n" +
-          "  Send screenshot + @projectbot description\n" +
+          "  Send screenshot + 「project bot」 description\n" +
           "  Claude reads the image before responding\n" +
           "  \u26a0\ufe0f A single image can use 50K+ tokens\n\n" +
           "\ud83d\udcac Quote any message\n" +
@@ -789,14 +789,14 @@ export function onboardMsg(lang: Lang) {
           ? "\u2705 频道设置完成！\n\n" +
             "\ud83c\udf89 下一步：\n\n" +
             "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
-            "\u2022 添加后在频道中 @项目bot 即可让 Claude Code 执行任务\n" +
-            "\u2022 @master menu 随时打开管理菜单\n\n" +
+            "\u2022 添加后在频道中 @提及项目 bot 即可让 Claude Code 执行任务\n" +
+            "\u2022 发送 menu 给主控 bot 随时打开管理菜单\n\n" +
             "\ud83d\udca1 项目 bot 需要先在 Developer Portal 创建，拿到 token 后在这里添加"
           : "\u2705 群组设置完成！\n\n" +
             "\ud83c\udf89 下一步：\n\n" +
             "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
-            "\u2022 添加后在群里 @项目bot 即可让 Claude Code 在该项目中执行任务\n" +
-            "\u2022 @master menu 随时打开管理菜单\n\n" +
+            "\u2022 添加后在群里 @提及项目 bot 即可让 Claude Code 执行任务\n" +
+            "\u2022 发送 menu 给主控 bot 随时打开管理菜单\n\n" +
             "\ud83d\udca1 项目 bot 需要先在 @BotFather 创建，拿到 token 后在这里添加",
         invalidToken: isDiscord()
           ? "\u26a0\ufe0f 这不像一个 bot token。\n\nDiscord token 由 3 段 base64 组成（用 . 分隔）\n请在 Developer Portal 重新获取后重试:"
@@ -884,14 +884,14 @@ export function onboardMsg(lang: Lang) {
           ? "\u2705 Channel set up!\n\n" +
             "\ud83c\udf89 Next steps:\n\n" +
             '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
-            "\u2022 Then @projectbot in the channel to run Claude Code tasks\n" +
-            "\u2022 @master menu to open the management menu anytime\n\n" +
+            "\u2022 Then mention the project bot in the channel to run Claude Code tasks\n" +
+            '\u2022 Send "menu" to the master bot to open management anytime\n\n' +
             "\ud83d\udca1 Create a bot in Developer Portal first, then add its token here"
           : "\u2705 Group set up!\n\n" +
             "\ud83c\udf89 Next steps:\n\n" +
             '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
-            "\u2022 Then @projectbot in the group to run Claude Code tasks in that project\n" +
-            "\u2022 @master menu to open the management menu anytime\n\n" +
+            "\u2022 Then @mention the project bot in the group to run Claude Code tasks\n" +
+            '\u2022 Send "menu" to the master bot to open management anytime\n\n' +
             "\ud83d\udca1 Create a bot in @BotFather first, then add its token here",
         invalidToken: isDiscord()
           ? "\u26a0\ufe0f That doesn't look like a bot token.\n\nDiscord tokens are 3 base64 segments joined by dots.\nRegenerate in Developer Portal and try again:"
