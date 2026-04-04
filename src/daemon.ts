@@ -452,6 +452,7 @@ async function main(): Promise<void> {
             !pending.requiredApprovers.includes(userId) &&
             !isAdmin(userId)
           ) {
+            await adapter.answerCallback(event.id, s.adminOnly).catch(() => {});
             return;
           }
           pendingApprovals.delete(approvalId!);
@@ -469,17 +470,28 @@ async function main(): Promise<void> {
           return;
         }
 
-        // approve:yes
+        // approve:yes — only approvers or admins
         if (
           pending.requiredApprovers.length > 0 &&
           !pending.requiredApprovers.includes(userId) &&
           !isAdmin(userId)
         ) {
+          await adapter.answerCallback(event.id, s.adminOnly).catch(() => {});
           return;
         }
 
-        if (pending.approvedBy.has(userId)) return;
+        if (pending.approvedBy.has(userId)) {
+          const lang = getLang();
+          await adapter
+            .answerCallback(
+              event.id,
+              lang === "zh" ? "已投票" : "Already voted",
+            )
+            .catch(() => {});
+          return;
+        }
         pending.approvedBy.add(userId);
+        await adapter.answerCallback(event.id).catch(() => {});
 
         if (pending.requiredApprovers.length === 0) {
           pendingApprovals.delete(approvalId!);

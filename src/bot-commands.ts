@@ -71,9 +71,22 @@ export async function handleBotSlashCommand(
           .sendMessage(chatId, zh ? "⚠️ 压缩失败" : "⚠️ Compact failed")
           .catch(() => {});
       })
-      .finally(() => {
+      .finally(async () => {
         managed.busy = false;
-        daemon.activeInvocations--;
+        daemon.activeInvocations = Math.max(0, daemon.activeInvocations - 1);
+        // Drain queue (messages queued during compact)
+        if (managed.queue.length > 0) {
+          const next = managed.queue.shift()!;
+          managed.busy = true;
+          const { invokeClaudeAndReply } = await import("./claude.js");
+          void invokeClaudeAndReply(
+            managed,
+            next.chatId,
+            next.message,
+            next.imagePath,
+            next.requesterName,
+          );
+        }
       });
     return true;
   }
