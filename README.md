@@ -619,7 +619,7 @@ claude-crew currently supports **Telegram**. The architecture uses a platform ab
 | Platform | Status | Notes |
 |----------|--------|-------|
 | **Telegram** | Supported | Full feature parity, production-tested |
-| **Discord** | Experimental | Adapter shipped, core features working |
+| **Discord** | Planned | Adapter in development |
 | **Feishu (Lark)** | Planned | Architecture ready, adapter not started |
 
 > The Platform interface (`src/platform/types.ts`) defines all capabilities — messaging, buttons, files, threads. Adding a new platform means implementing this interface. Core logic (task execution, permissions, queue, dashboard) is platform-agnostic.
