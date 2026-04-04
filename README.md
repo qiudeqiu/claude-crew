@@ -13,14 +13,12 @@
 
 **Claude Code — Every Project, Anywhere.**
 
-Manage your Claude Code work like a project manager: one bot per project, clear boundaries between codebases, structured and organized multi-project workflows. No more switching between terminal windows or telling Claude "go look at project X" every time — just @mention the right bot.
+One bot per project, all in one group chat. No more switching between terminal windows or telling Claude "go look at project X" — just @mention the right bot. Clear boundaries between codebases, structured multi-project workflows, managed from your phone.
 
-Built on Claude Code CLI, this project focuses on two things:
+- **For individuals** — orchestrate all your projects remotely from a single chat
+- **For teams** — shared workspace with per-bot permissions, everyone on the same timeline
 
-- **Remote multi-project management for individuals** — manage all your projects from your phone
-- **Remote multi-project collaboration for teams** — your whole team works in one shared space
-
-All from one group chat. Each project gets a dedicated bot. @mention to dispatch. Everyone sees everything in a single shared timeline. Your **master bot** is the control center: add project bots, configure settings, manage team access, and monitor everything from an interactive button menu on your phone. Each **project bot** connects to a codebase and runs Claude Code on @mention.
+Your **master bot** is the control center: add project bots, configure settings, manage access, and monitor everything via button menus. Each **project bot** connects to a codebase and runs Claude Code on @mention.
 
 <p align="center">
   <img src="docs/concept.png" alt="claude-crew concept" width="100%">
