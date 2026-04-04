@@ -242,6 +242,7 @@ async function main(): Promise<void> {
           managed,
           msg.chatId,
           cmdText,
+          msg.userId,
         );
         if (slashHandled) return;
 
@@ -305,7 +306,8 @@ async function main(): Promise<void> {
             return;
           }
 
-          // Text-only master commands (status, restart, cron, search)
+          // Text-only master commands (status, restart, cron, search) — admin only
+          if (!isAdmin(msg.userId)) return;
           const { handleMasterCommand } = await import("./commands.js");
           const directReply = handleMasterCommand(stripped, msg.userId);
           if (directReply !== undefined) {

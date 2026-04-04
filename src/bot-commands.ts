@@ -6,6 +6,7 @@ import {
   loadPool,
   savePool,
   getBotModel,
+  isAdmin,
   CONTEXT_BAR_LENGTH,
   getMessageLimit,
 } from "./config.js";
@@ -23,10 +24,12 @@ export async function handleBotSlashCommand(
   managed: ManagedBot,
   chatId: string,
   stripped: string,
+  userId?: string,
 ): Promise<boolean> {
   const { config, platform: p } = managed;
   const lang = getLang();
   const zh = lang === "zh";
+  const adminOnly = userId ? isAdmin(userId) : true;
 
   // ── /new — reset session ──
   if (/^new$/i.test(stripped)) {
@@ -42,8 +45,14 @@ export async function handleBotSlashCommand(
     return true;
   }
 
-  // ── /compact — compress context ──
+  // ── /compact — compress context (admin only) ──
   if (/^compact$/i.test(stripped)) {
+    if (!adminOnly) {
+      await p
+        .sendMessage(chatId, zh ? "\u26d4 无权限" : "\u26d4 No permission")
+        .catch(() => {});
+      return true;
+    }
     if (managed.busy) {
       await p
         .sendMessage(
@@ -99,10 +108,16 @@ export async function handleBotSlashCommand(
     return true;
   }
 
-  // ── /model [sonnet|opus|haiku] — switch model ──
+  // ── /model [sonnet|opus|haiku] — switch model (admin only) ──
   const ALLOWED_MODELS = /^(claude-[a-z0-9.-]+|sonnet|opus|haiku)$/i;
   const modelMatch = stripped.match(/^model(?:\s+(\S+))?$/i);
   if (modelMatch) {
+    if (!adminOnly) {
+      await p
+        .sendMessage(chatId, zh ? "\u26d4 无权限" : "\u26d4 No permission")
+        .catch(() => {});
+      return true;
+    }
     const newModel = modelMatch[1];
     if (!newModel) {
       const current = getBotModel(config) || (zh ? "(默认)" : "(default)");

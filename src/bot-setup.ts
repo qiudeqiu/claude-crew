@@ -507,7 +507,11 @@ export function setupBot(managed: ManagedBot): void {
         return;
       }
 
-      // Text-only master commands (search, cron, restart, status)
+      // Text-only master commands (search, cron, restart, status) — admin only
+      if (!isAdmin(userId)) {
+        await showMainMenu(managed, chatId, undefined, userId);
+        return;
+      }
       const directReply = handleMasterCommand(stripped, userId);
       if (directReply !== undefined) {
         if (directReply !== null) {
@@ -545,7 +549,12 @@ export function setupBot(managed: ManagedBot): void {
     // Project bot slash commands (/new, /compact, /model, /effort, /cost, /memory, /status)
     {
       const cmdText = text.replace(selfMentionRe, "").trim().replace(/^\//, "");
-      const handled = await handleBotSlashCommand(managed, chatId, cmdText);
+      const handled = await handleBotSlashCommand(
+        managed,
+        chatId,
+        cmdText,
+        userId,
+      );
       if (handled) return;
     }
 
