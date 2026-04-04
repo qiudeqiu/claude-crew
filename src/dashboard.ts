@@ -107,7 +107,12 @@ export async function updateDashboard(): Promise<void> {
   }
 
   // Master bot info + commands
-  text += `\n\n${d.master(masterName)}\n${d.cmds}`;
+  const interval = pool.dashboardIntervalMinutes ?? 30;
+  const intervalHint =
+    lang === "zh"
+      ? `\u23f0 每 ${interval} 分钟自动刷新 | menu \u2192 配置 \u2192 dashboardInterval 修改`
+      : `\u23f0 Auto-refresh every ${interval}min | menu \u2192 Config \u2192 dashboardInterval to change`;
+  text += `\n\n${d.master(masterName)}\n${d.cmds}\n${intervalHint}`;
 
   try {
     let dashMsgData: { messageId: number; chatId: string } | null = null;
