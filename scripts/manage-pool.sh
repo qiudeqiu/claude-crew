@@ -41,6 +41,12 @@ case "${1:-help}" in
       exit 1
     fi
 
+    # Validate token format (prevent shell injection)
+    if ! echo "$TOKEN" | grep -qE '^[0-9]+:[A-Za-z0-9_-]+$'; then
+      echo "❌ Invalid token format. Expected: 123456789:AAH..."
+      exit 1
+    fi
+
     # Validate token by calling getMe
     RESULT=$(curl -s "https://api.telegram.org/bot${TOKEN}/getMe")
     OK=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('ok',False))" 2>/dev/null)

@@ -74,11 +74,18 @@ export async function handleBotSlashCommand(
       .finally(async () => {
         managed.busy = false;
         daemon.activeInvocations = Math.max(0, daemon.activeInvocations - 1);
-        // Drain queue (messages queued during compact)
-        if (managed.queue.length > 0) {
+        // Drain queue — re-validate access, skip revoked users
+        const { invokeClaudeAndReply } = await import("./claude.js");
+        const { loadPool, canUseBot } = await import("./config.js");
+        while (managed.queue.length > 0) {
           const next = managed.queue.shift()!;
+          const liveConf =
+            loadPool().bots.find(
+              (b) => b.username === managed.config.username,
+            ) ?? managed.config;
+          if (next.userId !== "system" && !canUseBot(next.userId, liveConf))
+            continue;
           managed.busy = true;
-          const { invokeClaudeAndReply } = await import("./claude.js");
           void invokeClaudeAndReply(
             managed,
             next.chatId,
@@ -86,6 +93,7 @@ export async function handleBotSlashCommand(
             next.imagePath,
             next.requesterName,
           );
+          break;
         }
       });
     return true;

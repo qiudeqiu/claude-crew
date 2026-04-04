@@ -92,6 +92,12 @@ setup_telegram() {
     exit 1
   fi
 
+  # Validate token format (prevent shell injection)
+  if ! echo "$MASTER_TOKEN" | grep -qE '^[0-9]+:[A-Za-z0-9_-]+$'; then
+    echo "❌ Invalid token format. Expected: 123456789:AAH..."
+    exit 1
+  fi
+
   # Validate token
   RESULT=$(curl -s "https://api.telegram.org/bot${MASTER_TOKEN}/getMe")
   OK=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('ok',False))" 2>/dev/null)

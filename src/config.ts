@@ -205,13 +205,10 @@ export function getConfig() {
 
 // ── Auth ──
 
-/** Get the owner (original admin) ID. Falls back to first secondary admin if missing. */
+/** Get the owner (original admin) ID. Returns empty string if not configured. */
 export function getOwner(): string {
   const pool = loadPool();
-  if (pool.owner) return pool.owner;
-  // Fallback: first admin becomes owner
-  const first = pool.admins?.[0];
-  return first?.id ?? "";
+  return pool.owner ?? "";
 }
 
 /** Check if userId is the owner (original admin). */
