@@ -13,7 +13,7 @@
 
 **Claude Code — Every Project, Anywhere.**
 
-用项目管理的视角安排你的 Claude Code 工作：一个项目一个 bot，项目之间边界清晰，多项目工作结构化且有条不紊。
+用项目管理的视角安排你的 Claude Code 工作：一个项目一个 bot，项目之间边界清晰，多项目工作结构化且有条不紊。不用在多个终端窗口间来回切换，也不用每次都跟 Claude 说"帮我看看某某项目"—— @提及对应的 bot 就行。
 
 基于 Claude Code CLI，这个项目专注于两件事：
 

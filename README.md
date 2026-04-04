@@ -13,7 +13,7 @@
 
 **Claude Code — Every Project, Anywhere.**
 
-Manage your Claude Code work like a project manager: one bot per project, clear boundaries between codebases, structured and organized multi-project workflows.
+Manage your Claude Code work like a project manager: one bot per project, clear boundaries between codebases, structured and organized multi-project workflows. No more switching between terminal windows or telling Claude "go look at project X" every time — just @mention the right bot.
 
 Built on Claude Code CLI, this project focuses on two things:
 
