@@ -75,12 +75,18 @@ export function setupBot(managed: ManagedBot): void {
   const { bot: tgBot, config, platform } = managed;
   const botName = config.username ?? "";
 
+  /** Get the latest bot config from disk (reflects runtime changes like allowedUsers). */
+  const liveConfig = () => {
+    const pool = loadPool();
+    return pool.bots.find((b) => b.username === botName) ?? config;
+  };
+
   tgBot.use((ctx, next) => {
     const from = ctx.from;
     const text = ctx.message?.text ?? ctx.message?.caption ?? "";
     if (ctx.message) {
       const userId = String(from?.id ?? "");
-      const authorized = canUseBot(userId, config);
+      const authorized = canUseBot(userId, liveConfig());
       log(
         `RAW: @${botName} \u2190 [${ctx.chat?.type}] ${from?.username ?? "?"}(${userId}) auth=${authorized}: ${text.slice(0, 60)}`,
       );
@@ -303,7 +309,7 @@ export function setupBot(managed: ManagedBot): void {
       if (!isMentioned && !isReplyToMe) return;
     }
 
-    if (!canUseBot(String(ctx.from.id), config)) {
+    if (!canUseBot(String(ctx.from.id), liveConfig())) {
       await platform
         .sendMessage(chatId, setupMsg(getLang()).noPermission)
         .catch(() => {});
@@ -392,7 +398,7 @@ export function setupBot(managed: ManagedBot): void {
       }
     }
 
-    if (!canUseBot(String(ctx.from.id), config)) {
+    if (!canUseBot(String(ctx.from.id), liveConfig())) {
       await platform
         .sendMessage(chatId, setupMsg(getLang()).noPermission)
         .catch(() => {});
