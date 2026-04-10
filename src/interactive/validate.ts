@@ -45,12 +45,49 @@ async function validateDiscordToken(
   }
 }
 
+/**
+ * Validate a Feishu app credential.
+ * Token format: "cli_xxxx:secret" (app_id:app_secret).
+ * Calls Feishu API to obtain tenant_access_token as proof of validity.
+ */
+async function validateFeishuToken(
+  token: string,
+): Promise<{ ok: boolean; username?: string }> {
+  const sep = token.indexOf(":");
+  if (sep < 0) return { ok: false };
+  const appId = token.slice(0, sep);
+  const appSecret = token.slice(sep + 1);
+  try {
+    const res = await fetch(
+      "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ app_id: appId, app_secret: appSecret }),
+      },
+    );
+    const data = (await res.json()) as {
+      code?: number;
+      tenant_access_token?: string;
+      app_name?: string;
+    };
+    if (data.code === 0 && data.tenant_access_token) {
+      // Use app_id as the "username" identifier (Feishu apps don't have usernames)
+      return { ok: true, username: data.app_name || appId };
+    }
+    return { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export async function validateBotToken(
   token: string,
 ): Promise<{ ok: boolean; username?: string }> {
-  return getPlatform() === "discord"
-    ? validateDiscordToken(token)
-    : validateTelegramToken(token);
+  const p = getPlatform();
+  if (p === "discord") return validateDiscordToken(token);
+  if (p === "feishu") return validateFeishuToken(token);
+  return validateTelegramToken(token);
 }
 
 const BLOCKED_PATHS = [
@@ -120,11 +157,14 @@ export async function handleTokenValidation(
 ): Promise<boolean> {
   const token = text.trim();
 
-  // Telegram: 123456789:ABCdefGHI...  Discord: base64.base64.base64
+  // Telegram: 123456789:ABCdefGHI...  Discord: base64.base64.base64  Feishu: cli_xxx:secret
+  const p = getPlatform();
   const tokenPattern =
-    getPlatform() === "discord"
+    p === "discord"
       ? /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
-      : /^\d+:[A-Za-z0-9_-]+$/;
+      : p === "feishu"
+        ? /^cli_[a-zA-Z0-9]+:.+$/
+        : /^\d+:[A-Za-z0-9_-]+$/;
   if (!tokenPattern.test(token)) {
     await send(api, chatId, msgs.invalidToken, cancelKb).catch(() => {});
     return true;

@@ -54,17 +54,40 @@ export const MAX_TRUNCATION_RECOVERIES = 2; // max auto-continue attempts
 
 /** Platform-aware message character limit */
 export function getMessageLimit(): number {
-  return getPlatform() === "discord" ? 2000 : 4096;
+  const p = getPlatform();
+  if (p === "discord") return 2000;
+  if (p === "feishu") return 20000; // Feishu text msg limit; card elements ~3000 each
+  return 4096;
 }
 export const WRITE_TOOLS = "Bash,Edit,Write,NotebookEdit,Agent,Skill";
 export const READONLY_DISALLOWED = "Bash,Edit,Write,NotebookEdit";
+
+// ── Lark/Feishu tool permission tiers ──
+/** Tier 2: write tools — blocked in readOnly, need approval in approve mode */
+export const LARK_WRITE_TOOLS = [
+  "lark-doc",
+  "lark-sheets",
+  "lark-base",
+  "lark-task",
+  "lark-wiki",
+  "lark-whiteboard",
+  "lark-drive",
+];
+
+/** Tier 3: sensitive tools — blocked by default, per-bot opt-in via larkSensitiveTools */
+export const LARK_SENSITIVE_TOOLS = [
+  "lark-mail",
+  "lark-approval",
+  "lark-contact",
+  "lark-calendar",
+];
 
 // ── Pool I/O (cached, invalidated on save or file change) ──
 // On-disk format uses platform sections; loadPool() returns a flattened view
 // so all consuming code sees the same BotPool shape regardless of format.
 let rawCache: { data: RawBotPool; mtimeMs: number } | null = null;
 
-export type PlatformType = "telegram" | "discord";
+export type PlatformType = "telegram" | "discord" | "feishu";
 
 /** Read the raw on-disk format (platform sections + shared settings). */
 export function loadPoolRaw(): RawBotPool {
@@ -81,7 +104,11 @@ export function loadPoolRaw(): RawBotPool {
   }
 }
 
-const VALID_PLATFORMS: ReadonlySet<string> = new Set(["telegram", "discord"]);
+const VALID_PLATFORMS: ReadonlySet<string> = new Set([
+  "telegram",
+  "discord",
+  "feishu",
+]);
 
 export function getPlatform(): PlatformType {
   try {
@@ -324,8 +351,9 @@ export function migrateConfig(): string[] {
 
   // ── Phase 1: Migrate flat format → platform-segmented format ──
   if (!("activePlatform" in pool) && Array.isArray(pool.bots)) {
+    const p = pool.platform as string;
     const platform =
-      (pool.platform as string) === "discord" ? "discord" : "telegram";
+      p === "discord" ? "discord" : p === "feishu" ? "feishu" : "telegram";
     // Move platform-specific fields into their section
     pool.activePlatform = platform;
     pool[platform] = {

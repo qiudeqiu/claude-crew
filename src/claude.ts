@@ -14,6 +14,9 @@ import {
   getSessionMode,
   WRITE_TOOLS,
   READONLY_DISALLOWED,
+  LARK_WRITE_TOOLS,
+  LARK_SENSITIVE_TOOLS,
+  getPlatform,
   TYPING_INTERVAL_MS,
   PROGRESS_THROTTLE_MS,
   APPROVAL_TIMEOUT_MS,
@@ -404,11 +407,58 @@ function accumulateStats(managed: ManagedBot, result: ClaudeResult): void {
 // ── Build system prompt ──
 // ══════════════════════════════════════
 function buildSystemPrompt(project: string, dir: string): string | undefined {
-  const isDaemonProject = existsSync(join(dir, "src", "daemon.ts"));
-  if (!isDaemonProject) return undefined;
+  const parts: string[] = [];
 
-  const safeProject = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff_-]/g, "_");
-  return `WARNING: You are running inside the telegram-pool daemon. If you modify daemon.ts or related files, you MUST: 1) finish ALL edits first, 2) send your reply/summary to the user, 3) write a restart note: echo '{"project":"${safeProject}","summary":"<what you did>"}' > ${RESTART_NOTE_FILE}, 4) ONLY THEN run daemon.sh restart as the very last command. Restarting kills your process — anything after it will not execute.`;
+  // Daemon self-modification warning
+  const isDaemonProject = existsSync(join(dir, "src", "daemon.ts"));
+  if (isDaemonProject) {
+    const safeProject = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff_-]/g, "_");
+    parts.push(
+      `WARNING: You are running inside the Claude Crew daemon. If you modify daemon.ts or related files, you MUST: 1) finish ALL edits first, 2) send your reply/summary to the user, 3) write a restart note: echo '{"project":"${safeProject}","summary":"<what you did>"}' > ${RESTART_NOTE_FILE}, 4) ONLY THEN run daemon.sh restart as the very last command. Restarting kills your process — anything after it will not execute.`,
+    );
+  }
+
+  // Feishu: Lark CLI tool instructions
+  if (getPlatform() === "feishu") {
+    parts.push(
+      "You have access to Feishu/Lark CLI tools via the Bash tool. " +
+        "Use `lark-cli` commands for Feishu operations: " +
+        "lark-doc (documents), lark-sheets (spreadsheets), lark-base (databases), " +
+        "lark-task (tasks), lark-wiki (knowledge base), lark-drive (files), " +
+        "lark-whiteboard (diagrams). " +
+        "Run `lark-cli <skill> --help` for usage details. " +
+        "Prefer lark-cli over raw API calls — it handles auth and pagination automatically.",
+    );
+  }
+
+  return parts.length > 0 ? parts.join("\n\n") : undefined;
+}
+
+/**
+ * Build the disallowedTools string for Feishu Lark tool tier restrictions.
+ * - readOnly: block all write tools + all Lark write + all Lark sensitive
+ * - normal: block Lark sensitive tools unless bot has them opted in
+ */
+function buildLarkDisallowed(
+  accessLevel: string,
+  larkSensitiveOpts?: string[],
+): string | undefined {
+  if (getPlatform() !== "feishu") return undefined;
+
+  const blocked: string[] = [];
+
+  if (accessLevel === "readOnly") {
+    // Block all Lark write and sensitive tools
+    blocked.push(...LARK_WRITE_TOOLS, ...LARK_SENSITIVE_TOOLS);
+  } else {
+    // Block sensitive tools not opted in
+    const allowed = new Set(larkSensitiveOpts ?? []);
+    for (const tool of LARK_SENSITIVE_TOOLS) {
+      if (!allowed.has(tool)) blocked.push(tool);
+    }
+  }
+
+  return blocked.length > 0 ? blocked.join(",") : undefined;
 }
 
 // ══════════════════════════════════════
@@ -506,11 +556,18 @@ export async function invokeClaudeAndReply(
 
     const systemPrompt = buildSystemPrompt(project, dir);
     const accessLevel = getBotAccessLevel(config);
+    const larkDisallowed = buildLarkDisallowed(
+      accessLevel,
+      config.larkSensitiveTools,
+    );
     let result: ClaudeResult;
 
     if (accessLevel === "readOnly") {
+      const disallowed = [READONLY_DISALLOWED, larkDisallowed]
+        .filter(Boolean)
+        .join(",");
       result = await runClaude(dir, prompt, {
-        disallowedTools: READONLY_DISALLOWED,
+        disallowedTools: disallowed,
         model: botModel,
         effort: botEffort,
         resume: shouldContinue,
@@ -525,6 +582,7 @@ export async function invokeClaudeAndReply(
         effort: botEffort,
         resume: shouldContinue,
         appendSystemPrompt: systemPrompt,
+        disallowedTools: larkDisallowed,
         onProgress: progress.onProgress,
       });
 
@@ -578,16 +636,19 @@ export async function invokeClaudeAndReply(
         effort: botEffort,
         resume: shouldContinue,
         appendSystemPrompt: systemPrompt,
+        disallowedTools: larkDisallowed,
         onProgress: progress.onProgress,
       });
     } else {
       // allowAll: bypass all permission checks (including MCP tools)
+      // Still block non-opted-in Lark sensitive tools for safety
       result = await runClaude(dir, prompt, {
         permissionMode: "bypassPermissions",
         model: botModel,
         effort: botEffort,
         resume: shouldContinue,
         appendSystemPrompt: systemPrompt,
+        disallowedTools: larkDisallowed,
         onProgress: progress.onProgress,
       });
     }

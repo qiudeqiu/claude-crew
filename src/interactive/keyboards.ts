@@ -32,17 +32,15 @@ export async function sendOrEdit(
         .catch(() => {});
     }
     return String(messageId);
-  } else {
-    if (buttons) {
-      const sent = await platform
-        .sendButtons(chatId, text, buttons)
-        .catch(() => null);
-      return sent?.id;
-    } else {
-      const sent = await platform.sendMessage(chatId, text).catch(() => null);
-      return sent?.id;
-    }
   }
+  if (buttons) {
+    const sent = await platform
+      .sendButtons(chatId, text, buttons)
+      .catch(() => null);
+    return sent?.id;
+  }
+  const sent = await platform.sendMessage(chatId, text).catch(() => null);
+  return sent?.id;
 }
 
 export function chunkRows(buttons: Button[], perRow = 2): Row[] {
@@ -68,7 +66,7 @@ export async function send(
   }
 }
 
-/** Edit a message, optionally with buttons */
+/** Edit a message, optionally with buttons. */
 export async function edit(
   platform: Platform,
   chatId: string,

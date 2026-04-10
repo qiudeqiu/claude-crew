@@ -307,6 +307,7 @@ async function finalizeOnboarding(
     const inviteUrl = buildDiscordInviteUrl(token);
     text += `\n\n${m.inviteSteps(inviteUrl)}`;
   }
+  // Feishu: no invite URL needed — bots are added to groups via Feishu admin
 
   await edit(api, chatId, messageId, text, {
     reply_markup: { inline_keyboard: restartRow(lang) },
@@ -318,7 +319,12 @@ async function finalizeOnboarding(
 // ── Helpers ──
 
 async function getChatType(_api: Platform, chatId: string): Promise<string> {
-  // Telegram group IDs are negative; private chats are positive
+  const { getPlatform } = await import("../config.js");
+  const p = getPlatform();
+  // Discord: channel IDs are always numeric strings (no negative convention)
+  // Feishu: chat IDs start with "oc_" for groups, "ou_" for P2P — assume group in setup context
+  if (p === "discord" || p === "feishu") return "group";
+  // Telegram: group IDs are negative; private chats are positive
   const id = Number(chatId);
   if (isNaN(id)) return "unknown";
   return id < 0 ? "group" : "private";

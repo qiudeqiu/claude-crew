@@ -6,6 +6,8 @@ const EXAMPLE_HOME =
 
 /** Is the current platform Discord? */
 const isDiscord = () => getPlatform() === "discord";
+/** Is the current platform Feishu/Lark? */
+const isFeishu = () => getPlatform() === "feishu";
 
 export type Lang = "en" | "zh";
 
@@ -31,9 +33,11 @@ export function common(lang: Lang) {
         save: "保存",
         cancelled: "\u274c 已取消。",
         noPermission: "\u26d4 无权限",
-        replyHint: isDiscord()
+        replyHint: isFeishu()
           ? "\n\n\ud83d\udca1 请 @主控 发送"
-          : "\n\n\ud83d\udca1 请回复此消息或 @主控 发送",
+          : isDiscord()
+            ? "\n\n\ud83d\udca1 请 @主控 发送"
+            : "\n\n\ud83d\udca1 请回复此消息或 @主控 发送",
       }
     : {
         confirm: "Confirm",
@@ -44,9 +48,11 @@ export function common(lang: Lang) {
         save: "Save",
         cancelled: "\u274c Cancelled.",
         noPermission: "\u26d4 No permission",
-        replyHint: isDiscord()
+        replyHint: isFeishu()
           ? "\n\n\ud83d\udca1 Mention the master bot to respond"
-          : "\n\n\ud83d\udca1 Reply to this message or mention the master bot",
+          : isDiscord()
+            ? "\n\n\ud83d\udca1 Mention the master bot to respond"
+            : "\n\n\ud83d\udca1 Reply to this message or mention the master bot",
       };
 }
 
@@ -356,31 +362,50 @@ export function botsMsg(lang: Lang) {
         notFound: (u: string) => `\u26a0\ufe0f @${u} 未找到。`,
         removed: (u: string) =>
           `\u2705 @${u} 已从池中删除。\n\n重启后完全停止。`,
-        addTitle: isDiscord()
-          ? "\u2795 请按照以下流程添加 Discord 机器人：\n\n" +
-            "1\ufe0f\u20e3 打开 Discord Developer Portal\n" +
-            "   https://discord.com/developers/applications\n" +
-            "2\ufe0f\u20e3 New Application → 输入名称 → Create\n" +
-            "3\ufe0f\u20e3 左侧 Bot → Reset Token → 复制 token 发送到此处\n" +
-            "4\ufe0f\u20e3 开启 MESSAGE CONTENT INTENT（同页面下方）\n\n" +
-            "token 格式参考：\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
-          : "\u2795 请按照以下流程进行机器人添加：\n\n" +
-            "1\ufe0f\u20e3 点击打开 @BotFather\n" +
-            "2\ufe0f\u20e3 发送 /newbot\n" +
-            "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
-            "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
-            "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
-            "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
-        invalidToken: isDiscord()
-          ? "\u26a0\ufe0f token 格式无效。\nDiscord token 由 3 段 base64 组成（用 . 分隔）\n请重试:"
-          : "\u26a0\ufe0f token 格式无效。\n格式如: 123456789:ABCdefGHI...\n请重试:",
+        addTitle: isFeishu()
+          ? "\u2795 请按照以下流程添加飞书机器人：\n\n" +
+            "1\ufe0f\u20e3 打开飞书开放平台 → 创建企业自建应用\n" +
+            "   https://open.feishu.cn/app\n" +
+            "2\ufe0f\u20e3 添加「机器人」能力\n" +
+            "3\ufe0f\u20e3 权限管理 → 开通以下权限：\n" +
+            "   \u2022 im:message（获取与发送消息）\n" +
+            "   \u2022 im:message.group_at_msg（接收群 @消息）\n" +
+            "   \u2022 im:message.p2p_msg:readonly（接收私聊消息）\n" +
+            "4\ufe0f\u20e3 事件与回调 → 订阅方式选「长连接」\n" +
+            "   添加事件: im.message.receive_v1, card.action.trigger\n" +
+            "5\ufe0f\u20e3 发布版本（版本管理 → 创建版本 → 申请发布）\n" +
+            "6\ufe0f\u20e3 凭证与基础信息 → 复制 App ID 和 App Secret\n" +
+            "   按格式 app_id:app_secret 发送到此处\n\n" +
+            "token 格式参考：\ncli_a5xxxxx:xxxxxxxxx"
+          : isDiscord()
+            ? "\u2795 请按照以下流程添加 Discord 机器人：\n\n" +
+              "1\ufe0f\u20e3 打开 Discord Developer Portal\n" +
+              "   https://discord.com/developers/applications\n" +
+              "2\ufe0f\u20e3 New Application → 输入名称 → Create\n" +
+              "3\ufe0f\u20e3 左侧 Bot → Reset Token → 复制 token 发送到此处\n" +
+              "4\ufe0f\u20e3 开启 MESSAGE CONTENT INTENT（同页面下方）\n\n" +
+              "token 格式参考：\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+            : "\u2795 请按照以下流程进行机器人添加：\n\n" +
+              "1\ufe0f\u20e3 点击打开 @BotFather\n" +
+              "2\ufe0f\u20e3 发送 /newbot\n" +
+              "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
+              "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
+              "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
+              "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        invalidToken: isFeishu()
+          ? "\u26a0\ufe0f token 格式无效。\n格式如: cli_a5xxxxx:app_secret\n请重试:"
+          : isDiscord()
+            ? "\u26a0\ufe0f token 格式无效。\nDiscord token 由 3 段 base64 组成（用 . 分隔）\n请重试:"
+            : "\u26a0\ufe0f token 格式无效。\n格式如: 123456789:ABCdefGHI...\n请重试:",
         duplicateToken: "\u26a0\ufe0f 此机器人已在池中。",
         validating: "\ud83d\udd0d 验证 token...",
-        invalidTokenApi: isDiscord()
-          ? "\u274c 无效 token — Discord 拒绝了。\n请在 Developer Portal 重新生成后重试:"
-          : "\u274c 无效 token。请重试:",
+        invalidTokenApi: isFeishu()
+          ? "\u274c 无效凭证 — 飞书 API 拒绝了。\n请检查 App ID 和 App Secret 后重试:"
+          : isDiscord()
+            ? "\u274c 无效 token — Discord 拒绝了。\n请在 Developer Portal 重新生成后重试:"
+            : "\u274c 无效 token。请重试:",
         foundBot: (u: string) =>
-          `\u2705 找到 ${isDiscord() ? u : "@" + u}！\n\n请输入项目名称 (如 "my-api"):`,
+          `\u2705 找到 ${isDiscord() || isFeishu() ? u : "@" + u}！\n\n请输入项目名称 (如 "my-api"):`,
         invalidProject: "\u26a0\ufe0f 1-50 个字符。请重试:",
         askPath: (_p: string) =>
           `请输入项目代码所在的绝对路径:\n\n` +
@@ -392,12 +417,18 @@ export function botsMsg(lang: Lang) {
         summaryTitle: "\ud83d\udcdd 添加机器人摘要",
         bot: "机器人",
         added: (u: string, proj: string, path: string) =>
-          `\u2705 @${u} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
-          `\ud83d\udc49 下一步：\n` +
-          `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
-          `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
-          `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
-          `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
+          isFeishu()
+            ? `\u2705 ${u} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+              `\ud83d\udc49 下一步：\n` +
+              `1\ufe0f\u20e3 在飞书开放平台发布应用版本\n` +
+              `2\ufe0f\u20e3 将机器人添加到群聊\n` +
+              `3\ufe0f\u20e3 点击下方「重启」按钮上线`
+            : `\u2705 @${u} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+              `\ud83d\udc49 下一步：\n` +
+              `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
+              `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
+              `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+              `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 邀请机器人进服务器：\n" +
           "1\ufe0f\u20e3 点击下方链接授权\n" +
@@ -425,31 +456,50 @@ export function botsMsg(lang: Lang) {
         notFound: (u: string) => `\u26a0\ufe0f @${u} not found.`,
         removed: (u: string) =>
           `\u2705 @${u} removed from pool.\n\nRestart to fully stop it.`,
-        addTitle: isDiscord()
-          ? "\u2795 Follow these steps to add a Discord bot:\n\n" +
-            "1\ufe0f\u20e3 Open Discord Developer Portal\n" +
-            "   https://discord.com/developers/applications\n" +
-            "2\ufe0f\u20e3 New Application \u2192 enter name \u2192 Create\n" +
-            "3\ufe0f\u20e3 Go to Bot \u2192 Reset Token \u2192 copy & send here\n" +
-            "4\ufe0f\u20e3 Enable MESSAGE CONTENT INTENT (same page, below)\n\n" +
-            "Token format:\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
-          : "\u2795 Follow these steps to add a bot:\n\n" +
-            "1\ufe0f\u20e3 Open @BotFather\n" +
-            "2\ufe0f\u20e3 Send /newbot\n" +
-            "3\ufe0f\u20e3 Send the bot display name\n" +
-            "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
-            "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
-            "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
-        invalidToken: isDiscord()
-          ? "\u26a0\ufe0f Invalid token format.\nDiscord tokens are 3 base64 segments joined by dots.\nTry again:"
-          : "\u26a0\ufe0f Invalid token format.\nTokens look like: 123456789:ABCdefGHI...\nTry again:",
+        addTitle: isFeishu()
+          ? "\u2795 Follow these steps to add a Feishu bot:\n\n" +
+            "1\ufe0f\u20e3 Open Feishu Open Platform \u2192 Create custom app\n" +
+            "   https://open.feishu.cn/app\n" +
+            "2\ufe0f\u20e3 Add Bot capability\n" +
+            "3\ufe0f\u20e3 Permissions \u2192 Enable:\n" +
+            "   \u2022 im:message (send & receive messages)\n" +
+            "   \u2022 im:message.group_at_msg (receive group @mentions)\n" +
+            "   \u2022 im:message.p2p_msg:readonly (receive DMs)\n" +
+            "4\ufe0f\u20e3 Events & Callbacks \u2192 Mode: Long Connection\n" +
+            "   Add events: im.message.receive_v1, card.action.trigger\n" +
+            "5\ufe0f\u20e3 Publish a version (Version Management \u2192 Create \u2192 Publish)\n" +
+            "6\ufe0f\u20e3 Credentials \u2192 Copy App ID and App Secret\n" +
+            "   Send here in format: app_id:app_secret\n\n" +
+            "Token format:\ncli_a5xxxxx:xxxxxxxxx"
+          : isDiscord()
+            ? "\u2795 Follow these steps to add a Discord bot:\n\n" +
+              "1\ufe0f\u20e3 Open Discord Developer Portal\n" +
+              "   https://discord.com/developers/applications\n" +
+              "2\ufe0f\u20e3 New Application \u2192 enter name \u2192 Create\n" +
+              "3\ufe0f\u20e3 Go to Bot \u2192 Reset Token \u2192 copy & send here\n" +
+              "4\ufe0f\u20e3 Enable MESSAGE CONTENT INTENT (same page, below)\n\n" +
+              "Token format:\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+            : "\u2795 Follow these steps to add a bot:\n\n" +
+              "1\ufe0f\u20e3 Open @BotFather\n" +
+              "2\ufe0f\u20e3 Send /newbot\n" +
+              "3\ufe0f\u20e3 Send the bot display name\n" +
+              "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
+              "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
+              "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        invalidToken: isFeishu()
+          ? "\u26a0\ufe0f Invalid token format.\nFormat: cli_a5xxxxx:app_secret\nTry again:"
+          : isDiscord()
+            ? "\u26a0\ufe0f Invalid token format.\nDiscord tokens are 3 base64 segments joined by dots.\nTry again:"
+            : "\u26a0\ufe0f Invalid token format.\nTokens look like: 123456789:ABCdefGHI...\nTry again:",
         duplicateToken: "\u26a0\ufe0f This bot is already in the pool.",
         validating: "\ud83d\udd0d Validating token...",
-        invalidTokenApi: isDiscord()
-          ? "\u274c Invalid token \u2014 Discord rejected it.\nRegenerate in Developer Portal and try again:"
-          : "\u274c Invalid token. Try again:",
+        invalidTokenApi: isFeishu()
+          ? "\u274c Invalid credentials \u2014 Feishu API rejected them.\nCheck App ID and App Secret, then try again:"
+          : isDiscord()
+            ? "\u274c Invalid token \u2014 Discord rejected it.\nRegenerate in Developer Portal and try again:"
+            : "\u274c Invalid token. Try again:",
         foundBot: (u: string) =>
-          `\u2705 Found ${isDiscord() ? u : "@" + u}!\n\nWhat project name? (e.g. "my-api")`,
+          `\u2705 Found ${isDiscord() || isFeishu() ? u : "@" + u}!\n\nWhat project name? (e.g. "my-api")`,
         invalidProject: "\u26a0\ufe0f 1-50 characters. Try again:",
         askPath: (_p: string) =>
           `Enter the absolute path to the project code:\n\n` +
@@ -461,12 +511,18 @@ export function botsMsg(lang: Lang) {
         summaryTitle: "\ud83d\udcdd Add Bot Summary",
         bot: "Bot",
         added: (u: string, proj: string, path: string) =>
-          `\u2705 @${u} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
-          `\ud83d\udc49 Next steps:\n` +
-          `1\ufe0f\u20e3 Add @${u} to this group\n` +
-          `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
-          `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
-          `3\ufe0f\u20e3 Click Restart below to bring it online`,
+          isFeishu()
+            ? `\u2705 ${u} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+              `\ud83d\udc49 Next steps:\n` +
+              `1\ufe0f\u20e3 Publish the app version on Feishu Open Platform\n` +
+              `2\ufe0f\u20e3 Add the bot to your group chat\n` +
+              `3\ufe0f\u20e3 Click Restart below to bring it online`
+            : `\u2705 @${u} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+              `\ud83d\udc49 Next steps:\n` +
+              `1\ufe0f\u20e3 Add @${u} to this group\n` +
+              `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
+              `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+              `3\ufe0f\u20e3 Click Restart below to bring it online`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 Invite bot to server:\n" +
           "1\ufe0f\u20e3 Click the link below to authorize\n" +
@@ -674,9 +730,11 @@ export function usersMsg(lang: Lang) {
         userCount: (n: number) => (n > 0 ? `${n} 个用户` : "无"),
         addAdmin: "\u2795 添加管理员",
         botUsers: (u: string) => `\ud83d\udc65 @${u} 用户`,
-        addAdminPrompt: isDiscord()
-          ? "\ud83d\udc51 添加管理员\n\n发送 Discord 用户 ID（数字）。\n\n提示: 开启开发者模式后右键用户 \u2192 复制用户 ID"
-          : "\ud83d\udc51 添加管理员\n\n发送 Telegram 用户 ID（数字）。\n\n提示: 可通过 @userinfobot 获取 ID\n\n添加后可编辑其菜单权限。",
+        addAdminPrompt: isFeishu()
+          ? "\ud83d\udc51 添加管理员\n\n发送用户的 Open ID。\n\n提示: 在飞书管理后台 → 成员管理中查看 Open ID\n\n添加后可编辑其菜单权限。"
+          : isDiscord()
+            ? "\ud83d\udc51 添加管理员\n\n发送 Discord 用户 ID（数字）。\n\n提示: 开启开发者模式后右键用户 \u2192 复制用户 ID"
+            : "\ud83d\udc51 添加管理员\n\n发送 Telegram 用户 ID（数字）。\n\n提示: 可通过 @userinfobot 获取 ID\n\n添加后可编辑其菜单权限。",
         ownerOnly: "\u26d4 仅 Owner 可执行此操作。",
         cantRemoveOwner: "\u26d4 Owner 不可被移除。",
         adminRemoved: (id: string) => `\u2705 管理员 ${id} 已移除。`,
@@ -687,10 +745,14 @@ export function usersMsg(lang: Lang) {
         noUsers: "  (无用户 \u2014 管理员始终有权限)",
         addUser: "\u2795 添加用户",
         addUserPrompt: (u: string) =>
-          isDiscord()
-            ? `\ud83d\udc65 添加用户到 ${u}\n\n发送 Discord 用户 ID（数字）:`
-            : `\ud83d\udc65 添加用户到 @${u}\n\n发送 Telegram 用户 ID（数字）:`,
-        invalidId: "\u26a0\ufe0f 用户 ID 必须是数字（如 123456789）。\n请重试:",
+          isFeishu()
+            ? `\ud83d\udc65 添加用户到 ${u}\n\n发送用户 Open ID:`
+            : isDiscord()
+              ? `\ud83d\udc65 添加用户到 ${u}\n\n发送 Discord 用户 ID（数字）:`
+              : `\ud83d\udc65 添加用户到 @${u}\n\n发送 Telegram 用户 ID（数字）:`,
+        invalidId: isFeishu()
+          ? "\u26a0\ufe0f 请输入用户 Open ID（如 ou_xxxxx）。\n请重试:"
+          : "\u26a0\ufe0f 用户 ID 必须是数字（如 123456789）。\n请重试:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} 已是管理员。`,
         adminAdded: (id: string) =>
           `\u2705 管理员已添加: ${id}\n\n默认权限：用户管理、定时任务。点击下方编辑更多权限。`,
@@ -707,9 +769,11 @@ export function usersMsg(lang: Lang) {
         userCount: (n: number) => (n > 0 ? `${n} user(s)` : "none"),
         addAdmin: "\u2795 Add Admin",
         botUsers: (u: string) => `\ud83d\udc65 @${u} users`,
-        addAdminPrompt: isDiscord()
-          ? "\ud83d\udc51 Add Admin\n\nSend the Discord user ID (numeric).\n\nTip: enable Developer Mode, right-click user \u2192 Copy User ID"
-          : "\ud83d\udc51 Add Admin\n\nSend the Telegram user ID (numeric).\n\nTip: users can find their ID via @userinfobot\n\nYou can edit their menu permissions after adding.",
+        addAdminPrompt: isFeishu()
+          ? "\ud83d\udc51 Add Admin\n\nSend the user's Open ID.\n\nTip: find Open IDs in Feishu Admin Console \u2192 Member Management\n\nYou can edit their menu permissions after adding."
+          : isDiscord()
+            ? "\ud83d\udc51 Add Admin\n\nSend the Discord user ID (numeric).\n\nTip: enable Developer Mode, right-click user \u2192 Copy User ID"
+            : "\ud83d\udc51 Add Admin\n\nSend the Telegram user ID (numeric).\n\nTip: users can find their ID via @userinfobot\n\nYou can edit their menu permissions after adding.",
         ownerOnly: "\u26d4 Only the Owner can do this.",
         cantRemoveOwner: "\u26d4 The Owner cannot be removed.",
         adminRemoved: (id: string) => `\u2705 Admin ${id} removed.`,
@@ -721,11 +785,14 @@ export function usersMsg(lang: Lang) {
         noUsers: "  (no users \u2014 admins always have access)",
         addUser: "\u2795 Add User",
         addUserPrompt: (u: string) =>
-          isDiscord()
-            ? `\ud83d\udc65 Add user to ${u}\n\nSend the Discord user ID (numeric):`
-            : `\ud83d\udc65 Add user to @${u}\n\nSend the Telegram user ID (numeric):`,
-        invalidId:
-          "\u26a0\ufe0f User ID must be numeric (e.g. 123456789).\nTry again:",
+          isFeishu()
+            ? `\ud83d\udc65 Add user to ${u}\n\nSend the user's Open ID:`
+            : isDiscord()
+              ? `\ud83d\udc65 Add user to ${u}\n\nSend the Discord user ID (numeric):`
+              : `\ud83d\udc65 Add user to @${u}\n\nSend the Telegram user ID (numeric):`,
+        invalidId: isFeishu()
+          ? "\u26a0\ufe0f Please enter a valid Open ID (e.g. ou_xxxxx).\nTry again:"
+          : "\u26a0\ufe0f User ID must be numeric (e.g. 123456789).\nTry again:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} is already an admin.`,
         adminAdded: (id: string) =>
           `\u2705 Admin added: ${id}\n\nDefault permissions: Users, Cron. Tap below to grant more.`,
@@ -742,16 +809,19 @@ export function usersMsg(lang: Lang) {
 export function onboardMsg(lang: Lang) {
   return lang === "zh"
     ? {
-        dmOnly: isDiscord()
+        dmOnly: isFeishu()
           ? "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
-            "请在服务器的文字频道中 @我 并发送 setup 开始设置向导 \ud83d\ude80"
-          : "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
-            "下一步：\n" +
-            "1\ufe0f\u20e3 创建一个 Telegram 私密群组\n" +
-            "2\ufe0f\u20e3 把我拉进群组\n" +
-            "3\ufe0f\u20e3 在 @BotFather 中关闭我的 Group Privacy：\n" +
-            "   /mybots \u2192 选择我 \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
-            "拉进群后我会自动发起设置向导 \ud83d\ude80",
+            "请在群聊中 @我 并发送 setup 开始设置向导 \ud83d\ude80"
+          : isDiscord()
+            ? "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
+              "请在服务器的文字频道中 @我 并发送 setup 开始设置向导 \ud83d\ude80"
+            : "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
+              "下一步：\n" +
+              "1\ufe0f\u20e3 创建一个 Telegram 私密群组\n" +
+              "2\ufe0f\u20e3 把我拉进群组\n" +
+              "3\ufe0f\u20e3 在 @BotFather 中关闭我的 Group Privacy：\n" +
+              "   /mybots \u2192 选择我 \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
+              "拉进群后我会自动发起设置向导 \ud83d\ude80",
         needAdmin:
           "\ud83d\udc4b 我已加入群组！\n\n\u26a0\ufe0f 请先将我设为群组管理员，这样我才能置顶看板和管理消息。\n\n操作：群组设置 \u2192 管理员 \u2192 添加我 \u2192 保存",
         groupDetected:
@@ -768,46 +838,66 @@ export function onboardMsg(lang: Lang) {
         yesUseGroup: "是，使用此群组",
         groupDone: (n: number) =>
           `\u2705 群组已配置！\n\n你已有 ${n} 个项目机器人。\n它们将在此群组发布更新。\n\n\ud83d\udd04 重启以应用更改。`,
-        groupSet: isDiscord()
-          ? "\u2705 频道已设置！\n\n" +
+        groupSet: isFeishu()
+          ? "\u2705 群组已设置！\n\n" +
             "现在添加你的第一个项目机器人：\n\n" +
-            "1\ufe0f\u20e3 打开 Discord Developer Portal\n" +
-            "   https://discord.com/developers/applications\n" +
-            "2\ufe0f\u20e3 New Application \u2192 输入名称 \u2192 Create\n" +
-            "3\ufe0f\u20e3 左侧 Bot \u2192 Reset Token \u2192 复制 token 发送到此处\n" +
-            "4\ufe0f\u20e3 开启 MESSAGE CONTENT INTENT\n\n" +
-            "token 格式参考：\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
-          : "\u2705 群组已设置！\n\n" +
-            "现在添加你的第一个项目机器人：\n\n" +
-            "1\ufe0f\u20e3 点击打开 @BotFather\n" +
-            "2\ufe0f\u20e3 发送 /newbot\n" +
-            "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
-            "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
-            "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
-            "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
-        welcomeGuide: isDiscord()
-          ? "\u2705 频道设置完成！\n\n" +
-            "\ud83c\udf89 下一步：\n\n" +
-            "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
-            "\u2022 添加后在频道中 @提及项目 bot 即可让 Claude Code 执行任务\n" +
-            "\u2022 发送 menu 给主控 bot 随时打开管理菜单\n\n" +
-            "\ud83d\udca1 项目 bot 需要先在 Developer Portal 创建，拿到 token 后在这里添加"
-          : "\u2705 群组设置完成！\n\n" +
+            "1\ufe0f\u20e3 打开飞书开放平台\n" +
+            "   https://open.feishu.cn/app\n" +
+            "2\ufe0f\u20e3 创建企业自建应用 → 添加「机器人」能力\n" +
+            "3\ufe0f\u20e3 复制 App ID 和 App Secret\n" +
+            "4\ufe0f\u20e3 按格式 app_id:app_secret 发送到此处\n\n" +
+            "token 格式参考：\ncli_a5xxxxx:xxxxxxxxx"
+          : isDiscord()
+            ? "\u2705 频道已设置！\n\n" +
+              "现在添加你的第一个项目机器人：\n\n" +
+              "1\ufe0f\u20e3 打开 Discord Developer Portal\n" +
+              "   https://discord.com/developers/applications\n" +
+              "2\ufe0f\u20e3 New Application \u2192 输入名称 \u2192 Create\n" +
+              "3\ufe0f\u20e3 左侧 Bot \u2192 Reset Token \u2192 复制 token 发送到此处\n" +
+              "4\ufe0f\u20e3 开启 MESSAGE CONTENT INTENT\n\n" +
+              "token 格式参考：\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+            : "\u2705 群组已设置！\n\n" +
+              "现在添加你的第一个项目机器人：\n\n" +
+              "1\ufe0f\u20e3 点击打开 @BotFather\n" +
+              "2\ufe0f\u20e3 发送 /newbot\n" +
+              "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
+              "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
+              "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
+              "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        welcomeGuide: isFeishu()
+          ? "\u2705 群组设置完成！\n\n" +
             "\ud83c\udf89 下一步：\n\n" +
             "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
             "\u2022 添加后在群里 @提及项目 bot 即可让 Claude Code 执行任务\n" +
             "\u2022 发送 menu 给主控 bot 随时打开管理菜单\n\n" +
-            "\ud83d\udca1 项目 bot 需要先在 @BotFather 创建，拿到 token 后在这里添加",
-        invalidToken: isDiscord()
-          ? "\u26a0\ufe0f 这不像一个 bot token。\n\nDiscord token 由 3 段 base64 组成（用 . 分隔）\n请在 Developer Portal 重新获取后重试:"
-          : "\u26a0\ufe0f 这不像一个 bot token。\n\n" +
-            "token 格式如: 123456789:ABCdefGHI...\n" +
-            "从 @BotFather 获取后重试:",
+            "\ud83d\udca1 项目 bot 需要先在飞书开放平台创建应用，拿到凭证后在这里添加"
+          : isDiscord()
+            ? "\u2705 频道设置完成！\n\n" +
+              "\ud83c\udf89 下一步：\n\n" +
+              "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
+              "\u2022 添加后在频道中 @提及项目 bot 即可让 Claude Code 执行任务\n" +
+              "\u2022 发送 menu 给主控 bot 随时打开管理菜单\n\n" +
+              "\ud83d\udca1 项目 bot 需要先在 Developer Portal 创建，拿到 token 后在这里添加"
+            : "\u2705 群组设置完成！\n\n" +
+              "\ud83c\udf89 下一步：\n\n" +
+              "\u2022 点击「添加 Bot」为你的项目创建专属 bot\n" +
+              "\u2022 添加后在群里 @提及项目 bot 即可让 Claude Code 执行任务\n" +
+              "\u2022 发送 menu 给主控 bot 随时打开管理菜单\n\n" +
+              "\ud83d\udca1 项目 bot 需要先在 @BotFather 创建，拿到 token 后在这里添加",
+        invalidToken: isFeishu()
+          ? "\u26a0\ufe0f 这不像飞书应用凭证。\n\n格式如: cli_a5xxxxx:app_secret\n请检查后重试:"
+          : isDiscord()
+            ? "\u26a0\ufe0f 这不像一个 bot token。\n\nDiscord token 由 3 段 base64 组成（用 . 分隔）\n请在 Developer Portal 重新获取后重试:"
+            : "\u26a0\ufe0f 这不像一个 bot token。\n\n" +
+              "token 格式如: 123456789:ABCdefGHI...\n" +
+              "从 @BotFather 获取后重试:",
         duplicateToken: "\u26a0\ufe0f 此机器人已在池中。\n请发送其他 token:",
         validating: "\ud83d\udd0d 验证 token...",
-        invalidTokenApi: isDiscord()
-          ? "\u274c 无效 token — Discord 拒绝了。\n请在 Developer Portal 重新生成后重试:"
-          : "\u274c 无效 token — Telegram 拒绝了。\n请检查 @BotFather 后重试:",
+        invalidTokenApi: isFeishu()
+          ? "\u274c 无效凭证 — 飞书 API 拒绝了。\n请检查 App ID 和 App Secret 后重试:"
+          : isDiscord()
+            ? "\u274c 无效 token — Discord 拒绝了。\n请在 Developer Portal 重新生成后重试:"
+            : "\u274c 无效 token — Telegram 拒绝了。\n请检查 @BotFather 后重试:",
         foundBot: (u: string) =>
           `\u2705 找到 @${u}！\n\n请输入项目名称 (如 "my-api"、"frontend"):`,
         invalidProject: "\u26a0\ufe0f 项目名称应为 1-50 个字符。\n请重试:",
@@ -822,12 +912,18 @@ export function onboardMsg(lang: Lang) {
         summary: "\ud83d\udcdd 设置摘要",
         saveConfig: "保存此配置?",
         added: (u: string, proj: string, path: string) =>
-          `\u2705 @${u} 已添加到池中！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
-          `\ud83d\udc49 下一步：\n` +
-          `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
-          `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
-          `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
-          `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
+          isFeishu()
+            ? `\u2705 ${u} 已添加到池中！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+              `\ud83d\udc49 下一步：\n` +
+              `1\ufe0f\u20e3 在飞书开放平台发布应用版本\n` +
+              `2\ufe0f\u20e3 将机器人添加到群聊\n` +
+              `3\ufe0f\u20e3 点击下方「重启」按钮上线`
+            : `\u2705 @${u} 已添加到池中！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+              `\ud83d\udc49 下一步：\n` +
+              `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
+              `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
+              `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+              `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 邀请机器人进服务器：\n" +
           "1\ufe0f\u20e3 点击下方链接授权\n" +
@@ -836,16 +932,19 @@ export function onboardMsg(lang: Lang) {
           "3\ufe0f\u20e3 确认后点击「立即重启」",
       }
     : {
-        dmOnly: isDiscord()
+        dmOnly: isFeishu()
           ? "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
-            "Please @mention me in a server channel and send setup to start the wizard \ud83d\ude80"
-          : "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
-            "Next steps:\n" +
-            "1\ufe0f\u20e3 Create a private Telegram group\n" +
-            "2\ufe0f\u20e3 Add me to the group\n" +
-            "3\ufe0f\u20e3 Disable my Group Privacy in @BotFather:\n" +
-            "   /mybots \u2192 select me \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
-            "I'll auto-start the setup wizard once I'm in the group \ud83d\ude80",
+            "Please @mention me in a group chat and send setup to start the wizard \ud83d\ude80"
+          : isDiscord()
+            ? "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
+              "Please @mention me in a server channel and send setup to start the wizard \ud83d\ude80"
+            : "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
+              "Next steps:\n" +
+              "1\ufe0f\u20e3 Create a private Telegram group\n" +
+              "2\ufe0f\u20e3 Add me to the group\n" +
+              "3\ufe0f\u20e3 Disable my Group Privacy in @BotFather:\n" +
+              "   /mybots \u2192 select me \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
+              "I'll auto-start the setup wizard once I'm in the group \ud83d\ude80",
         needAdmin:
           "\ud83d\udc4b I've joined the group!\n\n\u26a0\ufe0f Please make me a group admin so I can pin the dashboard and manage messages.\n\nHow: Group settings \u2192 Administrators \u2192 Add me \u2192 Save",
         groupDetected:
@@ -863,47 +962,67 @@ export function onboardMsg(lang: Lang) {
         yesUseGroup: "Yes, use this group",
         groupDone: (n: number) =>
           `\u2705 Group configured!\n\nYou already have ${n} project bot(s). They'll now post updates here.\n\n\ud83d\udd04 Restart to apply changes.`,
-        groupSet: isDiscord()
-          ? "\u2705 Channel set!\n\n" +
+        groupSet: isFeishu()
+          ? "\u2705 Group set!\n\n" +
             "Now let's add your first project bot:\n\n" +
-            "1\ufe0f\u20e3 Open Discord Developer Portal\n" +
-            "   https://discord.com/developers/applications\n" +
-            "2\ufe0f\u20e3 New Application \u2192 enter name \u2192 Create\n" +
-            "3\ufe0f\u20e3 Go to Bot \u2192 Reset Token \u2192 copy & send here\n" +
-            "4\ufe0f\u20e3 Enable MESSAGE CONTENT INTENT\n\n" +
-            "Token format:\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
-          : "\u2705 Group set!\n\n" +
-            "Now let's add your first project bot:\n\n" +
-            "1\ufe0f\u20e3 Open @BotFather\n" +
-            "2\ufe0f\u20e3 Send /newbot\n" +
-            "3\ufe0f\u20e3 Send the bot display name\n" +
-            "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
-            "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
-            "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
-        welcomeGuide: isDiscord()
-          ? "\u2705 Channel set up!\n\n" +
-            "\ud83c\udf89 Next steps:\n\n" +
-            '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
-            "\u2022 Then mention the project bot in the channel to run Claude Code tasks\n" +
-            '\u2022 Send "menu" to the master bot to open management anytime\n\n' +
-            "\ud83d\udca1 Create a bot in Developer Portal first, then add its token here"
-          : "\u2705 Group set up!\n\n" +
+            "1\ufe0f\u20e3 Open Feishu Open Platform\n" +
+            "   https://open.feishu.cn/app\n" +
+            "2\ufe0f\u20e3 Create custom app \u2192 Add Bot capability\n" +
+            "3\ufe0f\u20e3 Copy App ID and App Secret\n" +
+            "4\ufe0f\u20e3 Send here in format: app_id:app_secret\n\n" +
+            "Token format:\ncli_a5xxxxx:xxxxxxxxx"
+          : isDiscord()
+            ? "\u2705 Channel set!\n\n" +
+              "Now let's add your first project bot:\n\n" +
+              "1\ufe0f\u20e3 Open Discord Developer Portal\n" +
+              "   https://discord.com/developers/applications\n" +
+              "2\ufe0f\u20e3 New Application \u2192 enter name \u2192 Create\n" +
+              "3\ufe0f\u20e3 Go to Bot \u2192 Reset Token \u2192 copy & send here\n" +
+              "4\ufe0f\u20e3 Enable MESSAGE CONTENT INTENT\n\n" +
+              "Token format:\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+            : "\u2705 Group set!\n\n" +
+              "Now let's add your first project bot:\n\n" +
+              "1\ufe0f\u20e3 Open @BotFather\n" +
+              "2\ufe0f\u20e3 Send /newbot\n" +
+              "3\ufe0f\u20e3 Send the bot display name\n" +
+              "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
+              "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
+              "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        welcomeGuide: isFeishu()
+          ? "\u2705 Group set up!\n\n" +
             "\ud83c\udf89 Next steps:\n\n" +
             '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
             "\u2022 Then @mention the project bot in the group to run Claude Code tasks\n" +
             '\u2022 Send "menu" to the master bot to open management anytime\n\n' +
-            "\ud83d\udca1 Create a bot in @BotFather first, then add its token here",
-        invalidToken: isDiscord()
-          ? "\u26a0\ufe0f That doesn't look like a bot token.\n\nDiscord tokens are 3 base64 segments joined by dots.\nRegenerate in Developer Portal and try again:"
-          : "\u26a0\ufe0f That doesn't look like a bot token.\n\n" +
-            "Tokens look like: 123456789:ABCdefGHI...\n" +
-            "Get one from @BotFather and try again:",
+            "\ud83d\udca1 Create a bot on Feishu Open Platform first, then add its credentials here"
+          : isDiscord()
+            ? "\u2705 Channel set up!\n\n" +
+              "\ud83c\udf89 Next steps:\n\n" +
+              '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
+              "\u2022 Then mention the project bot in the channel to run Claude Code tasks\n" +
+              '\u2022 Send "menu" to the master bot to open management anytime\n\n' +
+              "\ud83d\udca1 Create a bot in Developer Portal first, then add its token here"
+            : "\u2705 Group set up!\n\n" +
+              "\ud83c\udf89 Next steps:\n\n" +
+              '\u2022 Tap "Add Bot" to create a dedicated bot for your project\n' +
+              "\u2022 Then @mention the project bot in the group to run Claude Code tasks\n" +
+              '\u2022 Send "menu" to the master bot to open management anytime\n\n' +
+              "\ud83d\udca1 Create a bot in @BotFather first, then add its token here",
+        invalidToken: isFeishu()
+          ? "\u26a0\ufe0f That doesn't look like Feishu credentials.\n\nFormat: cli_a5xxxxx:app_secret\nCheck and try again:"
+          : isDiscord()
+            ? "\u26a0\ufe0f That doesn't look like a bot token.\n\nDiscord tokens are 3 base64 segments joined by dots.\nRegenerate in Developer Portal and try again:"
+            : "\u26a0\ufe0f That doesn't look like a bot token.\n\n" +
+              "Tokens look like: 123456789:ABCdefGHI...\n" +
+              "Get one from @BotFather and try again:",
         duplicateToken:
           "\u26a0\ufe0f This bot is already in the pool.\nSend a different token:",
         validating: "\ud83d\udd0d Validating token...",
-        invalidTokenApi: isDiscord()
-          ? "\u274c Invalid token \u2014 Discord rejected it.\nRegenerate in Developer Portal and try again:"
-          : "\u274c Invalid token \u2014 Telegram rejected it.\nDouble-check with @BotFather and try again:",
+        invalidTokenApi: isFeishu()
+          ? "\u274c Invalid credentials \u2014 Feishu API rejected them.\nCheck App ID and App Secret, then try again:"
+          : isDiscord()
+            ? "\u274c Invalid token \u2014 Discord rejected it.\nRegenerate in Developer Portal and try again:"
+            : "\u274c Invalid token \u2014 Telegram rejected it.\nDouble-check with @BotFather and try again:",
         foundBot: (u: string) =>
           `\u2705 Found @${u}!\n\nWhat project name should I assign? (e.g. "my-api", "frontend")`,
         invalidProject:
@@ -919,12 +1038,18 @@ export function onboardMsg(lang: Lang) {
         summary: "\ud83d\udcdd Setup Summary",
         saveConfig: "Save this configuration?",
         added: (u: string, proj: string, path: string) =>
-          `\u2705 @${u} added to pool!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
-          `\ud83d\udc49 Next steps:\n` +
-          `1\ufe0f\u20e3 Add @${u} to this group\n` +
-          `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
-          `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
-          `3\ufe0f\u20e3 Click Restart below to bring it online`,
+          isFeishu()
+            ? `\u2705 ${u} added to pool!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+              `\ud83d\udc49 Next steps:\n` +
+              `1\ufe0f\u20e3 Publish the app version on Feishu Open Platform\n` +
+              `2\ufe0f\u20e3 Add the bot to your group chat\n` +
+              `3\ufe0f\u20e3 Click Restart below to bring it online`
+            : `\u2705 @${u} added to pool!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+              `\ud83d\udc49 Next steps:\n` +
+              `1\ufe0f\u20e3 Add @${u} to this group\n` +
+              `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
+              `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+              `3\ufe0f\u20e3 Click Restart below to bring it online`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 Invite bot to server:\n" +
           "1\ufe0f\u20e3 Click the link below to authorize\n" +

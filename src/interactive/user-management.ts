@@ -8,6 +8,7 @@ import {
   isOwner,
   getOwner,
   hasPermission,
+  getPlatform,
 } from "../config.js";
 import { log } from "../logger.js";
 import {
@@ -417,7 +418,9 @@ export async function handleUserText(
   const input = text.trim();
 
   if (state.step === "user:awaitAdmin") {
-    if (!/^\d+$/.test(input)) {
+    const idPattern =
+      getPlatform() === "feishu" ? /^ou_[a-zA-Z0-9]+$/ : /^\d+$/;
+    if (!idPattern.test(input)) {
       await send(api, chatId, m.invalidId, {
         reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
       }).catch(() => {});
@@ -459,7 +462,9 @@ export async function handleUserText(
 
   if (state.step === "user:awaitUser") {
     const targetBot = state.data.targetBot;
-    if (!/^\d+$/.test(input)) {
+    const idPattern =
+      getPlatform() === "feishu" ? /^ou_[a-zA-Z0-9]+$/ : /^\d+$/;
+    if (!idPattern.test(input)) {
       await send(api, chatId, m.invalidId, {
         reply_markup: {
           inline_keyboard: cancelButton(`u:b:${targetBot}`, lang),

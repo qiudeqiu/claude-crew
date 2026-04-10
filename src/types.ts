@@ -14,6 +14,8 @@ export type PoolBot = {
   model?: string;
   /** List of user IDs who must ALL approve before writes execute. Empty = any admin. */
   approvers?: string[];
+  /** Per-bot opt-in for sensitive Lark tools (mail, approval, contact, calendar). */
+  larkSensitiveTools?: string[];
 };
 
 /** Menu permission that can be granted to secondary admins. */
@@ -28,7 +30,7 @@ export type AdminConfig = {
 
 /** Flattened view of the active platform's config — what all consuming code sees. */
 export type BotPool = {
-  platform?: "telegram" | "discord";
+  platform?: "telegram" | "discord" | "feishu";
   bots: PoolBot[];
   sharedGroupId?: string;
   /** Owner (original admin) ID — immutable after setup. */
@@ -65,9 +67,10 @@ export type PlatformSection = {
 
 /** On-disk config format — platform sections + shared settings. */
 export type RawBotPool = {
-  activePlatform?: "telegram" | "discord";
+  activePlatform?: "telegram" | "discord" | "feishu";
   telegram?: PlatformSection;
   discord?: PlatformSection;
+  feishu?: PlatformSection;
   // Shared settings (platform-agnostic)
   accessLevel?: "readWrite" | "readOnly";
   permissionMode?: "allowAll" | "approve" | "auto";
@@ -83,7 +86,7 @@ export type RawBotPool = {
 
 export type ManagedBot = {
   config: PoolBot;
-  bot: Bot;
+  bot?: Bot;
   platform: Platform;
   busy: boolean;
   lastInvoke: number;

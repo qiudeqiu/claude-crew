@@ -73,6 +73,7 @@ async function buildQuotedContext(
 
 export function setupBot(managed: ManagedBot): void {
   const { bot: tgBot, config, platform } = managed;
+  if (!tgBot) throw new Error("setupBot requires a grammY Bot (Telegram only)");
   const botName = config.username ?? "";
 
   /** Get the latest bot config from disk (reflects runtime changes like allowedUsers). */

@@ -10,6 +10,8 @@
 import { Bot, GrammyError } from "grammy";
 import { TelegramAdapter } from "./platform/telegram/adapter.js";
 import { DiscordAdapter } from "./platform/discord/adapter.js";
+import { FeishuAdapter } from "./platform/feishu/adapter.js";
+import { registerPlatformHandlers } from "./handler.js";
 import {
   mkdirSync,
   existsSync,
@@ -24,11 +26,8 @@ import {
   getAdminIds,
   getOwner,
   getConfig,
-  canUseBot,
-  isAdmin,
   validateConfig,
   migrateConfig,
-  MAX_QUEUE_SIZE,
   INBOX_DIR,
   PID_FILE,
   RESTART_NOTE_FILE,
@@ -39,7 +38,6 @@ import {
   RESTART_NOTIFY_DELAY_MS,
   CRON_CHECK_INTERVAL_MS,
   CONVERSATION_CLEANUP_MS,
-  WRITE_TOOLS,
 } from "./config.js";
 import { log } from "./logger.js";
 import { managedBots, botByUsername, daemon } from "./state.js";
@@ -47,7 +45,7 @@ import { setupBot } from "./bot-setup.js";
 import { updateDashboard } from "./dashboard.js";
 import { checkCron } from "./cron.js";
 import { cleanupExpired } from "./interactive/index.js";
-import { setupMsg, getLang } from "./interactive/i18n.js";
+// i18n is imported dynamically where needed
 
 // ── Singleton: kill any other daemon.ts processes + write PID file ──
 {
@@ -115,13 +113,15 @@ async function main(): Promise<void> {
 
     // Create platform adapter based on config
     const adapter =
-      platformType === "discord"
-        ? new DiscordAdapter(config.token)
-        : new TelegramAdapter(config.token);
+      platformType === "feishu"
+        ? new FeishuAdapter(config.token)
+        : platformType === "discord"
+          ? new DiscordAdapter(config.token)
+          : new TelegramAdapter(config.token);
     const tgBot =
       platformType === "telegram"
         ? (adapter as TelegramAdapter).raw
-        : (null as unknown as Bot); // Discord has no grammY Bot
+        : undefined;
 
     const managed: ManagedBot = {
       config,
@@ -189,364 +189,15 @@ async function main(): Promise<void> {
         }
       }, i * BOT_START_STAGGER_MS);
     } else if (platformType === "discord") {
-      // Discord: register message handlers via Platform interface
-      adapter.onMessage(async (msg) => {
-        if (!msg.userId || (!msg.text && !msg.photoFileId)) return;
-        // Use live config for access check (reflects runtime allowedUsers changes)
-        const liveConf =
-          loadPool().bots.find((b) => b.username === config.username) ?? config;
-        const authorized = canUseBot(msg.userId, liveConf);
-
-        // Interactive text flow: active conversation takes priority (no @mention needed)
-        // Strip Discord mentions before routing (same as Telegram strips @mentions)
-        if (authorized && config.role === "master") {
-          const { routeText } = await import("./interactive/index.js");
-          const cleanText = (msg.text ?? "").replace(/<@[&!]?\d+>/g, "").trim();
-          if (cleanText) {
-            const handled = await routeText(
-              managed,
-              msg.chatId,
-              msg.userId,
-              cleanText,
-            );
-            if (handled) return;
-          }
-        }
-
-        // Check for bot mention (user or role) or reply to THIS bot's message
-        const discordAdapter =
-          adapter as import("./platform/discord/adapter.js").DiscordAdapter;
-        const discordBotId = discordAdapter.botId ?? "";
-        const isMentioned = discordAdapter.isMentionedIn(msg);
-        const isReplyToMe = msg.replyTo?.userId === discordBotId;
-        if (!isMentioned && !isReplyToMe) return;
-
-        // Only log targeted messages (mentioned or replied)
-        log(
-          `RAW: ${config.username ?? "?"} ← ${msg.username ?? "?"}(${msg.userId}) auth=${authorized}: ${(msg.text ?? "").slice(0, 60)}`,
-        );
-        if (!authorized) {
-          await adapter
-            .sendMessage(msg.chatId, setupMsg(getLang()).noPermission)
-            .catch(() => {});
-          return;
-        }
-
-        const text = (msg.text ?? "").replace(/<@[&!]?\d+>/g, "").trim();
-        if (!text && !msg.photoFileId) return;
-
-        // Slash commands (/new, /compact, /model, etc.)
-        const cmdText = text.replace(/^\//, "");
-        const { handleBotSlashCommand } = await import("./bot-commands.js");
-        const slashHandled = await handleBotSlashCommand(
-          managed,
-          msg.chatId,
-          cmdText,
-          msg.userId,
-        );
-        if (slashHandled) return;
-
-        // Master bot: interactive commands (menu, bots, config, users, setup)
-        if (config.role === "master") {
-          const stripped = text.replace(/^\//, "");
-
-          if (/^(help|menu|start)$/i.test(stripped)) {
-            const { showMainMenu } = await import("./interactive/index.js");
-            await showMainMenu(managed, msg.chatId, undefined, msg.userId);
-            return;
-          }
-          if (/^setup$/i.test(stripped)) {
-            const { startOnboarding } =
-              await import("./interactive/onboarding.js");
-            await startOnboarding(managed, msg.chatId, msg.userId);
-            return;
-          }
-          if (/^(bots|addbot)$/i.test(stripped)) {
-            const { hasPermission } = await import("./config.js");
-            if (!hasPermission(msg.userId, "bots")) {
-              await adapter
-                .sendMessage(msg.chatId, setupMsg(getLang()).noPermission)
-                .catch(() => {});
-              return;
-            }
-            const { showBotList } =
-              await import("./interactive/bot-management.js");
-            await showBotList(managed, msg.chatId);
-            return;
-          }
-          if (/^config$/i.test(stripped)) {
-            const { hasPermission } = await import("./config.js");
-            if (!hasPermission(msg.userId, "config")) {
-              await adapter
-                .sendMessage(msg.chatId, setupMsg(getLang()).noPermission)
-                .catch(() => {});
-              return;
-            }
-            const { showGlobalConfig } =
-              await import("./interactive/config-editor.js");
-            await showGlobalConfig(managed, msg.chatId);
-            return;
-          }
-          if (/^users$/i.test(stripped)) {
-            const { hasPermission } = await import("./config.js");
-            if (!hasPermission(msg.userId, "users")) {
-              await adapter
-                .sendMessage(msg.chatId, setupMsg(getLang()).noPermission)
-                .catch(() => {});
-              return;
-            }
-            const { showUserManagement } =
-              await import("./interactive/user-management.js");
-            await showUserManagement(
-              managed,
-              msg.chatId,
-              undefined,
-              msg.userId,
-            );
-            return;
-          }
-
-          // Text-only master commands (status, restart, cron, search) — admin only
-          if (!isAdmin(msg.userId)) return;
-          const { handleMasterCommand } = await import("./commands.js");
-          const directReply = handleMasterCommand(stripped, msg.userId);
-          if (directReply !== undefined) {
-            if (directReply !== null) {
-              const { splitMessage } = await import("./helpers.js");
-              const { getMessageLimit } = await import("./config.js");
-              for (const chunk of splitMessage(
-                directReply,
-                getMessageLimit(),
-              )) {
-                await adapter.sendMessage(msg.chatId, chunk).catch(() => {});
-              }
-            }
-            return;
-          }
-
-          // Unrecognized input → show menu (if masterExecute disabled)
-          if (!loadPool().masterExecute) {
-            const { showMainMenu } = await import("./interactive/index.js");
-            await showMainMenu(managed, msg.chatId, undefined, msg.userId);
-            return;
-          }
-        }
-
-        // Project bot: intercept master-only commands
-        if (config.role !== "master" && text) {
-          const stripped = text.replace(/^\//, "");
-          if (
-            /^cron\s/i.test(stripped) ||
-            /^(help|setup|bots|config|users|restart)$/i.test(stripped) ||
-            /^search\s/i.test(stripped)
-          ) {
-            const { getMasterName } = await import("./config.js");
-            const masterName = getMasterName();
-            await adapter
-              .sendMessage(
-                msg.chatId,
-                setupMsg(getLang()).masterOnly(masterName),
-              )
-              .catch(() => {});
-            return;
-          }
-        }
-
-        if (!config.assignedPath && config.role !== "master") {
-          await adapter
-            .sendMessage(
-              msg.chatId,
-              setupMsg(getLang()).noProject(config.username ?? "?"),
-            )
-            .catch(() => {});
-          return;
-        }
-        if (managed.busy) {
-          if (managed.queue.length >= MAX_QUEUE_SIZE) {
-            await adapter
-              .sendMessage(
-                msg.chatId,
-                setupMsg(getLang()).queueFull(
-                  managed.queue.length + 1,
-                  MAX_QUEUE_SIZE,
-                ),
-              )
-              .catch(() => {});
-            return;
-          }
-          managed.queue.push({
-            chatId: msg.chatId,
-            userId: msg.userId,
-            message: text,
-            queuedAt: Date.now(),
-            requesterName: msg.username,
-          });
-          const pos = managed.queue.length;
-          await adapter
-            .sendMessage(
-              msg.chatId,
-              getLang() === "zh"
-                ? `⏳ 你是第 ${pos + 1} 个，前面还有 ${pos} 个任务`
-                : `⏳ You're #${pos + 1} in queue, ${pos} task(s) ahead`,
-            )
-            .catch(() => {});
-          return;
-        }
-
-        // Download image if present
-        let imagePath: string | undefined;
-        if (msg.photoFileId) {
-          imagePath = await adapter.downloadFile(msg.photoFileId);
-        }
-
-        await adapter.setReaction(msg.chatId, msg.id, "👀").catch(() => {});
-        const { invokeClaudeAndReply } = await import("./claude.js");
-        void invokeClaudeAndReply(
-          managed,
-          msg.chatId,
-          text,
-          imagePath,
-          msg.username,
-        );
-      });
-
-      adapter.onCallback(async (event) => {
-        const userId = event.userId;
-        // Interactive setup callbacks (o:, b:, c:, u:, m:, x:)
-        if (config.role === "master") {
-          const { routeCallback } = await import("./interactive/index.js");
-          const handled = await routeCallback(
-            managed,
-            event.chatId,
-            userId,
-            event.data,
-            event.messageId,
-            event.id,
-          );
-          if (handled) return;
-        }
-
-        // Approval callbacks (approve:yes:id / approve:no:id)
-        const { pendingApprovals } = await import("./state.js");
-
-        if (!isAdmin(userId)) {
-          await adapter
-            .answerCallback(event.id, setupMsg(getLang()).adminOnly)
-            .catch(() => {});
-          return;
-        }
-        if (!event.data.startsWith("approve:")) return;
-
-        const [, action, approvalId] = event.data.split(":");
-        const pending = pendingApprovals.get(approvalId!);
-        if (!pending) {
-          await adapter
-            .answerCallback(event.id, setupMsg(getLang()).expired)
-            .catch(() => {});
-          return;
-        }
-
-        const s = setupMsg(getLang());
-
-        if (action === "no") {
-          if (
-            pending.requiredApprovers.length > 0 &&
-            !pending.requiredApprovers.includes(userId) &&
-            !isAdmin(userId)
-          ) {
-            await adapter.answerCallback(event.id, s.adminOnly).catch(() => {});
-            return;
-          }
-          pendingApprovals.delete(approvalId!);
-          pending.resolve(null);
-          if (event.messageText) {
-            await adapter
-              .editButtons(
-                event.chatId,
-                event.messageId,
-                `${event.messageText}\n\n${s.skipped}`,
-                [],
-              )
-              .catch(() => {});
-          }
-          return;
-        }
-
-        // approve:yes — only approvers or admins
-        if (
-          pending.requiredApprovers.length > 0 &&
-          !pending.requiredApprovers.includes(userId) &&
-          !isAdmin(userId)
-        ) {
-          await adapter.answerCallback(event.id, s.adminOnly).catch(() => {});
-          return;
-        }
-
-        if (pending.approvedBy.has(userId)) {
-          const lang = getLang();
-          await adapter
-            .answerCallback(
-              event.id,
-              lang === "zh" ? "已投票" : "Already voted",
-            )
-            .catch(() => {});
-          return;
-        }
-        pending.approvedBy.add(userId);
-        await adapter.answerCallback(event.id).catch(() => {});
-
-        if (pending.requiredApprovers.length === 0) {
-          pendingApprovals.delete(approvalId!);
-          pending.resolve(WRITE_TOOLS);
-          if (event.messageText) {
-            await adapter
-              .editButtons(
-                event.chatId,
-                event.messageId,
-                `${event.messageText}\n\n${s.authorized}`,
-                [],
-              )
-              .catch(() => {});
-          }
-        } else {
-          const allApproved = pending.requiredApprovers.every((id) =>
-            pending.approvedBy.has(id),
-          );
-          const count = pending.approvedBy.size;
-          const total = pending.requiredApprovers.length;
-
-          if (allApproved) {
-            pendingApprovals.delete(approvalId!);
-            pending.resolve(WRITE_TOOLS);
-            if (event.messageText) {
-              await adapter
-                .editButtons(
-                  event.chatId,
-                  event.messageId,
-                  `${event.messageText}\n\n${s.authorized} (${count}/${total})`,
-                  [],
-                )
-                .catch(() => {});
-            }
-          } else {
-            const lang = getLang();
-            const label =
-              lang === "zh"
-                ? `\u2705 允许 (${count}/${total})`
-                : `\u2705 Allow (${count}/${total})`;
-            await adapter
-              .editButtonsOnly(event.chatId, event.messageId, [
-                [
-                  { text: label, data: `approve:yes:${approvalId}` },
-                  {
-                    text: lang === "zh" ? "\u274c 跳过" : "\u274c Skip",
-                    data: `approve:no:${approvalId}`,
-                  },
-                ],
-              ])
-              .catch(() => {});
-          }
-        }
+      // Discord: shared handler with Discord-specific hooks
+      const discordAdapter =
+        adapter as import("./platform/discord/adapter.js").DiscordAdapter;
+      registerPlatformHandlers(managed, adapter, config, {
+        stripMentions: (msg) =>
+          (msg.text ?? "").replace(/<@[&!]?\d+>/g, "").trim(),
+        isMentionedIn: (msg) => discordAdapter.isMentionedIn(msg),
+        isGroupMessage: () => true, // Discord channels are always "group"
+        logLabel: "Discord",
       });
 
       // Start Discord bot
@@ -563,6 +214,37 @@ async function main(): Promise<void> {
           });
         } catch (err) {
           log(`DISCORD_FAIL: ${config.username ?? "?"} — ${err}`);
+        }
+      }, i * BOT_START_STAGGER_MS);
+    } else if (platformType === "feishu") {
+      // Feishu: shared handler with Feishu-specific hooks
+      const feishuAdapter = adapter as FeishuAdapter;
+      registerPlatformHandlers(managed, adapter, config, {
+        stripMentions: (msg) => feishuAdapter.stripMentions(msg),
+        isMentionedIn: (msg) => feishuAdapter.isMentionedIn(msg),
+        isGroupMessage: (msg) => {
+          const raw = msg.raw as
+            | { message?: { chat_type?: string } }
+            | undefined;
+          return raw?.message?.chat_type === "group";
+        },
+        logLabel: "Feishu",
+      });
+
+      // Start Feishu bot
+      setTimeout(async () => {
+        try {
+          await adapter.start((info) => {
+            log(
+              `ONLINE: ${info.username} → ${config.assignedProject ?? config.role ?? "?"}`,
+            );
+            if (!config.username) {
+              managed.config = { ...config, username: info.username };
+              botByUsername.set(info.username, managed);
+            }
+          });
+        } catch (err) {
+          log(`FEISHU_FAIL: ${config.username ?? "?"} — ${err}`);
         }
       }, i * BOT_START_STAGGER_MS);
     }
