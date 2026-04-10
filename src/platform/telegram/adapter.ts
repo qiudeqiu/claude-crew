@@ -4,7 +4,7 @@
  */
 import { Bot, GrammyError } from "grammy";
 import type { ReactionTypeEmoji } from "grammy/types";
-import { mkdirSync, writeFileSync } from "fs";
+import { mkdirSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import type {
   Platform,
@@ -13,10 +13,11 @@ import type {
   Button,
   BotInfo,
   SentMessage,
+  FileCapable,
 } from "../types.js";
 import { INBOX_DIR } from "../../config.js";
 
-export class TelegramAdapter implements Platform {
+export class TelegramAdapter implements Platform, FileCapable {
   private bot: Bot;
   private token: string;
   private messageHandlers: Array<(msg: PlatformMessage) => void> = [];
@@ -196,6 +197,25 @@ export class TelegramAdapter implements Platform {
       return path;
     } catch {
       return undefined;
+    }
+  }
+
+  // ── Send File ──
+
+  async sendFile(
+    chatId: string,
+    path: string,
+    caption?: string,
+  ): Promise<void> {
+    const buf = readFileSync(path);
+    const ext = path.split(".").pop()?.toLowerCase() ?? "";
+    const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
+    if (isImage) {
+      await this.bot.api.sendPhoto(chatId, new Blob([buf]), {
+        caption,
+      });
+    } else {
+      await this.bot.api.sendDocument(chatId, new Blob([buf]), { caption });
     }
   }
 

@@ -22,10 +22,11 @@ import type {
   BotInfo,
   SentMessage,
   ThreadCapable,
+  FileCapable,
 } from "../types.js";
 import { INBOX_DIR } from "../../config.js";
 
-export class DiscordAdapter implements Platform, ThreadCapable {
+export class DiscordAdapter implements Platform, ThreadCapable, FileCapable {
   private client: Client;
   private token: string;
   private messageHandlers: Array<(msg: PlatformMessage) => void> = [];
@@ -220,6 +221,21 @@ export class DiscordAdapter implements Platform, ThreadCapable {
     } catch {
       return undefined;
     }
+  }
+
+  // ── Send File ──
+
+  async sendFile(
+    chatId: string,
+    path: string,
+    caption?: string,
+  ): Promise<void> {
+    const channel = await this.client.channels.fetch(chatId);
+    if (!channel || !channel.isTextBased()) return;
+    await (channel as { send: (opts: unknown) => Promise<unknown> }).send({
+      content: caption ?? "",
+      files: [path],
+    });
   }
 
   // ── Thread support (Discord native) ──

@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { homedir } from "os";
 import { join } from "path";
 import type { ClaudeResult, ManagedBot } from "./types.js";
+import { hasFileSupport } from "./platform/types.js";
 import {
   getConfig,
   loadPool,
@@ -431,6 +432,14 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
     );
   }
 
+  // File sending instruction — all platforms
+  parts.push(
+    "To send a file (image, PDF, etc.) to the user in the chat, include this marker in your text output: " +
+      "[[FILE:/absolute/path/to/file.png]]. " +
+      "The daemon will automatically upload and send the file through the bot. " +
+      "You can include multiple [[FILE:...]] markers. Always use absolute paths.",
+  );
+
   return parts.length > 0 ? parts.join("\n\n") : undefined;
 }
 
@@ -722,9 +731,30 @@ export async function invokeClaudeAndReply(
       recordSuccess(botKey);
     }
 
+    // ── Extract and send [[FILE:path]] markers ──
+    const filePattern = /\[\[FILE:(\/[^\]]+)\]\]/g;
+    const filePaths = [...result.text.matchAll(filePattern)].map((m) => m[1]);
+    const cleanText = result.text.replace(filePattern, "").trim();
+
+    if (filePaths.length > 0 && hasFileSupport(platform)) {
+      for (const fp of filePaths) {
+        try {
+          if (existsSync(fp)) {
+            await platform.sendFile(chatId, fp);
+            log(`FILE: sent ${fp} to ${chatId}`);
+          } else {
+            log(`FILE: not found ${fp}`);
+          }
+        } catch (e) {
+          log(`FILE: failed ${fp} — ${e}`);
+        }
+      }
+    }
+
     const projectTag = project.replace(/[^a-zA-Z0-9\u4e00-\u9fff_]/g, "_");
     const mention = requesterName ? ` @${requesterName}` : "";
-    const chunks = splitMessage(result.text, getMessageLimit());
+    const outputText = cleanText || result.text;
+    const chunks = splitMessage(outputText, getMessageLimit());
     for (let i = 0; i < chunks.length; i++) {
       const text =
         i === chunks.length - 1

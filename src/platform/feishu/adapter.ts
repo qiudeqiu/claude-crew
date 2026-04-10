@@ -13,7 +13,7 @@ import {
   EventDispatcher,
   LoggerLevel,
 } from "@larksuiteoapi/node-sdk";
-import { mkdirSync, writeFileSync } from "fs";
+import { mkdirSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import type {
   Platform,
@@ -23,6 +23,7 @@ import type {
   BotInfo,
   SentMessage,
   CardCapable,
+  FileCapable,
 } from "../types.js";
 import { INBOX_DIR } from "../../config.js";
 import type { FeishuMessageEvent, FeishuCardAction } from "./types.js";
@@ -38,7 +39,7 @@ import { buildCard, buildTextCard } from "./cards.js";
 const HEALTH_CHECK_MS = 300_000; // 5 min
 const HEALTH_PING_MS = 60_000; // check every 1 min
 
-export class FeishuAdapter implements Platform, CardCapable {
+export class FeishuAdapter implements Platform, CardCapable, FileCapable {
   private client: Client;
   private wsClient!: WSClient;
   private eventDispatcher: EventDispatcher;
@@ -413,6 +414,121 @@ export class FeishuAdapter implements Platform, CardCapable {
       throw new Error(`Feishu card send failed: ${resp.code} ${resp.msg}`);
     }
     return { id: resp.data?.message_id ?? "", chatId };
+  }
+
+  // ── Send File ──
+
+  async sendFile(
+    chatId: string,
+    path: string,
+    caption?: string,
+  ): Promise<void> {
+    try {
+      const buf = readFileSync(path);
+      const ext = path.split(".").pop()?.toLowerCase() ?? "";
+      const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
+
+      if (isImage) {
+        // Upload image → get image_key → send as image message
+        const blob = new Blob([buf]);
+        const form = new FormData();
+        form.append("image_type", "message");
+        form.append("image", blob, `image.${ext}`);
+
+        const tokenResp = await fetch(
+          "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              app_id: this.appId,
+              app_secret: this.appSecret,
+            }),
+          },
+        );
+        const token = (
+          (await tokenResp.json()) as { tenant_access_token?: string }
+        ).tenant_access_token;
+        if (!token) return;
+
+        const uploadResp = await fetch(
+          "https://open.feishu.cn/open-apis/im/v1/images",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: form,
+          },
+        );
+        const uploadData = (await uploadResp.json()) as {
+          code?: number;
+          data?: { image_key?: string };
+        };
+        if (uploadData.code !== 0 || !uploadData.data?.image_key) return;
+
+        await this.client.im.v1.message.create({
+          params: { receive_id_type: "chat_id" },
+          data: {
+            receive_id: chatId,
+            content: JSON.stringify({ image_key: uploadData.data.image_key }),
+            msg_type: "image",
+          },
+        });
+
+        // Send caption as separate text card if provided
+        if (caption) {
+          await this.sendMessage(chatId, caption);
+        }
+      } else {
+        // Non-image: upload as file
+        const blob = new Blob([buf]);
+        const form = new FormData();
+        const fileName = path.split("/").pop() ?? "file";
+        form.append("file_type", "stream");
+        form.append("file_name", fileName);
+        form.append("file", blob, fileName);
+
+        const tokenResp = await fetch(
+          "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              app_id: this.appId,
+              app_secret: this.appSecret,
+            }),
+          },
+        );
+        const token = (
+          (await tokenResp.json()) as { tenant_access_token?: string }
+        ).tenant_access_token;
+        if (!token) return;
+
+        const uploadResp = await fetch(
+          "https://open.feishu.cn/open-apis/im/v1/files",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: form,
+          },
+        );
+        const uploadData = (await uploadResp.json()) as {
+          code?: number;
+          data?: { file_key?: string };
+        };
+        if (uploadData.code !== 0 || !uploadData.data?.file_key) return;
+
+        await this.client.im.v1.message.create({
+          params: { receive_id_type: "chat_id" },
+          data: {
+            receive_id: chatId,
+            content: JSON.stringify({ file_key: uploadData.data.file_key }),
+            msg_type: "file",
+          },
+        });
+      }
+    } catch {
+      // silently fail — file send is best-effort
+    }
   }
 
   // ── Feedback ──
