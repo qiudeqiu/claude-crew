@@ -369,10 +369,12 @@ export function botsMsg(lang: Lang) {
             "2\ufe0f\u20e3 添加「机器人」能力\n" +
             "3\ufe0f\u20e3 权限管理 → 开通以下权限：\n" +
             "   \u2022 im:message（获取与发送消息）\n" +
-            "   \u2022 im:message.group_at_msg（接收群 @消息）\n" +
+            "   \u2022 im:message.group_at_msg:readonly（接收群消息）\n" +
             "   \u2022 im:message.p2p_msg:readonly（接收私聊消息）\n" +
-            "4\ufe0f\u20e3 事件与回调 → 订阅方式选「长连接」\n" +
-            "   添加事件: im.message.receive_v1, card.action.trigger\n" +
+            "   \u2022 im:message:send_as_bot（发送消息）\n" +
+            "4\ufe0f\u20e3 事件与回调：\n" +
+            "   事件配置 → 订阅方式「长连接」→ 添加 im.message.receive_v1\n" +
+            "   回调配置 → 订阅方式「长连接」→ 添加 card.action.trigger\n" +
             "5\ufe0f\u20e3 发布版本（版本管理 → 创建版本 → 申请发布）\n" +
             "6\ufe0f\u20e3 凭证与基础信息 → 复制 App ID 和 App Secret\n" +
             "   按格式 app_id:app_secret 发送到此处\n\n" +
@@ -463,10 +465,12 @@ export function botsMsg(lang: Lang) {
             "2\ufe0f\u20e3 Add Bot capability\n" +
             "3\ufe0f\u20e3 Permissions \u2192 Enable:\n" +
             "   \u2022 im:message (send & receive messages)\n" +
-            "   \u2022 im:message.group_at_msg (receive group @mentions)\n" +
+            "   \u2022 im:message.group_at_msg:readonly (receive group messages)\n" +
             "   \u2022 im:message.p2p_msg:readonly (receive DMs)\n" +
-            "4\ufe0f\u20e3 Events & Callbacks \u2192 Mode: Long Connection\n" +
-            "   Add events: im.message.receive_v1, card.action.trigger\n" +
+            "   \u2022 im:message:send_as_bot (send messages)\n" +
+            "4\ufe0f\u20e3 Events & Callbacks:\n" +
+            "   Events tab \u2192 Mode: Long Connection \u2192 Add im.message.receive_v1\n" +
+            "   Callbacks tab \u2192 Mode: Long Connection \u2192 Add card.action.trigger\n" +
             "5\ufe0f\u20e3 Publish a version (Version Management \u2192 Create \u2192 Publish)\n" +
             "6\ufe0f\u20e3 Credentials \u2192 Copy App ID and App Secret\n" +
             "   Send here in format: app_id:app_secret\n\n" +
