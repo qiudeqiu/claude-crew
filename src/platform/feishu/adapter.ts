@@ -207,6 +207,9 @@ export class FeishuAdapter implements Platform, CardCapable, FileCapable {
       onReady({ username: this.appId });
     }
 
+    // Auto-initialize lark-cli with bot credentials (if not configured)
+    this.initLarkCli().catch(() => {});
+
     // Keep the event loop alive
     this.keepaliveTimer = setInterval(() => {}, 30_000);
 
@@ -253,6 +256,54 @@ export class FeishuAdapter implements Platform, CardCapable, FileCapable {
     } catch {
       /* ignore */
     }
+  }
+
+  /**
+   * Auto-initialize lark-cli config with this bot's credentials.
+   * Ensures Claude subprocesses can use lark-cli without manual setup.
+   */
+  private async initLarkCli(): Promise<void> {
+    const { existsSync } = await import("fs");
+    const { homedir } = await import("os");
+    const { join } = await import("path");
+    const configPath = join(homedir(), ".lark-cli", "config.json");
+
+    if (existsSync(configPath)) {
+      // Already configured — check if appId matches
+      try {
+        const { readFileSync } = await import("fs");
+        const conf = JSON.parse(readFileSync(configPath, "utf8"));
+        const apps = conf.apps ?? [];
+        if (apps.some((a: { appId?: string }) => a.appId === this.appId)) {
+          return; // Already configured for this app
+        }
+      } catch {
+        // Corrupted config — recreate
+      }
+    }
+
+    // Write lark-cli config
+    const { mkdirSync, writeFileSync } = await import("fs");
+    const dir = join(homedir(), ".lark-cli");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      configPath,
+      JSON.stringify(
+        {
+          apps: [
+            {
+              appId: this.appId,
+              appSecret: this.appSecret,
+              brand: "feishu",
+              lang: "zh",
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      { mode: 0o600 },
+    );
   }
 
   // ── Messages ──

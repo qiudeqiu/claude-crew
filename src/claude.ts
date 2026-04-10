@@ -427,8 +427,9 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
         "lark-doc (documents), lark-sheets (spreadsheets), lark-base (databases), " +
         "lark-task (tasks), lark-wiki (knowledge base), lark-drive (files), " +
         "lark-whiteboard (diagrams). " +
-        "IMPORTANT: Always use `--as bot` flag (e.g. `lark-cli docs +create --as bot ...`). " +
-        "Never use `--as user` — it requires OAuth login which is not available in this context. " +
+        "IMPORTANT: Use `--as bot` flag by default (e.g. `lark-cli docs +create --as bot ...`). " +
+        "Only use `--as user` if the user explicitly asks for docs under their own name AND user auth is configured. " +
+        "If `--as user` fails with auth error, fall back to `--as bot`. " +
         "Run `lark-cli <skill> --help` for usage details.",
     );
   }
