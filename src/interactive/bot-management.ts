@@ -7,6 +7,7 @@ import {
   savePool,
   createProjectBot,
   hasPermission,
+  getPlatform,
 } from "../config.js";
 import { log } from "../logger.js";
 import { botByUsername } from "../state.js";
@@ -153,6 +154,18 @@ export async function handleBotCallback(
   }
 
   if (data === "b:a") {
+    if (getPlatform() === "wechat") {
+      // WeChat: no token needed, virtual bots. Skip to project name.
+      const hint =
+        lang === "zh"
+          ? "请输入项目名称（将作为 # 标签）:"
+          : "Enter project name (will be used as #tag):";
+      await edit(api, chatId, messageId, hint + c.replyHint, {
+        reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
+      }).catch(() => {});
+      setConversation(userId, chatId, "bot:awaitProject");
+      return true;
+    }
     await edit(api, chatId, messageId, m.addTitle + c.replyHint, {
       reply_markup: { inline_keyboard: cancelButton("b:l", lang) },
     }).catch(() => {});
@@ -342,11 +355,13 @@ export async function handleBotText(
 
     setConversation(userId, chatId, "idle", { path });
     const s = getConversation(userId, chatId)!;
+    const botLabel =
+      getPlatform() === "wechat" ? `#${s.data.project}` : `@${s.data.username}`;
     await send(
       api,
       chatId,
       `${m.summaryTitle}\n${SEPARATOR}\n\n` +
-        `${m.bot}: @${s.data.username}\n` +
+        `${m.bot}: ${botLabel}\n` +
         `${m.project}: ${s.data.project}\n` +
         `${m.path}: ${path}\n\n` +
         `${common(lang).save}?`,
@@ -380,8 +395,15 @@ async function finalizeAddBot(
   const state = getConversation(userId, chatId);
   if (!state) return false;
 
-  const { token, username, project, path } = state.data;
-  if (!token || !username || !project || !path) return false;
+  let { token, username, project, path } = state.data;
+  if (!project || !path) return false;
+
+  // WeChat: auto-generate virtual token and username
+  if (getPlatform() === "wechat") {
+    token = `virtual:${project}`;
+    username = project;
+  }
+  if (!token || !username) return false;
 
   const lang = getLang();
   const m = botsMsg(lang);
@@ -392,7 +414,6 @@ async function finalizeAddBot(
   log(`BOT_MGMT: added @${username} → ${project} (${path}) by ${userId}`);
   clearConversation(userId, chatId);
 
-  const { getPlatform } = await import("../config.js");
   let text = m.added(username, project, path);
   if (getPlatform() === "discord") {
     const inviteUrl = buildDiscordInviteUrl(token);
