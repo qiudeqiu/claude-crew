@@ -150,49 +150,88 @@ export class WeChatRouter {
     if (!contextToken) return;
 
     try {
+      const { createHash } = await import("crypto");
       const buf = readFileSync(filePath);
+      const rawsize = buf.length;
+      const rawfilemd5 = createHash("md5").update(buf).digest("hex");
+      const aesKeyBuf = randomBytes(16);
+      const filekey = randomBytes(16).toString("hex");
       const ext = filePath.split(".").pop()?.toLowerCase() ?? "";
       const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
 
-      // 1. Get upload URL
+      // AES-128-ECB encrypt (PKCS7 padding added by cipher)
+      const { createCipheriv } = await import("crypto");
+      const cipher = createCipheriv("aes-128-ecb", aesKeyBuf, null);
+      const encrypted = Buffer.concat([cipher.update(buf), cipher.final()]);
+      const filesize = encrypted.length;
+
+      // 1. Get upload params
       const uploadResp = await fetch(
         `${WECHAT_BASE_URL}/ilink/bot/getuploadurl`,
         {
           method: "POST",
           headers: buildHeaders(this.botToken),
-          body: JSON.stringify({}),
+          body: JSON.stringify({
+            filekey,
+            media_type: isImage ? 1 : 3, // 1=image, 3=file
+            to_user_id: chatId,
+            rawsize,
+            rawfilemd5,
+            filesize,
+            no_need_thumb: true,
+            aeskey: aesKeyBuf.toString("hex"),
+            base_info: buildBaseInfo(),
+          }),
         },
       );
-      const uploadData = (await uploadResp.json()) as GetUploadUrlResponse;
-      if (uploadData.ret !== 0 || !uploadData.url) return;
+      const uploadData = (await uploadResp.json()) as Record<string, unknown>;
+      const uploadParam = uploadData.upload_param as string | undefined;
+      if (!uploadParam) {
+        console.error(
+          `[wechat] getuploadurl failed: ${JSON.stringify(uploadData).slice(0, 200)}`,
+        );
+        return;
+      }
 
-      // 2. Encrypt and upload to CDN
-      // Generate a random 16-byte AES key
-      const keyBuf = crypto.getRandomValues(new Uint8Array(16));
-      const aesKey = Buffer.from(keyBuf).toString("base64");
-      const encrypted = encrypt(buf, aesKey);
-
-      await fetch(uploadData.url, {
-        method: "PUT",
-        body: encrypted,
+      // 2. Upload encrypted file to CDN
+      const cdnUrl = `https://novac2c.cdn.weixin.qq.com/c2c/upload?encrypted_query_param=${encodeURIComponent(uploadParam)}&filekey=${encodeURIComponent(filekey)}`;
+      const cdnResp = await fetch(cdnUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: new Uint8Array(encrypted),
       });
+      const downloadParam = cdnResp.headers.get("x-encrypted-param");
+      if (!downloadParam) {
+        console.error(
+          `[wechat] CDN upload missing x-encrypted-param, status=${cdnResp.status}`,
+        );
+        return;
+      }
 
-      // 3. Send message with file reference
-      const msgType = isImage ? 2 : 4; // 2=image, 4=file
-      const itemType = isImage ? 2 : 4;
-      const fileName = filePath.split("/").pop() ?? "file";
-
+      // 3. Send message with media reference
+      const itemType = isImage ? 2 : 4; // item type: 2=IMAGE, 4=FILE
       const item = isImage
         ? {
             type: itemType,
-            image_item: { aes_key: aesKey, url: uploadData.url },
+            image_item: {
+              media: {
+                encrypt_query_param: downloadParam,
+                aes_key: aesKeyBuf.toString("base64"),
+                encrypt_type: 1,
+              },
+              mid_size: filesize,
+            },
           }
         : {
             type: itemType,
             file_item: {
-              aes_key: aesKey,
-              url: uploadData.url,
-              file_name: fileName,
+              media: {
+                encrypt_query_param: downloadParam,
+                aes_key: aesKeyBuf.toString("base64"),
+                encrypt_type: 1,
+              },
+              file_name: filePath.split("/").pop() ?? "file",
+              file_size: rawsize,
             },
           };
 
@@ -204,7 +243,7 @@ export class WeChatRouter {
             from_user_id: "",
             to_user_id: chatId,
             client_id: generateClientId(),
-            message_type: msgType,
+            message_type: 2, // always 2 = BOT
             message_state: 2,
             context_token: contextToken,
             item_list: [item],
@@ -212,8 +251,8 @@ export class WeChatRouter {
           base_info: buildBaseInfo(),
         }),
       });
-    } catch {
-      // File send is best-effort
+    } catch (e) {
+      console.error(`[wechat] sendFile error: ${e}`);
     }
   }
 
