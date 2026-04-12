@@ -11,7 +11,7 @@ import { Bot, GrammyError } from "grammy";
 import { TelegramAdapter } from "./platform/telegram/adapter.js";
 import { DiscordAdapter } from "./platform/discord/adapter.js";
 import { FeishuAdapter } from "./platform/feishu/adapter.js";
-import { WeChatAdapter } from "./platform/wechat/adapter.js";
+import { WeChatRouter, WeChatBotAdapter } from "./platform/wechat/adapter.js";
 import { registerPlatformHandlers } from "./handler.js";
 import {
   mkdirSync,
@@ -111,6 +111,9 @@ async function main(): Promise<void> {
 
   for (let i = 0; i < pool.bots.length; i++) {
     const config = pool.bots[i];
+
+    // WeChat: skip individual bot creation — handled separately below
+    if (platformType === "wechat") continue;
 
     // Create platform adapter based on config
     const adapter =
@@ -251,16 +254,25 @@ async function main(): Promise<void> {
     }
   }
 
-  // ── WeChat: single adapter, multiple virtual bots via #tag routing ──
+  // ── WeChat: single router + virtual bot adapters ──
   if (platformType === "wechat") {
     const masterConfig = pool.bots.find((b) => b.role === "master");
     if (masterConfig) {
-      const wechatAdapter = new WeChatAdapter(masterConfig.token);
+      const wechatRouter = new WeChatRouter(masterConfig.token);
+      const lang = (pool.language === "zh" ? "zh" : "en") as "zh" | "en";
 
-      for (const cfg of pool.bots) {
+      for (const botConf of pool.bots) {
+        const botAdapter = new WeChatBotAdapter(wechatRouter, lang);
+
+        if (botConf.role === "master") {
+          wechatRouter.registerMaster(botAdapter);
+        } else if (botConf.assignedProject) {
+          wechatRouter.registerBot(botConf.assignedProject, botAdapter);
+        }
+
         const managed: ManagedBot = {
-          config: cfg,
-          platform: wechatAdapter,
+          config: botConf,
+          platform: botAdapter,
           busy: false,
           lastInvoke: 0,
           lastActivity: 0,
@@ -270,32 +282,27 @@ async function main(): Promise<void> {
           lastCostUSD: 0,
           queue: [],
         };
-        managedBots.set(cfg.token, managed);
-        if (cfg.username) botByUsername.set(cfg.username, managed);
-        if (cfg.role === "master") {
-          daemon.masterBot = managed;
-          wechatAdapter.router.registerMaster(managed, cfg);
-        } else if (cfg.assignedProject) {
-          wechatAdapter.router.register(cfg.assignedProject, managed, cfg);
-        }
-      }
 
-      registerPlatformHandlers(daemon.masterBot!, wechatAdapter, masterConfig, {
-        stripMentions: (msg) => msg.text ?? "",
-        isMentionedIn: () => true,
-        isGroupMessage: () => false,
-        logLabel: "WeChat",
-      });
+        managedBots.set(botConf.token, managed);
+        if (botConf.username) botByUsername.set(botConf.username, managed);
+        if (botConf.role === "master") daemon.masterBot = managed;
 
-      try {
-        await wechatAdapter.start((info) => {
-          log(
-            `ONLINE: ${info.username} [WeChat, ${pool.bots.length} virtual bot(s)]`,
-          );
+        registerPlatformHandlers(managed, botAdapter, botConf, {
+          stripMentions: (msg) => msg.text ?? "",
+          isMentionedIn: () => true, // Single bot, always "mentioned"
+          isGroupMessage: () => false, // WeChat DM model, no group filtering
+          logLabel: "WeChat",
         });
-      } catch (err) {
-        log(`WECHAT_FAIL: ${err}`);
+
+        log(
+          `READY: ${botConf.assignedProject ?? botConf.role ?? "?"} [wechat${botConf.token.startsWith("virtual:") ? " virtual" : ""}]`,
+        );
       }
+
+      // Start the single router (begins polling)
+      wechatRouter.start((info) => {
+        log(`ONLINE: ${info.username} → wechat master`);
+      });
     }
   }
 

@@ -57,7 +57,7 @@ export function getMessageLimit(): number {
   const p = getPlatform();
   if (p === "discord") return 2000;
   if (p === "feishu") return 20000; // Feishu text msg limit; card elements ~3000 each
-  if (p === "wechat") return 2048;
+  if (p === "wechat") return 2048; // WeChat iLink conservative limit
   return 4096;
 }
 export const WRITE_TOOLS = "Bash,Edit,Write,NotebookEdit,Agent,Skill";

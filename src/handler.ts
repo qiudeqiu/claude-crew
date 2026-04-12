@@ -56,7 +56,9 @@ export function registerPlatformHandlers(
     // Feishu apps already have enterprise-level access control, so trust all
     // tenant users for bot access. Admin checks still use owner's open_id.
     const authorized =
-      getPlatform() === "feishu" ? true : canUseBot(msg.userId, liveConf);
+      getPlatform() === "feishu" || getPlatform() === "wechat"
+        ? true
+        : canUseBot(msg.userId, liveConf);
 
     // Interactive text flow: active conversation takes priority (no @mention needed)
     if (authorized && config.role === "master") {
