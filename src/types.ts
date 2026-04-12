@@ -30,7 +30,7 @@ export type AdminConfig = {
 
 /** Flattened view of the active platform's config — what all consuming code sees. */
 export type BotPool = {
-  platform?: "telegram" | "discord" | "feishu";
+  platform?: "telegram" | "discord" | "feishu" | "wechat";
   bots: PoolBot[];
   sharedGroupId?: string;
   /** Owner (original admin) ID — immutable after setup. */
@@ -67,10 +67,11 @@ export type PlatformSection = {
 
 /** On-disk config format — platform sections + shared settings. */
 export type RawBotPool = {
-  activePlatform?: "telegram" | "discord" | "feishu";
+  activePlatform?: "telegram" | "discord" | "feishu" | "wechat";
   telegram?: PlatformSection;
   discord?: PlatformSection;
   feishu?: PlatformSection;
+  wechat?: PlatformSection;
   // Shared settings (platform-agnostic)
   accessLevel?: "readWrite" | "readOnly";
   permissionMode?: "allowAll" | "approve" | "auto";

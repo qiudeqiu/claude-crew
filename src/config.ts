@@ -57,6 +57,7 @@ export function getMessageLimit(): number {
   const p = getPlatform();
   if (p === "discord") return 2000;
   if (p === "feishu") return 20000; // Feishu text msg limit; card elements ~3000 each
+  if (p === "wechat") return 2048;
   return 4096;
 }
 export const WRITE_TOOLS = "Bash,Edit,Write,NotebookEdit,Agent,Skill";
@@ -87,7 +88,7 @@ export const LARK_SENSITIVE_TOOLS = [
 // so all consuming code sees the same BotPool shape regardless of format.
 let rawCache: { data: RawBotPool; mtimeMs: number } | null = null;
 
-export type PlatformType = "telegram" | "discord" | "feishu";
+export type PlatformType = "telegram" | "discord" | "feishu" | "wechat";
 
 /** Read the raw on-disk format (platform sections + shared settings). */
 export function loadPoolRaw(): RawBotPool {
@@ -108,6 +109,7 @@ const VALID_PLATFORMS: ReadonlySet<string> = new Set([
   "telegram",
   "discord",
   "feishu",
+  "wechat",
 ]);
 
 export function getPlatform(): PlatformType {
@@ -353,7 +355,13 @@ export function migrateConfig(): string[] {
   if (!("activePlatform" in pool) && Array.isArray(pool.bots)) {
     const p = pool.platform as string;
     const platform =
-      p === "discord" ? "discord" : p === "feishu" ? "feishu" : "telegram";
+      p === "discord"
+        ? "discord"
+        : p === "feishu"
+          ? "feishu"
+          : p === "wechat"
+            ? "wechat"
+            : "telegram";
     // Move platform-specific fields into their section
     pool.activePlatform = platform;
     pool[platform] = {

@@ -11,6 +11,7 @@ import { Bot, GrammyError } from "grammy";
 import { TelegramAdapter } from "./platform/telegram/adapter.js";
 import { DiscordAdapter } from "./platform/discord/adapter.js";
 import { FeishuAdapter } from "./platform/feishu/adapter.js";
+import { WeChatAdapter } from "./platform/wechat/adapter.js";
 import { registerPlatformHandlers } from "./handler.js";
 import {
   mkdirSync,
@@ -247,6 +248,54 @@ async function main(): Promise<void> {
           log(`FEISHU_FAIL: ${config.username ?? "?"} — ${err}`);
         }
       }, i * BOT_START_STAGGER_MS);
+    }
+  }
+
+  // ── WeChat: single adapter, multiple virtual bots via #tag routing ──
+  if (platformType === "wechat") {
+    const masterConfig = pool.bots.find((b) => b.role === "master");
+    if (masterConfig) {
+      const wechatAdapter = new WeChatAdapter(masterConfig.token);
+
+      for (const cfg of pool.bots) {
+        const managed: ManagedBot = {
+          config: cfg,
+          platform: wechatAdapter,
+          busy: false,
+          lastInvoke: 0,
+          lastActivity: 0,
+          contextUsed: 0,
+          contextWindow: 0,
+          lastModel: "",
+          lastCostUSD: 0,
+          queue: [],
+        };
+        managedBots.set(cfg.token, managed);
+        if (cfg.username) botByUsername.set(cfg.username, managed);
+        if (cfg.role === "master") {
+          daemon.masterBot = managed;
+          wechatAdapter.router.registerMaster(managed, cfg);
+        } else if (cfg.assignedProject) {
+          wechatAdapter.router.register(cfg.assignedProject, managed, cfg);
+        }
+      }
+
+      registerPlatformHandlers(daemon.masterBot!, wechatAdapter, masterConfig, {
+        stripMentions: (msg) => msg.text ?? "",
+        isMentionedIn: () => true,
+        isGroupMessage: () => false,
+        logLabel: "WeChat",
+      });
+
+      try {
+        await wechatAdapter.start((info) => {
+          log(
+            `ONLINE: ${info.username} [WeChat, ${pool.bots.length} virtual bot(s)]`,
+          );
+        });
+      } catch (err) {
+        log(`WECHAT_FAIL: ${err}`);
+      }
     }
   }
 
