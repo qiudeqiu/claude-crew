@@ -290,12 +290,19 @@ function createProgressTracker(
   function flush(): void {
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     const recent = steps.slice(-5);
-    const text =
-      `\u2699\ufe0f working... (${elapsed}s)\n` +
-      recent.map((s) => `  \u2192 \ud83d\udd27 ${s}`).join("\n");
     if (statusMsgId) {
+      // Update existing message (no-op on WeChat, which is desired)
+      const text =
+        `\u2699\ufe0f working... (${elapsed}s)\n` +
+        recent.map((s) => `  \u2192 \ud83d\udd27 ${s}`).join("\n");
       void tgBot.editMessage(chatId, statusMsgId, text).catch(() => {});
     } else {
+      // First progress message — WeChat uses simpler text to save quota
+      const text =
+        getPlatform() === "wechat"
+          ? "\ud83d\udd27 正在处理中，请稍等，有结果会回复..."
+          : `\u2699\ufe0f working... (${elapsed}s)\n` +
+            recent.map((s) => `  \u2192 \ud83d\udd27 ${s}`).join("\n");
       tgBot
         .sendMessage(chatId, text)
         .then((sent) => {

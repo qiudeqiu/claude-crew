@@ -56,6 +56,8 @@ export class WeChatRouter {
   private poller: WeChatPoller;
   /** Latest context_token per chat (required for sending replies). */
   private contextTokens = new Map<string, string>();
+  /** Message count per context_token (max 10 before user must send new msg). */
+  private msgCount = new Map<string, number>();
   /** User's last-used project name (for untagged message routing). */
   private lastProject = new Map<string, string>();
   /** Registered bot adapters by project name. */
@@ -107,16 +109,27 @@ export class WeChatRouter {
     this.poller.stop();
   }
 
-  /** Send a text message. */
+  /** Max bot replies per context_token before user must send new message. */
+  private static readonly MAX_MSG_PER_CTX = 10;
+
+  /** Send a text message. Tracks quota per context_token. */
   async send(chatId: string, text: string): Promise<SentMessage> {
-    console.error(
-      `[wechat] send to=${chatId} len=${text.length} hasToken=${this.contextTokens.has(chatId)}`,
-    );
     const contextToken = this.contextTokens.get(chatId);
     if (!contextToken) {
-      console.error(`[wechat] no context_token for ${chatId}, cannot send`);
       return { id: "", chatId };
     }
+
+    // Check quota — at limit, ask user to send a message to continue
+    const count = this.msgCount.get(chatId) ?? 0;
+    if (count >= WeChatRouter.MAX_MSG_PER_CTX) {
+      return { id: "", chatId }; // Silently drop — waiting for user msg
+    }
+
+    // Warn at message 9 — append hint to the text
+    const isNearLimit = count === WeChatRouter.MAX_MSG_PER_CTX - 2;
+    const finalText = isNearLimit
+      ? text + "\n\n⚠️ 消息配额即将用完，请发一条消息继续对话"
+      : text;
 
     const resp = await fetch(`${WECHAT_BASE_URL}/ilink/bot/sendmessage`, {
       method: "POST",
@@ -129,15 +142,15 @@ export class WeChatRouter {
           message_type: 2,
           message_state: 2,
           context_token: contextToken,
-          item_list: [{ type: 1, text_item: { text } }],
+          item_list: [{ type: 1, text_item: { text: finalText } }],
         },
         base_info: buildBaseInfo(),
       }),
     });
 
-    const data = (await resp.json()) as Record<string, unknown>;
-    console.error(`[wechat] send resp: ${JSON.stringify(data).slice(0, 300)}`);
-    return { id: (data.msg_id as string) ?? "", chatId };
+    await resp.json(); // consume response
+    this.msgCount.set(chatId, count + 1);
+    return { id: "", chatId };
   }
 
   /** Send a file (image or document) to a chat. */
@@ -298,9 +311,10 @@ export class WeChatRouter {
   // ── Internal message routing ──
 
   private handleMessage(raw: WeChatMessage): void {
-    // Store context_token for replies + persist to disk
+    // Store context_token for replies + persist to disk + reset message counter
     if (raw.context_token) {
       this.contextTokens.set(raw.from_user_id, raw.context_token);
+      this.msgCount.set(raw.from_user_id, 0); // New context_token = fresh quota
       try {
         writeFileSync(
           ctxTokenPath(),
