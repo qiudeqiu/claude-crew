@@ -295,9 +295,14 @@ cd claude-crew
 
 ### Step 2: Create a Master Bot
 
-Open [@BotFather](https://t.me/BotFather), send `/newbot`, and save the token.
+| Platform | Steps |
+|----------|-------|
+| **Telegram** | [@BotFather](https://t.me/BotFather) → `/newbot` → save token |
+| **Feishu** | [Open Platform](https://open.feishu.cn/app) → Create App → Add Bot → Enable permissions → Subscribe events → Publish → Copy `app_id:app_secret` |
+| **WeChat** | Daemon handles QR scan on startup — no manual bot creation |
+| **Discord** | [Developer Portal](https://discord.com/developers/applications) → New Application → Bot → copy token |
 
-> Project bots are added later from Telegram via `@master bots` — you don't need to create them now.
+> Project bots are added later via the bot's menu — send `menu` or `bots` to your master bot.
 
 ### Step 3: Run Setup
 
@@ -307,31 +312,24 @@ bash scripts/setup.sh
 
 This will:
 - Check dependencies (bun, claude)
-- Ask for your master bot token (validates via Telegram API)
-- Auto-detect your Telegram User ID (just send a message to the bot)
-- Create `bot-pool.json` config file at `~/.claude/channels/telegram/`
+- Ask for your platform and master bot token
+- Create `bot-pool.json` config file
 - Optionally enable auto-start on login
 - Start the daemon
 
-> `setup.sh` only sets up the master bot. Project bots are added afterwards via `@master bots` in Telegram or `manage-pool.sh add` in the terminal.
+> Project bots are added afterwards via the bot's menu — send `menu` or `bots`.
 
-### Step 4: Telegram Setup
+### Step 4: Platform Setup
 
-1. Create a **private group** in Telegram
-2. Add your master bot to the group
-3. **Critical** — disable Group Privacy in @BotFather:
+**Telegram:** Create a private group → add bot → disable Group Privacy in @BotFather → bot auto-detects group → `@master menu`
 
-   `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**
+**Feishu:** Add bot to a group chat → `@bot menu` → each project bot needs its own app with permissions (`im:message`, `im:message.group_at_msg:readonly`, `im:message:send_as_bot`) + event subscription (`im.message.receive_v1`) + callback (`card.action.trigger`)
 
-   > Bots cannot see group messages with Group Privacy enabled!
+**WeChat:** Daemon shows QR code URL on startup → scan with WeChat → send `menu` in DM → use `#projectname` for tasks → number menus instead of buttons
 
-4. The bot auto-detects the group and shows a welcome guide with options:
-   - Add project bots (one per project)
-   - Open the management menu
+**Discord:** Invite bot to server → `@bot menu` in a text channel → enable MESSAGE CONTENT INTENT in Developer Portal
 
-5. Use `@master menu` for all ongoing management — add bots, configure settings, manage users
-
-That's it. Everything else is managed from Telegram.
+That's it. Everything else is managed from your chat app.
 
 <details>
 <summary><b>Terminal alternatives (optional)</b></summary>
@@ -360,12 +358,23 @@ bash scripts/daemon.sh restart
 
 ### Interacting with Bots
 
+**Telegram / Feishu / Discord** — one bot per project, @mention to dispatch:
+
 | Action | How | Example |
 |--------|-----|---------|
 | Run a task | `@bot request` | `@frontend_bot fix the login bug` |
 | Continue conversation | Reply to bot's message | Reply with follow-up |
 | Quote + ask | Reply to any message + `@bot` | Select message → Reply → `@bot explain this` |
 | Photo analysis | Photo + `@bot caption` | Photo + `@api_bot what's this error?` |
+
+**WeChat** — one bot, `#tag` routing to virtual projects:
+
+| Action | How | Example |
+|--------|-----|---------|
+| Run a task | `#project request` | `#api fix the login bug` |
+| Continue conversation | Just send (routes to last project) | `now add tests for it` |
+| Switch project | Use a different `#tag` | `#web update the homepage` |
+| Management | Send keyword | `menu`, `bots`, `config` |
 
 ### Master Bot Commands
 
@@ -387,6 +396,8 @@ All master commands are accessible via **button menu** or text. Send `menu` to t
 | `@master cron del <id>` | Delete task |
 
 > The menu supports English and Chinese. Switch language via the `Lang` button in the menu.
+>
+> **WeChat:** Omit `@master` — just send the command directly (e.g. `menu`, `bots`). Buttons are replaced by number menus — reply with a number to select.
 
 ### Daemon Management
 

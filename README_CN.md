@@ -257,17 +257,29 @@ bun --version       # 应输出 >= 1.0
 
 ```bash
 git clone https://github.com/qiudeqiu/claude-crew.git && cd claude-crew
-bash scripts/setup.sh    # 输入 Telegram User ID + master bot token，自动启动
+bash scripts/setup.sh    # 引导式安装 — 选择平台、输入凭证、启动 daemon
 ```
 
-> 先在 [@BotFather](https://t.me/BotFather) 创建一个 master bot（`/newbot`）。只需要一个 token 就能开始。
+<details>
+<summary><b>各平台 bot 创建方式</b></summary>
 
-**Telegram（后续全部操作）：**
+| 平台 | 创建方式 | Token 格式 |
+|------|---------|-----------|
+| **Telegram** | [@BotFather](https://t.me/BotFather) → `/newbot` | `123456789:ABCdefGHI...` |
+| **飞书** | [开放平台](https://open.feishu.cn/app) → 创建应用 → 添加 Bot → 开通权限（`im:message`, `im:message.group_at_msg:readonly`）→ 事件: `im.message.receive_v1`（长连接）→ 回调: `card.action.trigger`（长连接）→ 发布版本 | `cli_a5xxxxx:app_secret` |
+| **微信** | 扫码连接 iLink Bot（daemon 启动时自动引导） | 扫码自动获取 |
+| **Discord** | [Developer Portal](https://discord.com/developers/applications) → New Application → Bot → Reset Token → 开启 MESSAGE CONTENT INTENT | `MTQ4ODU1.GRPIaY.cv3...` |
 
-1. 创建私密群组，拉入 master bot
-2. 关闭 Group Privacy: @BotFather → `/mybots` → 选择机器人 → **Bot Settings** → **Group Privacy** → **Turn off**
-3. 机器人自动检测群组，显示欢迎引导
-4. 用 `@master menu` 管理一切 —— 添加项目 bot、配置设置、管理用户
+</details>
+
+**安装后：**
+
+| 平台 | 后续步骤 |
+|------|---------|
+| **Telegram** | 创建私密群组 → 拉入 bot → 在 @BotFather 关闭 Group Privacy → `@master menu` |
+| **飞书** | 将 bot 添加到群聊 → `@bot menu` |
+| **微信** | 直接给 bot 发 `menu`（私聊）→ 用 `#项目名` 发送任务 |
+| **Discord** | 邀请 bot 到服务器 → 在频道中 `@bot menu` |
 
 <details>
 <summary><b>详细安装步骤</b></summary>
@@ -348,12 +360,23 @@ bash scripts/daemon.sh restart
 
 ### 与机器人交互
 
+**Telegram / 飞书 / Discord** — 一个项目一个 bot，@提及执行任务：
+
 | 操作 | 方式 | 示例 |
 |------|------|------|
 | 执行任务 | `@bot 需求` | `@frontend_bot 修复登录bug` |
 | 继续对话 | 回复机器人消息 | 回复并追问 |
 | 引用 + 提问 | 回复任意消息 + `@bot` | 选中消息 → 回复 → `@bot 解释一下` |
 | 图片分析 | 图片 + `@bot 说明` | 截图 + `@api_bot 这个报错怎么回事？` |
+
+**微信** — 一个 bot，`#标签` 路由到虚拟项目：
+
+| 操作 | 方式 | 示例 |
+|------|------|------|
+| 执行任务 | `#项目名 需求` | `#api 修复登录bug` |
+| 继续对话 | 直接发送（路由到上次项目） | `帮我加上测试` |
+| 切换项目 | 用另一个 `#标签` | `#web 更新首页` |
+| 管理操作 | 发送关键词 | `menu`、`bots`、`config` |
 
 ### 引用消息
 
