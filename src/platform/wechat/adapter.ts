@@ -11,7 +11,7 @@
 
 import { readFileSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
-import { WECHAT_BASE_URL, buildHeaders } from "./types.js";
+import { WECHAT_BASE_URL, buildHeaders, buildBaseInfo } from "./types.js";
 import type { WeChatMessage, GetUploadUrlResponse } from "./types.js";
 import { WeChatPoller } from "./poller.js";
 import { toMessage, parseTag } from "./events.js";
@@ -84,6 +84,9 @@ export class WeChatRouter {
 
   /** Send a text message. */
   async send(chatId: string, text: string): Promise<SentMessage> {
+    console.error(
+      `[wechat] send to=${chatId} len=${text.length} hasToken=${this.contextTokens.has(chatId)}`,
+    );
     const contextToken = this.contextTokens.get(chatId);
     if (!contextToken) {
       console.error(`[wechat] no context_token for ${chatId}, cannot send`);
@@ -101,11 +104,13 @@ export class WeChatRouter {
           context_token: contextToken,
           item_list: [{ type: 1, text_item: { text } }],
         },
+        base_info: buildBaseInfo(),
       }),
     });
 
-    const data = (await resp.json()) as { ret: number; msg_id?: string };
-    return { id: data.msg_id ?? "", chatId };
+    const data = (await resp.json()) as Record<string, unknown>;
+    console.error(`[wechat] send resp: ${JSON.stringify(data).slice(0, 300)}`);
+    return { id: (data.msg_id as string) ?? "", chatId };
   }
 
   /** Send a file (image or document) to a chat. */
@@ -175,6 +180,7 @@ export class WeChatRouter {
             context_token: contextToken,
             item_list: [item],
           },
+          base_info: buildBaseInfo(),
         }),
       });
     } catch {
@@ -206,7 +212,10 @@ export class WeChatRouter {
     await fetch(`${WECHAT_BASE_URL}/ilink/bot/sendtyping`, {
       method: "POST",
       headers: buildHeaders(this.botToken),
-      body: JSON.stringify({ context_token: contextToken }),
+      body: JSON.stringify({
+        context_token: contextToken,
+        base_info: buildBaseInfo(),
+      }),
     }).catch(() => {});
   }
 

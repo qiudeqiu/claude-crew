@@ -4,11 +4,21 @@
  * Polls POST /ilink/bot/getupdates with cursor management.
  */
 
-import { WECHAT_BASE_URL, buildHeaders } from "./types.js";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
+import { WECHAT_BASE_URL, buildHeaders, buildBaseInfo } from "./types.js";
 import type { WeChatMessage, GetUpdatesResponse } from "./types.js";
 
 const POLL_RETRY_DELAY_MS = 15_000;
-const POLL_TIMEOUT_MS = 40_000; // slightly above server's 35s longpolling timeout
+const POLL_TIMEOUT_MS = 40_000;
+
+/** Persist cursor to survive daemon restarts. */
+function cursorPath(): string {
+  const dir =
+    process.env.TELEGRAM_POOL_DIR ??
+    join(process.env.HOME ?? "/tmp", ".claude", "channels", "telegram");
+  return join(dir, "wechat-cursor.json");
+}
 
 export class WeChatPoller {
   private botToken: string;
@@ -18,13 +28,46 @@ export class WeChatPoller {
 
   constructor(botToken: string) {
     this.botToken = botToken;
+    // Restore cursor from disk
+    try {
+      if (existsSync(cursorPath())) {
+        const data = JSON.parse(readFileSync(cursorPath(), "utf8"));
+        this.cursor = data.get_updates_buf ?? "";
+      }
+    } catch {
+      /* start fresh */
+    }
   }
 
-  /** Start the polling loop. */
+  /** Start the polling loop. Initializes cursor first. */
   start(onMessage: (msg: WeChatMessage) => void): void {
     this.messageHandler = onMessage;
     this.running = true;
-    this.poll();
+    // Initialize cursor before starting message loop
+    this.initCursor().then(() => this.poll());
+  }
+
+  /** Get initial cursor without processing messages (skip old messages). */
+  private async initCursor(): Promise<void> {
+    try {
+      const resp = await fetch(`${WECHAT_BASE_URL}/ilink/bot/getupdates`, {
+        method: "POST",
+        headers: buildHeaders(this.botToken),
+        body: JSON.stringify({
+          get_updates_buf: "",
+          base_info: buildBaseInfo(),
+        }),
+        signal: AbortSignal.timeout(POLL_TIMEOUT_MS),
+      });
+      if (resp.ok) {
+        const data = (await resp.json()) as GetUpdatesResponse;
+        if (data.get_updates_buf) {
+          this.cursor = data.get_updates_buf;
+        }
+      }
+    } catch {
+      // Will retry in poll loop
+    }
   }
 
   /** Stop the polling loop. */
@@ -36,23 +79,17 @@ export class WeChatPoller {
     while (this.running) {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(
-          () => controller.abort(),
-          POLL_TIMEOUT_MS,
-        );
+        const timeout = setTimeout(() => controller.abort(), POLL_TIMEOUT_MS);
 
-        const resp = await fetch(
-          `${WECHAT_BASE_URL}/ilink/bot/getupdates`,
-          {
-            method: "POST",
-            headers: buildHeaders(this.botToken),
-            body: JSON.stringify({
-              get_updates_buf: this.cursor,
-              base_info: { channel_version: "1.0.2" },
-            }),
-            signal: controller.signal,
-          },
-        );
+        const resp = await fetch(`${WECHAT_BASE_URL}/ilink/bot/getupdates`, {
+          method: "POST",
+          headers: buildHeaders(this.botToken),
+          body: JSON.stringify({
+            get_updates_buf: this.cursor,
+            base_info: buildBaseInfo(),
+          }),
+          signal: controller.signal,
+        });
 
         clearTimeout(timeout);
 
@@ -66,7 +103,8 @@ export class WeChatPoller {
 
         const data = (await resp.json()) as GetUpdatesResponse;
 
-        if (data.ret !== 0) {
+        // API returns ret field only on error; successful responses have msgs + get_updates_buf
+        if (data.ret && data.ret !== 0) {
           console.error(
             `[wechat] poll error ret=${data.ret}, retry in ${POLL_RETRY_DELAY_MS / 1000}s`,
           );
@@ -74,9 +112,18 @@ export class WeChatPoller {
           continue;
         }
 
-        // Advance cursor
+        // Advance cursor + persist to disk
         if (data.get_updates_buf) {
           this.cursor = data.get_updates_buf;
+          try {
+            writeFileSync(
+              cursorPath(),
+              JSON.stringify({ get_updates_buf: this.cursor }),
+              { mode: 0o600 },
+            );
+          } catch {
+            /* non-fatal */
+          }
         }
 
         // Dispatch messages

@@ -67,17 +67,32 @@ export type QRCodeStatusResponse = {
   baseurl?: string;
 };
 
+// ── Protocol version ──
+export const CHANNEL_VERSION = "2.1.8";
+
+/** Encode version string to uint32: "2.1.8" → (2<<16)|(1<<8)|8 = 131336 */
+function buildClientVersion(version: string): number {
+  const [major = 0, minor = 0, patch = 0] = version
+    .split(".")
+    .map((p) => parseInt(p, 10));
+  return ((major & 0xff) << 16) | ((minor & 0xff) << 8) | (patch & 0xff);
+}
+
+/** base_info required in ALL request bodies */
+export function buildBaseInfo() {
+  return { channel_version: CHANNEL_VERSION };
+}
+
 // ── Auth headers ──
 
 export function buildHeaders(botToken: string): Record<string, string> {
-  // X-WECHAT-UIN: base64(String(randomUint32)) — replay protection
-  const uin = btoa(
-    String(crypto.getRandomValues(new Uint32Array(1))[0]),
-  );
+  const uin = btoa(String(crypto.getRandomValues(new Uint32Array(1))[0]));
   return {
     "Content-Type": "application/json",
     AuthorizationType: "ilink_bot_token",
     "X-WECHAT-UIN": uin,
+    "iLink-App-Id": "bot",
+    "iLink-App-ClientVersion": String(buildClientVersion(CHANNEL_VERSION)),
     Authorization: `Bearer ${botToken}`,
   };
 }
