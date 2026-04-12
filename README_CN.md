@@ -295,9 +295,14 @@ cd claude-crew
 
 ### 第二步：创建主控机器人
 
-打开 [@BotFather](https://t.me/BotFather)，发送 `/newbot`，保存 token。
+| 平台 | 步骤 |
+|------|------|
+| **Telegram** | [@BotFather](https://t.me/BotFather) → `/newbot` → 保存 token |
+| **飞书** | [开放平台](https://open.feishu.cn/app) → 创建应用 → 添加 Bot → 开通权限 → 订阅事件 → 发布 → 复制 `app_id:app_secret` |
+| **微信** | daemon 启动时自动引导扫码，无需手动创建 |
+| **Discord** | [Developer Portal](https://discord.com/developers/applications) → New Application → Bot → 复制 token |
 
-> 项目机器人之后在 Telegram 中通过 `@master bots` 添加，现在不需要创建。
+> 项目机器人之后通过 bot 菜单添加 —— 发送 `menu` 或 `bots` 给主控 bot。
 
 ### 第三步：运行安装脚本
 
@@ -307,31 +312,22 @@ bash scripts/setup.sh
 
 脚本会：
 - 检查依赖（bun、claude）
-- 要求输入主控机器人 token（通过 Telegram API 验证）
-- 自动获取你的 Telegram User ID（给 bot 发条消息即可）
-- 创建 `bot-pool.json` 配置文件至 `~/.claude/channels/telegram/`
+- 选择平台、输入主控机器人凭证
+- 创建 `bot-pool.json` 配置文件
 - 可选开启开机自启
 - 启动 daemon
 
-> `setup.sh` 只设置主控机器人。项目机器人之后通过 `@master bots` 在 Telegram 中添加，或用 `manage-pool.sh add` 在终端添加。
+### 第四步：平台设置
 
-### 第四步：Telegram 设置
+**Telegram：** 创建私密群组 → 拉入 bot → 在 @BotFather 关闭 Group Privacy → bot 自动检测群组 → `@master menu`
 
-1. 在 Telegram 创建一个**私密群组**
-2. 把主控机器人拉进群
-3. **关键步骤** —— 在 @BotFather 中关闭 Group Privacy：
+**飞书：** 将 bot 添加到群聊 → `@bot menu` → 每个项目 bot 需要独立应用，开通权限（`im:message`, `im:message.group_at_msg:readonly`, `im:message:send_as_bot`）+ 事件（`im.message.receive_v1`）+ 回调（`card.action.trigger`）
 
-   `/mybots` → 选择机器人 → **Bot Settings** → **Group Privacy** → **Turn off**
+**微信：** daemon 启动时显示二维码链接 → 微信扫码 → 发 `menu` 开始 → 用 `#项目名` 发送任务 → 按钮以数字菜单形式呈现
 
-   > 不关闭 Group Privacy，机器人无法看到群消息！
+**Discord：** 邀请 bot 到服务器 → 在频道中 `@bot menu` → 在 Developer Portal 开启 MESSAGE CONTENT INTENT
 
-4. 机器人自动检测群组，显示欢迎引导：
-   - 添加项目 bot（每个项目一个）
-   - 打开管理菜单
-
-5. 用 `@master menu` 管理一切 —— 添加 bot、配置、用户
-
-搞定。后续一切在 Telegram 中操作。
+搞定。后续一切在聊天 App 中操作。
 
 <details>
 <summary><b>终端替代方案（可选）</b></summary>
