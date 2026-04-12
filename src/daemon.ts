@@ -306,11 +306,14 @@ async function main(): Promise<void> {
     }
   }
 
-  // On startup: send main menu to group
+  // On startup: send main menu to group (or owner DM for WeChat)
   setTimeout(async () => {
     if (!daemon.masterBot) return;
     const pool = loadPool();
-    if (!pool.sharedGroupId) return;
+    const targetChat =
+      pool.sharedGroupId ??
+      (platformType === "wechat" ? pool.owner : undefined);
+    if (!targetChat) return;
 
     // Clean up restart note if present
     if (existsSync(RESTART_NOTE_FILE)) {
@@ -329,16 +332,8 @@ async function main(): Promise<void> {
       const lang = getLang();
       const m = menuMsg(lang);
       const ownerId = getOwner();
-      await daemon.masterBot!.platform.sendMessage(
-        pool.sharedGroupId,
-        m.started,
-      );
-      await showMainMenu(
-        daemon.masterBot!,
-        pool.sharedGroupId,
-        undefined,
-        ownerId,
-      );
+      await daemon.masterBot!.platform.sendMessage(targetChat, m.started);
+      await showMainMenu(daemon.masterBot!, targetChat, undefined, ownerId);
       // Pre-bind the menu to owner (will be set on first click via routeCallback)
     } catch (e) {
       log(`WARN: startup notification failed: ${e}`);
