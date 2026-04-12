@@ -13,6 +13,28 @@ const isWeChat = () => getPlatform() === "wechat";
 
 export type Lang = "en" | "zh";
 
+/**
+ * Platform-aware syntax helpers — used in help/guide text to show
+ * the correct mention/routing syntax for each platform.
+ */
+function mentionBot(lang: Lang, botName = "项目bot"): string {
+  if (isWeChat()) return lang === "zh" ? `#${botName}` : `#${botName}`;
+  return `@${botName}`;
+}
+function mentionMaster(lang: Lang, master = "主控"): string {
+  if (isWeChat()) return lang === "zh" ? master : "master bot";
+  return `@${master}`;
+}
+function routeHint(lang: Lang): string {
+  if (isWeChat())
+    return lang === "zh"
+      ? "用 #项目名 + 任务描述 发送"
+      : "Send with #project + task description";
+  return lang === "zh"
+    ? "所有命令通过 @mention 使用"
+    : "All commands via @mention";
+}
+
 export function getLang(): Lang {
   try {
     const l = loadPool().language;
@@ -87,25 +109,32 @@ export function menuMsg(lang: Lang) {
         btnHelp: "\ud83d\udcd6 指南",
         helpText:
           "\ud83d\udcd6 使用指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "每个项目一个专属 bot，@提及即可调度任务。\n" +
+          `每个项目一个专属 bot，${mentionBot("zh")} 即可调度任务。\n` +
           "主控机器人负责管理：添加 bot、修改配置、管理权限。\n\n" +
-          "\ud83d\udca1 所有命令通过 @mention 使用\n\n" +
-          "点击下方按钮查看各模块详细指南:",
+          `\ud83d\udca1 ${routeHint("zh")}\n\n` +
+          (isWeChat()
+            ? "回复数字查看各模块详细指南:"
+            : "点击下方按钮查看各模块详细指南:"),
         helpMaster:
           "\ud83d\udc51 主控机器人指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "按钮菜单（发送以下文字给主控 bot）:\n" +
+          (isWeChat()
+            ? "直接发送以下文字命令:\n"
+            : "按钮菜单（发送以下文字给主控 bot）:\n") +
           "  menu \u2014 打开管理菜单\n" +
           "  bots \u2014 管理项目 Bot\n" +
           "  config \u2014 全局配置\n" +
           "  users \u2014 管理管理员和用户\n\n" +
-          "文字命令（需 @主控bot + 命令）:\n" +
+          (isWeChat()
+            ? "其他命令:\n"
+            : `文字命令（需 ${mentionMaster("zh")} + 命令）:\n`) +
           "  status \u2014 刷新仪表盘\n" +
           "  restart \u2014 重启 daemon\n" +
           "  search 关键词 \u2014 搜索所有项目",
         helpProject:
           "\ud83e\udd16 项目机器人指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "@提及项目 bot 后跟任务描述即可执行。\n" +
-          "回复 bot 消息可继续上下文对话。\n\n" +
+          (isWeChat()
+            ? "#项目名 + 任务描述即可执行。\n直接发送消息可继续上下文对话。\n\n"
+            : `${mentionBot("zh")} 后跟任务描述即可执行。\n回复 bot 消息可继续上下文对话。\n\n`) +
           "会话命令:\n" +
           "  /new \u2014 重置会话（清空上下文）\n" +
           "  /compact \u2014 压缩上下文（保留关键信息）\n\n" +
@@ -118,19 +147,29 @@ export function menuMsg(lang: Lang) {
           "  /status \u2014 Bot 状态",
         helpCron: (master: string) =>
           "\ud83d\udccb 定时任务指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "所有 cron 命令需 @主控 发送\n\n" +
+          (isWeChat()
+            ? "所有 cron 命令直接发送\n\n"
+            : `所有 cron 命令需 ${mentionMaster("zh", master)} 发送\n\n`) +
           "添加任务:\n" +
-          `  @${master} cron add @项目bot HH:MM 任务描述\n` +
+          (isWeChat()
+            ? `  cron add #项目名 HH:MM 任务描述\n`
+            : `  @${master} cron add @项目bot HH:MM 任务描述\n`) +
           "    \u2514 每天定时执行\n" +
-          `  @${master} cron add @项目bot */N 任务描述\n` +
+          (isWeChat()
+            ? `  cron add #项目名 */N 任务描述\n`
+            : `  @${master} cron add @项目bot */N 任务描述\n`) +
           "    \u2514 每 N 分钟执行一次\n\n" +
-          "\ud83d\udca1 @项目bot 支持项目名或 Telegram 用户名\n\n" +
+          (isWeChat()
+            ? "\ud83d\udca1 #项目名 即项目标签名\n\n"
+            : `\ud83d\udca1 ${mentionBot("zh")} 支持项目名或用户名\n\n`) +
           "示例:\n" +
-          `  @${master} cron add @api_bot 09:00 跑测试并汇报\n` +
-          `  @${master} cron add @monitor_bot */30 检查服务状态\n\n` +
+          (isWeChat()
+            ? "  cron add #api 09:00 跑测试并汇报\n  cron add #monitor */30 检查服务状态\n\n"
+            : `  @${master} cron add @api_bot 09:00 跑测试并汇报\n  @${master} cron add @monitor_bot */30 检查服务状态\n\n`) +
           "管理:\n" +
-          `  @${master} cron list \u2014 查看任务\n` +
-          `  @${master} cron del <id> \u2014 删除任务`,
+          (isWeChat()
+            ? "  cron list \u2014 查看任务\n  cron del <id> \u2014 删除任务"
+            : `  @${master} cron list \u2014 查看任务\n  @${master} cron del <id> \u2014 删除任务`),
         guideMaster: "\ud83d\udc51 主控指南",
         guideProject: "\ud83e\udd16 项目 Bot 指南",
         guideCron: "\ud83d\udccb 定时任务指南",
@@ -139,25 +178,31 @@ export function menuMsg(lang: Lang) {
         helpStart:
           "\ud83d\ude80 快速上手\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
           "1\ufe0f\u20e3 给项目 bot 发任务\n" +
-          "  @项目bot 帮我看一下这个 bug\n\n" +
+          (isWeChat()
+            ? "  #api 帮我看一下这个 bug\n\n"
+            : "  @项目bot 帮我看一下这个 bug\n\n") +
           "2\ufe0f\u20e3 等待执行（实时进度可见）\n" +
-          "  bot 会发送 \ud83d\udc40 表示已接收\n" +
           "  执行过程中显示正在操作的文件\n\n" +
           "3\ufe0f\u20e3 收到结果\n" +
           "  结果带 #项目名 标签，方便筛选\n" +
-          "  回复 bot 消息可继续对话\n\n" +
+          "  直接发送消息可继续对话\n\n" +
           "4\ufe0f\u20e3 多项目并行\n" +
-          "  @另一个bot 同时处理其他项目\n" +
-          "  各 bot 上下文完全隔离\n\n" +
-          "\ud83d\udca1 所有管理操作在主控 bot 的 menu 中完成",
+          (isWeChat()
+            ? "  #另一个项目 同时处理其他项目\n"
+            : "  @另一个bot 同时处理其他项目\n") +
+          "  各项目上下文完全隔离\n\n" +
+          "\ud83d\udca1 所有管理操作发送 menu 打开菜单",
         helpTips:
           "\ud83d\udca1 使用技巧\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
           "\ud83d\uddbc 图片分析\n" +
-          "  发送截图 + @项目bot 描述，Claude 会先读图再回答\n" +
+          (isWeChat()
+            ? "  发送截图 + #项目名 描述，Claude 会先读图再回答\n"
+            : "  发送截图 + @项目bot 描述，Claude 会先读图再回答\n") +
           "  \u26a0\ufe0f 单张图片可能消耗 50K+ tokens\n\n" +
           "\ud83d\udcac 引用任意消息\n" +
-          "  回复任何消息（文字/图片/文件）并 @bot\n" +
-          "  引用内容自动作为上下文传入\n\n" +
+          (isWeChat()
+            ? "  发送文字/图片/文件，内容自动作为上下文传入\n\n"
+            : "  回复任何消息（文字/图片/文件）并 @bot\n  引用内容自动作为上下文传入\n\n") +
           "\ud83d\udcb0 控制成本\n" +
           "  /model haiku \u2014 简单任务用便宜模型\n" +
           "  /effort low \u2014 降低思考深度\n" +
@@ -217,25 +262,32 @@ export function menuMsg(lang: Lang) {
         btnHelp: "\ud83d\udcd6 Guide",
         helpText:
           "\ud83d\udcd6 User Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "Each project gets a dedicated bot. @mention to dispatch tasks.\n" +
+          `Each project gets a dedicated bot. ${mentionBot("en", "project")} to dispatch tasks.\n` +
           "The master bot handles management: add bots, configure settings, manage access.\n\n" +
-          "\ud83d\udca1 All commands via @mention\n\n" +
-          "Tap a button below for detailed guides:",
+          `\ud83d\udca1 ${routeHint("en")}\n\n` +
+          (isWeChat()
+            ? "Reply with a number for detailed guides:"
+            : "Tap a button below for detailed guides:"),
         helpMaster:
           "\ud83d\udc51 Master Bot Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "Button menu (send text to master bot):\n" +
+          (isWeChat()
+            ? "Send text commands directly:\n"
+            : "Button menu (send text to master bot):\n") +
           "  menu \u2014 Open management menu\n" +
           "  bots \u2014 Manage project bots\n" +
           "  config \u2014 Global settings\n" +
           "  users \u2014 Manage admins & users\n\n" +
-          "Text commands (@mention master bot + command):\n" +
+          (isWeChat()
+            ? "Other commands:\n"
+            : `Text commands (${mentionMaster("en", master)} + command):\n`) +
           "  status \u2014 Refresh dashboard\n" +
           "  restart \u2014 Restart daemon\n" +
           "  search keyword \u2014 Search all projects",
         helpProject:
           "\ud83e\udd16 Project Bot Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "@mention a project bot followed by your task.\n" +
-          "Reply to a bot's message to continue the conversation.\n\n" +
+          (isWeChat()
+            ? "#project + task description to execute.\nSend messages directly to continue.\n\n"
+            : `${mentionBot("en", "project bot")} followed by your task.\nReply to a bot's message to continue the conversation.\n\n`) +
           "Session:\n" +
           "  /new \u2014 Reset session (clear context)\n" +
           "  /compact \u2014 Compress context (keep key info)\n\n" +
@@ -248,19 +300,29 @@ export function menuMsg(lang: Lang) {
           "  /status \u2014 Bot status",
         helpCron: (master: string) =>
           "\ud83d\udccb Scheduled Tasks Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
-          "All cron commands must be @sent to master\n\n" +
+          (isWeChat()
+            ? "Send cron commands directly\n\n"
+            : `All cron commands must be @sent to ${master}\n\n`) +
           "Add tasks:\n" +
-          `  @${master} cron add @bot HH:MM task\n` +
+          (isWeChat()
+            ? "  cron add #project HH:MM task\n"
+            : `  @${master} cron add @bot HH:MM task\n`) +
           "    \u2514 Run daily at HH:MM\n" +
-          `  @${master} cron add @bot */N task\n` +
+          (isWeChat()
+            ? "  cron add #project */N task\n"
+            : `  @${master} cron add @bot */N task\n`) +
           "    \u2514 Run every N minutes\n\n" +
-          "\ud83d\udca1 @bot accepts project name or Telegram username\n\n" +
+          (isWeChat()
+            ? "\ud83d\udca1 #project is the project tag name\n\n"
+            : `\ud83d\udca1 ${mentionBot("en", "bot")} accepts project name or username\n\n`) +
           "Examples:\n" +
-          `  @${master} cron add @api_bot 09:00 run tests\n` +
-          `  @${master} cron add @monitor_bot */30 health check\n\n` +
+          (isWeChat()
+            ? "  cron add #api 09:00 run tests\n  cron add #monitor */30 health check\n\n"
+            : `  @${master} cron add @api_bot 09:00 run tests\n  @${master} cron add @monitor_bot */30 health check\n\n`) +
           "Manage:\n" +
-          `  @${master} cron list \u2014 View tasks\n` +
-          `  @${master} cron del <id> \u2014 Delete task`,
+          (isWeChat()
+            ? "  cron list \u2014 View tasks\n  cron del <id> \u2014 Delete task"
+            : `  @${master} cron list \u2014 View tasks\n  @${master} cron del <id> \u2014 Delete task`),
         guideMaster: "\ud83d\udc51 Master Guide",
         guideProject: "\ud83e\udd16 Project Bot Guide",
         guideCron: "\ud83d\udccb Cron Guide",
@@ -368,38 +430,42 @@ export function botsMsg(lang: Lang) {
         notFound: (u: string) => `\u26a0\ufe0f @${u} 未找到。`,
         removed: (u: string) =>
           `\u2705 @${u} 已从池中删除。\n\n重启后完全停止。`,
-        addTitle: isFeishu()
-          ? "\u2795 请按照以下流程添加飞书机器人：\n\n" +
-            "1\ufe0f\u20e3 打开飞书开放平台 → 创建企业自建应用\n" +
-            "   https://open.feishu.cn/app\n" +
-            "2\ufe0f\u20e3 添加「机器人」能力\n" +
-            "3\ufe0f\u20e3 权限管理 → 开通以下权限：\n" +
-            "   \u2022 im:message（获取与发送消息）\n" +
-            "   \u2022 im:message.group_at_msg:readonly（接收群消息）\n" +
-            "   \u2022 im:message.p2p_msg:readonly（接收私聊消息）\n" +
-            "   \u2022 im:message:send_as_bot（发送消息）\n" +
-            "4\ufe0f\u20e3 事件与回调：\n" +
-            "   事件配置 → 订阅方式「长连接」→ 添加 im.message.receive_v1\n" +
-            "   回调配置 → 订阅方式「长连接」→ 添加 card.action.trigger\n" +
-            "5\ufe0f\u20e3 发布版本（版本管理 → 创建版本 → 申请发布）\n" +
-            "6\ufe0f\u20e3 凭证与基础信息 → 复制 App ID 和 App Secret\n" +
-            "   按格式 app_id:app_secret 发送到此处\n\n" +
-            "token 格式参考：\ncli_a5xxxxx:xxxxxxxxx"
-          : isDiscord()
-            ? "\u2795 请按照以下流程添加 Discord 机器人：\n\n" +
-              "1\ufe0f\u20e3 打开 Discord Developer Portal\n" +
-              "   https://discord.com/developers/applications\n" +
-              "2\ufe0f\u20e3 New Application → 输入名称 → Create\n" +
-              "3\ufe0f\u20e3 左侧 Bot → Reset Token → 复制 token 发送到此处\n" +
-              "4\ufe0f\u20e3 开启 MESSAGE CONTENT INTENT（同页面下方）\n\n" +
-              "token 格式参考：\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
-            : "\u2795 请按照以下流程进行机器人添加：\n\n" +
-              "1\ufe0f\u20e3 点击打开 @BotFather\n" +
-              "2\ufe0f\u20e3 发送 /newbot\n" +
-              "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
-              "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
-              "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
-              "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        addTitle: isWeChat()
+          ? "\u2795 请输入项目名称（将作为 #标签）\n\n" +
+            "添加后可以用 #项目名 + 任务描述 发送任务\n" +
+            "无需额外配置，直接使用"
+          : isFeishu()
+            ? "\u2795 请按照以下流程添加飞书机器人：\n\n" +
+              "1\ufe0f\u20e3 打开飞书开放平台 → 创建企业自建应用\n" +
+              "   https://open.feishu.cn/app\n" +
+              "2\ufe0f\u20e3 添加「机器人」能力\n" +
+              "3\ufe0f\u20e3 权限管理 → 开通以下权限：\n" +
+              "   \u2022 im:message（获取与发送消息）\n" +
+              "   \u2022 im:message.group_at_msg:readonly（接收群消息）\n" +
+              "   \u2022 im:message.p2p_msg:readonly（接收私聊消息）\n" +
+              "   \u2022 im:message:send_as_bot（发送消息）\n" +
+              "4\ufe0f\u20e3 事件与回调：\n" +
+              "   事件配置 → 订阅方式「长连接」→ 添加 im.message.receive_v1\n" +
+              "   回调配置 → 订阅方式「长连接」→ 添加 card.action.trigger\n" +
+              "5\ufe0f\u20e3 发布版本（版本管理 → 创建版本 → 申请发布）\n" +
+              "6\ufe0f\u20e3 凭证与基础信息 → 复制 App ID 和 App Secret\n" +
+              "   按格式 app_id:app_secret 发送到此处\n\n" +
+              "token 格式参考：\ncli_a5xxxxx:xxxxxxxxx"
+            : isDiscord()
+              ? "\u2795 请按照以下流程添加 Discord 机器人：\n\n" +
+                "1\ufe0f\u20e3 打开 Discord Developer Portal\n" +
+                "   https://discord.com/developers/applications\n" +
+                "2\ufe0f\u20e3 New Application → 输入名称 → Create\n" +
+                "3\ufe0f\u20e3 左侧 Bot → Reset Token → 复制 token 发送到此处\n" +
+                "4\ufe0f\u20e3 开启 MESSAGE CONTENT INTENT（同页面下方）\n\n" +
+                "token 格式参考：\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+              : "\u2795 请按照以下流程进行机器人添加：\n\n" +
+                "1\ufe0f\u20e3 点击打开 @BotFather\n" +
+                "2\ufe0f\u20e3 发送 /newbot\n" +
+                "3\ufe0f\u20e3 发送机器人名字（可中文）\n" +
+                "4\ufe0f\u20e3 发送机器人 username（英文+数字，必须以 bot 结尾）\n" +
+                "5\ufe0f\u20e3 创建完成后，看到一串 HTTP API，点击复制发送到此处\n\n" +
+                "token 格式参考：\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
         invalidToken: isFeishu()
           ? "\u26a0\ufe0f token 格式无效。\n格式如: cli_a5xxxxx:app_secret\n请重试:"
           : isDiscord()
@@ -431,12 +497,16 @@ export function botsMsg(lang: Lang) {
               `1\ufe0f\u20e3 在飞书开放平台发布应用版本\n` +
               `2\ufe0f\u20e3 将机器人添加到群聊\n` +
               `3\ufe0f\u20e3 点击下方「重启」按钮上线`
-            : `\u2705 @${u} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
-              `\ud83d\udc49 下一步：\n` +
-              `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
-              `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
-              `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
-              `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
+            : isWeChat()
+              ? `\u2705 #${proj} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+                `\ud83d\udc49 用 #${proj} 发送任务即可开始\n` +
+                `点击下方「重启」按钮上线`
+              : `\u2705 @${u} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+                `\ud83d\udc49 下一步：\n` +
+                `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
+                `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
+                `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+                `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 邀请机器人进服务器：\n" +
           "1\ufe0f\u20e3 点击下方链接授权\n" +
@@ -464,38 +534,42 @@ export function botsMsg(lang: Lang) {
         notFound: (u: string) => `\u26a0\ufe0f @${u} not found.`,
         removed: (u: string) =>
           `\u2705 @${u} removed from pool.\n\nRestart to fully stop it.`,
-        addTitle: isFeishu()
-          ? "\u2795 Follow these steps to add a Feishu bot:\n\n" +
-            "1\ufe0f\u20e3 Open Feishu Open Platform \u2192 Create custom app\n" +
-            "   https://open.feishu.cn/app\n" +
-            "2\ufe0f\u20e3 Add Bot capability\n" +
-            "3\ufe0f\u20e3 Permissions \u2192 Enable:\n" +
-            "   \u2022 im:message (send & receive messages)\n" +
-            "   \u2022 im:message.group_at_msg:readonly (receive group messages)\n" +
-            "   \u2022 im:message.p2p_msg:readonly (receive DMs)\n" +
-            "   \u2022 im:message:send_as_bot (send messages)\n" +
-            "4\ufe0f\u20e3 Events & Callbacks:\n" +
-            "   Events tab \u2192 Mode: Long Connection \u2192 Add im.message.receive_v1\n" +
-            "   Callbacks tab \u2192 Mode: Long Connection \u2192 Add card.action.trigger\n" +
-            "5\ufe0f\u20e3 Publish a version (Version Management \u2192 Create \u2192 Publish)\n" +
-            "6\ufe0f\u20e3 Credentials \u2192 Copy App ID and App Secret\n" +
-            "   Send here in format: app_id:app_secret\n\n" +
-            "Token format:\ncli_a5xxxxx:xxxxxxxxx"
-          : isDiscord()
-            ? "\u2795 Follow these steps to add a Discord bot:\n\n" +
-              "1\ufe0f\u20e3 Open Discord Developer Portal\n" +
-              "   https://discord.com/developers/applications\n" +
-              "2\ufe0f\u20e3 New Application \u2192 enter name \u2192 Create\n" +
-              "3\ufe0f\u20e3 Go to Bot \u2192 Reset Token \u2192 copy & send here\n" +
-              "4\ufe0f\u20e3 Enable MESSAGE CONTENT INTENT (same page, below)\n\n" +
-              "Token format:\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
-            : "\u2795 Follow these steps to add a bot:\n\n" +
-              "1\ufe0f\u20e3 Open @BotFather\n" +
-              "2\ufe0f\u20e3 Send /newbot\n" +
-              "3\ufe0f\u20e3 Send the bot display name\n" +
-              "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
-              "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
-              "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
+        addTitle: isWeChat()
+          ? "\u2795 Enter a project name (will be used as #tag)\n\n" +
+            "After adding, send #project + task to dispatch.\n" +
+            "No extra configuration needed."
+          : isFeishu()
+            ? "\u2795 Follow these steps to add a Feishu bot:\n\n" +
+              "1\ufe0f\u20e3 Open Feishu Open Platform \u2192 Create custom app\n" +
+              "   https://open.feishu.cn/app\n" +
+              "2\ufe0f\u20e3 Add Bot capability\n" +
+              "3\ufe0f\u20e3 Permissions \u2192 Enable:\n" +
+              "   \u2022 im:message (send & receive messages)\n" +
+              "   \u2022 im:message.group_at_msg:readonly (receive group messages)\n" +
+              "   \u2022 im:message.p2p_msg:readonly (receive DMs)\n" +
+              "   \u2022 im:message:send_as_bot (send messages)\n" +
+              "4\ufe0f\u20e3 Events & Callbacks:\n" +
+              "   Events tab \u2192 Mode: Long Connection \u2192 Add im.message.receive_v1\n" +
+              "   Callbacks tab \u2192 Mode: Long Connection \u2192 Add card.action.trigger\n" +
+              "5\ufe0f\u20e3 Publish a version (Version Management \u2192 Create \u2192 Publish)\n" +
+              "6\ufe0f\u20e3 Credentials \u2192 Copy App ID and App Secret\n" +
+              "   Send here in format: app_id:app_secret\n\n" +
+              "Token format:\ncli_a5xxxxx:xxxxxxxxx"
+            : isDiscord()
+              ? "\u2795 Follow these steps to add a Discord bot:\n\n" +
+                "1\ufe0f\u20e3 Open Discord Developer Portal\n" +
+                "   https://discord.com/developers/applications\n" +
+                "2\ufe0f\u20e3 New Application \u2192 enter name \u2192 Create\n" +
+                "3\ufe0f\u20e3 Go to Bot \u2192 Reset Token \u2192 copy & send here\n" +
+                "4\ufe0f\u20e3 Enable MESSAGE CONTENT INTENT (same page, below)\n\n" +
+                "Token format:\nMTQ4ODU1.GRPIaY.cv3oBPEh..."
+              : "\u2795 Follow these steps to add a bot:\n\n" +
+                "1\ufe0f\u20e3 Open @BotFather\n" +
+                "2\ufe0f\u20e3 Send /newbot\n" +
+                "3\ufe0f\u20e3 Send the bot display name\n" +
+                "4\ufe0f\u20e3 Send the bot username (must end with bot)\n" +
+                "5\ufe0f\u20e3 Copy the HTTP API token and send it here\n\n" +
+                "Token format:\n8203239227:AAGiYi6u9g0iUHH7792QHo5-xxxxxxx",
         invalidToken: isFeishu()
           ? "\u26a0\ufe0f Invalid token format.\nFormat: cli_a5xxxxx:app_secret\nTry again:"
           : isDiscord()
@@ -527,12 +601,16 @@ export function botsMsg(lang: Lang) {
               `1\ufe0f\u20e3 Publish the app version on Feishu Open Platform\n` +
               `2\ufe0f\u20e3 Add the bot to your group chat\n` +
               `3\ufe0f\u20e3 Click Restart below to bring it online`
-            : `\u2705 @${u} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
-              `\ud83d\udc49 Next steps:\n` +
-              `1\ufe0f\u20e3 Add @${u} to this group\n` +
-              `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
-              `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
-              `3\ufe0f\u20e3 Click Restart below to bring it online`,
+            : isWeChat()
+              ? `\u2705 #${proj} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+                `\ud83d\udc49 Use #${proj} to send tasks\n` +
+                `Click Restart below to bring it online`
+              : `\u2705 @${u} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+                `\ud83d\udc49 Next steps:\n` +
+                `1\ufe0f\u20e3 Add @${u} to this group\n` +
+                `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
+                `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+                `3\ufe0f\u20e3 Click Restart below to bring it online`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 Invite bot to server:\n" +
           "1\ufe0f\u20e3 Click the link below to authorize\n" +
@@ -740,11 +818,13 @@ export function usersMsg(lang: Lang) {
         userCount: (n: number) => (n > 0 ? `${n} 个用户` : "无"),
         addAdmin: "\u2795 添加管理员",
         botUsers: (u: string) => `\ud83d\udc65 @${u} 用户`,
-        addAdminPrompt: isFeishu()
-          ? "\ud83d\udc51 添加管理员\n\n发送用户的 Open ID。\n\n提示: 在飞书管理后台 → 成员管理中查看 Open ID\n\n添加后可编辑其菜单权限。"
-          : isDiscord()
-            ? "\ud83d\udc51 添加管理员\n\n发送 Discord 用户 ID（数字）。\n\n提示: 开启开发者模式后右键用户 \u2192 复制用户 ID"
-            : "\ud83d\udc51 添加管理员\n\n发送 Telegram 用户 ID（数字）。\n\n提示: 可通过 @userinfobot 获取 ID\n\n添加后可编辑其菜单权限。",
+        addAdminPrompt: isWeChat()
+          ? "\ud83d\udc51 添加管理员\n\n发送用户的微信 ID（xxx@im.wechat 格式）:"
+          : isFeishu()
+            ? "\ud83d\udc51 添加管理员\n\n发送用户的 Open ID。\n\n提示: 在飞书管理后台 → 成员管理中查看 Open ID\n\n添加后可编辑其菜单权限。"
+            : isDiscord()
+              ? "\ud83d\udc51 添加管理员\n\n发送 Discord 用户 ID（数字）。\n\n提示: 开启开发者模式后右键用户 \u2192 复制用户 ID"
+              : "\ud83d\udc51 添加管理员\n\n发送 Telegram 用户 ID（数字）。\n\n提示: 可通过 @userinfobot 获取 ID\n\n添加后可编辑其菜单权限。",
         ownerOnly: "\u26d4 仅 Owner 可执行此操作。",
         cantRemoveOwner: "\u26d4 Owner 不可被移除。",
         adminRemoved: (id: string) => `\u2705 管理员 ${id} 已移除。`,
@@ -755,14 +835,18 @@ export function usersMsg(lang: Lang) {
         noUsers: "  (无用户 \u2014 管理员始终有权限)",
         addUser: "\u2795 添加用户",
         addUserPrompt: (u: string) =>
-          isFeishu()
-            ? `\ud83d\udc65 添加用户到 ${u}\n\n发送用户 Open ID:`
-            : isDiscord()
-              ? `\ud83d\udc65 添加用户到 ${u}\n\n发送 Discord 用户 ID（数字）:`
-              : `\ud83d\udc65 添加用户到 @${u}\n\n发送 Telegram 用户 ID（数字）:`,
-        invalidId: isFeishu()
-          ? "\u26a0\ufe0f 请输入用户 Open ID（如 ou_xxxxx）。\n请重试:"
-          : "\u26a0\ufe0f 用户 ID 必须是数字（如 123456789）。\n请重试:",
+          isWeChat()
+            ? `\ud83d\udc65 添加用户到 #${u}\n\n发送用户微信 ID（xxx@im.wechat）:`
+            : isFeishu()
+              ? `\ud83d\udc65 添加用户到 ${u}\n\n发送用户 Open ID:`
+              : isDiscord()
+                ? `\ud83d\udc65 添加用户到 ${u}\n\n发送 Discord 用户 ID（数字）:`
+                : `\ud83d\udc65 添加用户到 @${u}\n\n发送 Telegram 用户 ID（数字）:`,
+        invalidId: isWeChat()
+          ? "\u26a0\ufe0f 请输入微信 ID（如 xxx@im.wechat）。\n请重试:"
+          : isFeishu()
+            ? "\u26a0\ufe0f 请输入用户 Open ID（如 ou_xxxxx）。\n请重试:"
+            : "\u26a0\ufe0f 用户 ID 必须是数字（如 123456789）。\n请重试:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} 已是管理员。`,
         adminAdded: (id: string) =>
           `\u2705 管理员已添加: ${id}\n\n默认权限：用户管理、定时任务。点击下方编辑更多权限。`,
@@ -779,11 +863,13 @@ export function usersMsg(lang: Lang) {
         userCount: (n: number) => (n > 0 ? `${n} user(s)` : "none"),
         addAdmin: "\u2795 Add Admin",
         botUsers: (u: string) => `\ud83d\udc65 @${u} users`,
-        addAdminPrompt: isFeishu()
-          ? "\ud83d\udc51 Add Admin\n\nSend the user's Open ID.\n\nTip: find Open IDs in Feishu Admin Console \u2192 Member Management\n\nYou can edit their menu permissions after adding."
-          : isDiscord()
-            ? "\ud83d\udc51 Add Admin\n\nSend the Discord user ID (numeric).\n\nTip: enable Developer Mode, right-click user \u2192 Copy User ID"
-            : "\ud83d\udc51 Add Admin\n\nSend the Telegram user ID (numeric).\n\nTip: users can find their ID via @userinfobot\n\nYou can edit their menu permissions after adding.",
+        addAdminPrompt: isWeChat()
+          ? "\ud83d\udc51 Add Admin\n\nSend the user's WeChat ID (xxx@im.wechat format):"
+          : isFeishu()
+            ? "\ud83d\udc51 Add Admin\n\nSend the user's Open ID.\n\nTip: find Open IDs in Feishu Admin Console \u2192 Member Management\n\nYou can edit their menu permissions after adding."
+            : isDiscord()
+              ? "\ud83d\udc51 Add Admin\n\nSend the Discord user ID (numeric).\n\nTip: enable Developer Mode, right-click user \u2192 Copy User ID"
+              : "\ud83d\udc51 Add Admin\n\nSend the Telegram user ID (numeric).\n\nTip: users can find their ID via @userinfobot\n\nYou can edit their menu permissions after adding.",
         ownerOnly: "\u26d4 Only the Owner can do this.",
         cantRemoveOwner: "\u26d4 The Owner cannot be removed.",
         adminRemoved: (id: string) => `\u2705 Admin ${id} removed.`,
@@ -795,14 +881,18 @@ export function usersMsg(lang: Lang) {
         noUsers: "  (no users \u2014 admins always have access)",
         addUser: "\u2795 Add User",
         addUserPrompt: (u: string) =>
-          isFeishu()
-            ? `\ud83d\udc65 Add user to ${u}\n\nSend the user's Open ID:`
-            : isDiscord()
-              ? `\ud83d\udc65 Add user to ${u}\n\nSend the Discord user ID (numeric):`
-              : `\ud83d\udc65 Add user to @${u}\n\nSend the Telegram user ID (numeric):`,
-        invalidId: isFeishu()
-          ? "\u26a0\ufe0f Please enter a valid Open ID (e.g. ou_xxxxx).\nTry again:"
-          : "\u26a0\ufe0f User ID must be numeric (e.g. 123456789).\nTry again:",
+          isWeChat()
+            ? `\ud83d\udc65 Add user to #${u}\n\nSend WeChat ID (xxx@im.wechat):`
+            : isFeishu()
+              ? `\ud83d\udc65 Add user to ${u}\n\nSend the user's Open ID:`
+              : isDiscord()
+                ? `\ud83d\udc65 Add user to ${u}\n\nSend the Discord user ID (numeric):`
+                : `\ud83d\udc65 Add user to @${u}\n\nSend the Telegram user ID (numeric):`,
+        invalidId: isWeChat()
+          ? "\u26a0\ufe0f Please enter WeChat ID (e.g. xxx@im.wechat).\nTry again:"
+          : isFeishu()
+            ? "\u26a0\ufe0f Please enter a valid Open ID (e.g. ou_xxxxx).\nTry again:"
+            : "\u26a0\ufe0f User ID must be numeric (e.g. 123456789).\nTry again:",
         alreadyAdmin: (id: string) => `\u26a0\ufe0f ${id} is already an admin.`,
         adminAdded: (id: string) =>
           `\u2705 Admin added: ${id}\n\nDefault permissions: Users, Cron. Tap below to grant more.`,
@@ -819,35 +909,48 @@ export function usersMsg(lang: Lang) {
 export function onboardMsg(lang: Lang) {
   return lang === "zh"
     ? {
-        dmOnly: isFeishu()
+        dmOnly: isWeChat()
           ? "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
-            "请在群聊中 @我 并发送 setup 开始设置向导 \ud83d\ude80"
-          : isDiscord()
+            "发送 setup 开始设置向导\n" +
+            "发送 menu 打开管理菜单 \ud83d\ude80"
+          : isFeishu()
             ? "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
-              "请在服务器的文字频道中 @我 并发送 setup 开始设置向导 \ud83d\ude80"
-            : "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
-              "下一步：\n" +
-              "1\ufe0f\u20e3 创建一个 Telegram 私密群组\n" +
-              "2\ufe0f\u20e3 把我拉进群组\n" +
-              "3\ufe0f\u20e3 在 @BotFather 中关闭我的 Group Privacy：\n" +
-              "   /mybots \u2192 选择我 \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
-              "拉进群后我会自动发起设置向导 \ud83d\ude80",
-        needAdmin:
-          "\ud83d\udc4b 我已加入群组！\n\n\u26a0\ufe0f 请先将我设为群组管理员，这样我才能置顶看板和管理消息。\n\n操作：群组设置 \u2192 管理员 \u2192 添加我 \u2192 保存",
-        groupDetected:
-          "\u2705 管理员权限已就绪！\n\n是否将此群组设为共享控制群组？\n\n设置后，所有项目机器人和管理操作都将在此群组中进行。",
-        alreadySet: "\u2705 此群组已配置为共享群组。\n\n使用 config 管理设置。",
-        otherGroup:
-          "\u26a0\ufe0f 共享群组已在其他聊天中配置。\n\n请在该群组中使用 config 修改。",
-        welcome:
-          "\ud83d\udc4b 欢迎使用 Claude Crew 设置!\n\n" +
-          "将配置:\n" +
-          "1\ufe0f\u20e3 设置此群组为共享控制群组\n" +
-          "2\ufe0f\u20e3 添加你的第一个项目机器人\n\n" +
-          "使用此群组作为共享控制群组?",
-        yesUseGroup: "是，使用此群组",
+              "请在群聊中 @我 并发送 setup 开始设置向导 \ud83d\ude80"
+            : isDiscord()
+              ? "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
+                "请在服务器的文字频道中 @我 并发送 setup 开始设置向导 \ud83d\ude80"
+              : "\ud83d\udc4b 欢迎！我是你的 Claude Crew 主控机器人。\n\n" +
+                "下一步：\n" +
+                "1\ufe0f\u20e3 创建一个 Telegram 私密群组\n" +
+                "2\ufe0f\u20e3 把我拉进群组\n" +
+                "3\ufe0f\u20e3 在 @BotFather 中关闭我的 Group Privacy：\n" +
+                "   /mybots \u2192 选择我 \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
+                "拉进群后我会自动发起设置向导 \ud83d\ude80",
+        needAdmin: isWeChat()
+          ? "\ud83d\udc4b 已连接！发送 menu 开始管理。"
+          : "\ud83d\udc4b 我已加入群组！\n\n\u26a0\ufe0f 请先将我设为群组管理员，这样我才能置顶看板和管理消息。\n\n操作：群组设置 \u2192 管理员 \u2192 添加我 \u2192 保存",
+        groupDetected: isWeChat()
+          ? "\u2705 已就绪！发送 menu 管理项目。"
+          : "\u2705 管理员权限已就绪！\n\n是否将此群组设为共享控制群组？\n\n设置后，所有项目机器人和管理操作都将在此群组中进行。",
+        alreadySet: isWeChat()
+          ? "\u2705 已配置。使用 config 管理设置。"
+          : "\u2705 此群组已配置为共享群组。\n\n使用 config 管理设置。",
+        otherGroup: isWeChat()
+          ? "\u26a0\ufe0f 已在其他对话中配置。"
+          : "\u26a0\ufe0f 共享群组已在其他聊天中配置。\n\n请在该群组中使用 config 修改。",
+        welcome: isWeChat()
+          ? "\ud83d\udc4b 欢迎使用 Claude Crew!\n\n" +
+            "发送 bots 添加项目，用 #项目名 发送任务。"
+          : "\ud83d\udc4b 欢迎使用 Claude Crew 设置!\n\n" +
+            "将配置:\n" +
+            "1\ufe0f\u20e3 设置此群组为共享控制群组\n" +
+            "2\ufe0f\u20e3 添加你的第一个项目机器人\n\n" +
+            "使用此群组作为共享控制群组?",
+        yesUseGroup: isWeChat() ? "是，开始" : "是，使用此群组",
         groupDone: (n: number) =>
-          `\u2705 群组已配置！\n\n你已有 ${n} 个项目机器人。\n它们将在此群组发布更新。\n\n\ud83d\udd04 重启以应用更改。`,
+          isWeChat()
+            ? `\u2705 已配置！你已有 ${n} 个项目。\n\n\ud83d\udd04 重启以应用更改。`
+            : `\u2705 群组已配置！\n\n你已有 ${n} 个项目机器人。\n它们将在此群组发布更新。\n\n\ud83d\udd04 重启以应用更改。`,
         groupSet: isFeishu()
           ? "\u2705 群组已设置！\n\n" +
             "现在添加你的第一个项目机器人：\n\n" +
@@ -928,12 +1031,16 @@ export function onboardMsg(lang: Lang) {
               `1\ufe0f\u20e3 在飞书开放平台发布应用版本\n` +
               `2\ufe0f\u20e3 将机器人添加到群聊\n` +
               `3\ufe0f\u20e3 点击下方「重启」按钮上线`
-            : `\u2705 @${u} 已添加到池中！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
-              `\ud83d\udc49 下一步：\n` +
-              `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
-              `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
-              `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
-              `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
+            : isWeChat()
+              ? `\u2705 #${proj} 已添加！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+                `\ud83d\udc49 用 #${proj} 发送任务即可开始\n` +
+                `点击下方「重启」按钮上线`
+              : `\u2705 @${u} 已添加到池中！\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+                `\ud83d\udc49 下一步：\n` +
+                `1\ufe0f\u20e3 将 @${u} 添加到本群\n` +
+                `2\ufe0f\u20e3 在 @BotFather 中关闭 Group Privacy：\n` +
+                `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+                `3\ufe0f\u20e3 点击下方「重启」按钮上线`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 邀请机器人进服务器：\n" +
           "1\ufe0f\u20e3 点击下方链接授权\n" +
@@ -942,36 +1049,48 @@ export function onboardMsg(lang: Lang) {
           "3\ufe0f\u20e3 确认后点击「立即重启」",
       }
     : {
-        dmOnly: isFeishu()
+        dmOnly: isWeChat()
           ? "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
-            "Please @mention me in a group chat and send setup to start the wizard \ud83d\ude80"
-          : isDiscord()
+            "Send setup to start the wizard\n" +
+            "Send menu to open management \ud83d\ude80"
+          : isFeishu()
             ? "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
-              "Please @mention me in a server channel and send setup to start the wizard \ud83d\ude80"
-            : "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
-              "Next steps:\n" +
-              "1\ufe0f\u20e3 Create a private Telegram group\n" +
-              "2\ufe0f\u20e3 Add me to the group\n" +
-              "3\ufe0f\u20e3 Disable my Group Privacy in @BotFather:\n" +
-              "   /mybots \u2192 select me \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
-              "I'll auto-start the setup wizard once I'm in the group \ud83d\ude80",
-        needAdmin:
-          "\ud83d\udc4b I've joined the group!\n\n\u26a0\ufe0f Please make me a group admin so I can pin the dashboard and manage messages.\n\nHow: Group settings \u2192 Administrators \u2192 Add me \u2192 Save",
-        groupDetected:
-          "\u2705 Admin access granted!\n\nSet this group as your shared control group?\n\nOnce set, all project bots and management will happen here.",
-        alreadySet:
-          "\u2705 This group is already configured as the shared group.\n\nUse config to manage settings.",
-        otherGroup:
-          "\u26a0\ufe0f A shared group is already configured in a different chat.\n\nUse config in that group to change it.",
-        welcome:
-          "\ud83d\udc4b Welcome to Claude Crew Setup!\n\n" +
-          "This will configure:\n" +
-          "1\ufe0f\u20e3 Set this group as the shared control group\n" +
-          "2\ufe0f\u20e3 Add your first project bot\n\n" +
-          "Use this group as your shared control group?",
-        yesUseGroup: "Yes, use this group",
+              "Please @mention me in a group chat and send setup to start the wizard \ud83d\ude80"
+            : isDiscord()
+              ? "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
+                "Please @mention me in a server channel and send setup to start the wizard \ud83d\ude80"
+              : "\ud83d\udc4b Welcome! I'm your Claude Crew master bot.\n\n" +
+                "Next steps:\n" +
+                "1\ufe0f\u20e3 Create a private Telegram group\n" +
+                "2\ufe0f\u20e3 Add me to the group\n" +
+                "3\ufe0f\u20e3 Disable my Group Privacy in @BotFather:\n" +
+                "   /mybots \u2192 select me \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n\n" +
+                "I'll auto-start the setup wizard once I'm in the group \ud83d\ude80",
+        needAdmin: isWeChat()
+          ? "\ud83d\udc4b Connected! Send menu to get started."
+          : "\ud83d\udc4b I've joined the group!\n\n\u26a0\ufe0f Please make me a group admin so I can pin the dashboard and manage messages.\n\nHow: Group settings \u2192 Administrators \u2192 Add me \u2192 Save",
+        groupDetected: isWeChat()
+          ? "\u2705 Ready! Send menu to manage projects."
+          : "\u2705 Admin access granted!\n\nSet this group as your shared control group?\n\nOnce set, all project bots and management will happen here.",
+        alreadySet: isWeChat()
+          ? "\u2705 Already configured. Use config to manage."
+          : "\u2705 This group is already configured as the shared group.\n\nUse config to manage settings.",
+        otherGroup: isWeChat()
+          ? "\u26a0\ufe0f Already configured in another chat."
+          : "\u26a0\ufe0f A shared group is already configured in a different chat.\n\nUse config in that group to change it.",
+        welcome: isWeChat()
+          ? "\ud83d\udc4b Welcome to Claude Crew!\n\n" +
+            "Send bots to add projects, use #projectname to send tasks."
+          : "\ud83d\udc4b Welcome to Claude Crew Setup!\n\n" +
+            "This will configure:\n" +
+            "1\ufe0f\u20e3 Set this group as the shared control group\n" +
+            "2\ufe0f\u20e3 Add your first project bot\n\n" +
+            "Use this group as your shared control group?",
+        yesUseGroup: isWeChat() ? "Yes, start" : "Yes, use this group",
         groupDone: (n: number) =>
-          `\u2705 Group configured!\n\nYou already have ${n} project bot(s). They'll now post updates here.\n\n\ud83d\udd04 Restart to apply changes.`,
+          isWeChat()
+            ? `\u2705 Configured! You have ${n} project(s).\n\n\ud83d\udd04 Restart to apply changes.`
+            : `\u2705 Group configured!\n\nYou already have ${n} project bot(s). They'll now post updates here.\n\n\ud83d\udd04 Restart to apply changes.`,
         groupSet: isFeishu()
           ? "\u2705 Group set!\n\n" +
             "Now let's add your first project bot:\n\n" +
@@ -1054,12 +1173,16 @@ export function onboardMsg(lang: Lang) {
               `1\ufe0f\u20e3 Publish the app version on Feishu Open Platform\n` +
               `2\ufe0f\u20e3 Add the bot to your group chat\n` +
               `3\ufe0f\u20e3 Click Restart below to bring it online`
-            : `\u2705 @${u} added to pool!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
-              `\ud83d\udc49 Next steps:\n` +
-              `1\ufe0f\u20e3 Add @${u} to this group\n` +
-              `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
-              `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
-              `3\ufe0f\u20e3 Click Restart below to bring it online`,
+            : isWeChat()
+              ? `\u2705 #${proj} added!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+                `\ud83d\udc49 Use #${proj} to send tasks\n` +
+                `Click Restart below to bring it online`
+              : `\u2705 @${u} added to pool!\n\n\ud83d\udcc2 ${proj} \u2192 ${path}\n\n` +
+                `\ud83d\udc49 Next steps:\n` +
+                `1\ufe0f\u20e3 Add @${u} to this group\n` +
+                `2\ufe0f\u20e3 Disable Group Privacy in @BotFather:\n` +
+                `   /mybots \u2192 @${u} \u2192 Bot Settings \u2192 Group Privacy \u2192 Turn off\n` +
+                `3\ufe0f\u20e3 Click Restart below to bring it online`,
         inviteSteps: (url: string) =>
           "\ud83d\udd17 Invite bot to server:\n" +
           "1\ufe0f\u20e3 Click the link below to authorize\n" +
