@@ -9,10 +9,18 @@
  * - WeChatBotAdapter: implements Platform per bot, delegates to router for sends
  */
 
-import { readFileSync, mkdirSync, writeFileSync } from "fs";
+import { readFileSync, mkdirSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 import { randomBytes } from "crypto";
 import { WECHAT_BASE_URL, buildHeaders, buildBaseInfo } from "./types.js";
+
+/** Persist context_tokens to survive daemon restarts. */
+function ctxTokenPath(): string {
+  const dir =
+    process.env.TELEGRAM_POOL_DIR ??
+    join(process.env.HOME ?? "/tmp", ".claude", "channels", "telegram");
+  return join(dir, "wechat-ctx-tokens.json");
+}
 
 /** Generate unique client_id per message (required for delivery). */
 function generateClientId(): string {
@@ -58,6 +66,17 @@ export class WeChatRouter {
   constructor(botToken: string) {
     this.botToken = botToken;
     this.poller = new WeChatPoller(botToken);
+    // Restore context_tokens from disk
+    try {
+      if (existsSync(ctxTokenPath())) {
+        const data = JSON.parse(readFileSync(ctxTokenPath(), "utf8"));
+        for (const [k, v] of Object.entries(data)) {
+          if (typeof v === "string") this.contextTokens.set(k, v);
+        }
+      }
+    } catch {
+      /* start fresh */
+    }
   }
 
   /** Register a bot adapter for routing. */
@@ -232,9 +251,18 @@ export class WeChatRouter {
   // ── Internal message routing ──
 
   private handleMessage(raw: WeChatMessage): void {
-    // Store context_token for replies
+    // Store context_token for replies + persist to disk
     if (raw.context_token) {
       this.contextTokens.set(raw.from_user_id, raw.context_token);
+      try {
+        writeFileSync(
+          ctxTokenPath(),
+          JSON.stringify(Object.fromEntries(this.contextTokens)),
+          { mode: 0o600 },
+        );
+      } catch {
+        /* non-fatal */
+      }
     }
 
     const platformMsg = toMessage(raw);
