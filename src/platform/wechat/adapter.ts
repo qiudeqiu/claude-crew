@@ -11,7 +11,13 @@
 
 import { readFileSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
+import { randomBytes } from "crypto";
 import { WECHAT_BASE_URL, buildHeaders, buildBaseInfo } from "./types.js";
+
+/** Generate unique client_id per message (required for delivery). */
+function generateClientId(): string {
+  return `claude-crew:${Date.now()}-${randomBytes(4).toString("hex")}`;
+}
 import type { WeChatMessage, GetUploadUrlResponse } from "./types.js";
 import { WeChatPoller } from "./poller.js";
 import { toMessage, parseTag } from "./events.js";
@@ -98,7 +104,9 @@ export class WeChatRouter {
       headers: buildHeaders(this.botToken),
       body: JSON.stringify({
         msg: {
+          from_user_id: "",
           to_user_id: chatId,
+          client_id: generateClientId(),
           message_type: 2,
           message_state: 2,
           context_token: contextToken,
@@ -174,7 +182,9 @@ export class WeChatRouter {
         headers: buildHeaders(this.botToken),
         body: JSON.stringify({
           msg: {
+            from_user_id: "",
             to_user_id: chatId,
+            client_id: generateClientId(),
             message_type: msgType,
             message_state: 2,
             context_token: contextToken,

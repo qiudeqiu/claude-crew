@@ -12,6 +12,7 @@
     "claude-crew": "scripts/cli.sh"
   },
   "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.60.0",
     "discord.js": "^14.25.1",
     "grammy": "^1.41.0"
   },
