@@ -282,6 +282,7 @@ function createProgressTracker(
   chatId: string,
 ): ProgressTracker {
   let statusMsgId: string | null = null;
+  let statusSending = false; // Prevent duplicate sendMessage before async resolves
   const steps: string[] = [];
   const startTime = Date.now();
   let lastProgressUpdate = 0;
@@ -296,8 +297,9 @@ function createProgressTracker(
         `\u2699\ufe0f working... (${elapsed}s)\n` +
         recent.map((s) => `  \u2192 \ud83d\udd27 ${s}`).join("\n");
       void tgBot.editMessage(chatId, statusMsgId, text).catch(() => {});
-    } else {
-      // First progress message — WeChat uses simpler text to save quota
+    } else if (!statusSending) {
+      // First progress message — only send once
+      statusSending = true;
       const text =
         getPlatform() === "wechat"
           ? "\ud83d\udd27 正在处理中，请稍等，有结果会回复..."
