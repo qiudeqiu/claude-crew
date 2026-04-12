@@ -9,11 +9,14 @@
   <img src="https://img.shields.io/badge/runtime-Bun_%3E%3D1.0-f9f1e1" alt="Bun">
   <img src="https://img.shields.io/badge/Claude_Code-CLI-blueviolet" alt="Claude Code">
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
+  <img src="https://img.shields.io/badge/飞书%2FLark-Bot-3370FF" alt="Feishu">
+  <img src="https://img.shields.io/badge/微信-iLink_Bot-07C160" alt="WeChat">
+  <img src="https://img.shields.io/badge/Discord-Bot-5865F2" alt="Discord">
 </p>
 
 **Claude Code — Every Project, Anywhere.**
 
-一个项目一个 bot，全部汇聚在一个群聊里。不用在多个终端窗口间来回切换，也不用每次都跟 Claude 说"帮我看看某某项目"—— @提及对应的 bot 就行。项目之间边界清晰，多项目工作结构化且有条不紊，在手机上即可管理。
+一个项目一个 bot，全部汇聚在一个聊天里。不用在多个终端窗口间来回切换，也不用每次都跟 Claude 说"帮我看看某某项目"—— @提及对应的 bot 就行。项目之间边界清晰，多项目工作结构化且有条不紊，在手机上即可管理。支持 **Telegram**、**飞书**、**微信**、**Discord** 四大平台。
 
 - **个人** — 在一个群里远程调度你所有的项目
 - **团队** — 共享工作空间，per-bot 权限控制，所有人同一条时间线
@@ -43,6 +46,17 @@
 其他方案在多项目之间工作时，你需要切换 session、切换 tab、切换 app。claude-crew 把一切放进**一个 IM 群** — 所有项目 bot、所有请求、所有回复、所有进度，汇聚在同一条时间线上。@一个 bot，它干活；@另一个，它并行干活。所有项目的动态一目了然，不用切换任何东西。你的团队也同样看得到。一个群就是你的整个开发驾驶舱。
 
 ![为什么是群聊](docs/scene-group-chat.png)
+
+## 🌐 平台支持
+
+| 平台 | 路由方式 | 交互 UI | 文件发送 | 状态 |
+|------|---------|---------|---------|------|
+| **Telegram** | @mention 独立 bot | 内联键盘按钮 | 图片/文件 | 生产可用 |
+| **飞书/Lark** | @mention 独立 bot | 卡片交互 + 延迟更新 API | 图片上传 | 已测试 |
+| **微信** | #标签 虚拟项目 | 数字菜单（自动转换） | AES 加密 CDN 上传 | 已测试 |
+| **Discord** | @mention 独立 bot | 按钮组件 | 附件 | 已实现 |
+
+每个平台都有独立的适配器，实现统一的 `Platform` 接口——所有核心功能（Claude 执行、权限、队列、进度追踪）在各平台上行为一致。平台差异（按钮 vs 数字菜单、@mention vs #标签）在适配器层透明处理。
 
 ## ✨ 亮点
 

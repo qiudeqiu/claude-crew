@@ -9,11 +9,14 @@
   <img src="https://img.shields.io/badge/runtime-Bun_%3E%3D1.0-f9f1e1" alt="Bun">
   <img src="https://img.shields.io/badge/Claude_Code-CLI-blueviolet" alt="Claude Code">
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4" alt="Telegram">
+  <img src="https://img.shields.io/badge/Feishu%2FLark-Bot-3370FF" alt="Feishu">
+  <img src="https://img.shields.io/badge/WeChat-iLink_Bot-07C160" alt="WeChat">
+  <img src="https://img.shields.io/badge/Discord-Bot-5865F2" alt="Discord">
 </p>
 
 **Claude Code — Every Project, Anywhere.**
 
-One bot per project, all in one group chat. No more switching between terminal windows or telling Claude "go look at project X" — just @mention the right bot. Clear boundaries between codebases, structured multi-project workflows, managed from your phone.
+One bot per project, all in one chat. No more switching between terminal windows or telling Claude "go look at project X" — just @mention the right bot. Clear boundaries between codebases, structured multi-project workflows, managed from your phone. Works on **Telegram**, **Feishu/Lark**, **WeChat**, and **Discord**.
 
 - **For individuals** — orchestrate all your projects remotely from a single chat
 - **For teams** — shared workspace with per-bot permissions, everyone on the same timeline
@@ -43,6 +46,17 @@ Your **master bot** is the control center: add project bots, configure settings,
 Other solutions require you to switch between sessions, tabs, or apps when working on multiple projects. claude-crew puts everything in **one group chat** — all project bots, all requests, all responses, all progress updates in a single timeline. @mention a bot, it works. @mention another, it works in parallel. You see every project's activity without switching anything. Your team sees it too. One group is your entire development cockpit.
 
 ![Why a group chat](docs/scene-group-chat.png)
+
+## 🌐 Platform Support
+
+| Platform | Routing | Interactive UI | File Sending | Status |
+|----------|---------|---------------|-------------|--------|
+| **Telegram** | @mention per bot | Inline keyboard buttons | Photos & documents | Production |
+| **Feishu/Lark** | @mention per bot | Card JSON 1.0 + delayed update API | Images via upload API | Tested |
+| **WeChat** | #tag per project | Number menus (auto-translated) | AES-encrypted CDN upload | Tested |
+| **Discord** | @mention per bot | Button components | Attachments | Implemented |
+
+Each platform has a dedicated adapter implementing the same `Platform` interface — all core features (Claude execution, permissions, queuing, progress tracking) work identically across platforms. Platform-specific differences (buttons vs number menus, @mention vs #tag) are handled transparently in the adapter layer.
 
 ## ✨ Highlights
 
@@ -243,17 +257,29 @@ bun --version       # should print >= 1.0
 
 ```bash
 git clone https://github.com/qiudeqiu/claude-crew.git && cd claude-crew
-bash scripts/setup.sh    # asks for your Telegram User ID + master bot token, then starts daemon
+bash scripts/setup.sh    # guided setup — asks for platform, bot token, then starts daemon
 ```
 
-> Create a master bot via [@BotFather](https://t.me/BotFather) first (`/newbot`). You only need one token to get started.
+<details>
+<summary><b>Platform-specific bot creation</b></summary>
 
-**Telegram (everything else):**
+| Platform | How to create a bot | Token format |
+|----------|-------------------|--------------|
+| **Telegram** | [@BotFather](https://t.me/BotFather) → `/newbot` | `123456789:ABCdefGHI...` |
+| **Feishu** | [Open Platform](https://open.feishu.cn/app) → Create App → Add Bot capability → Enable permissions (`im:message`, `im:message.group_at_msg:readonly`) → Events: `im.message.receive_v1` (long connection) → Callbacks: `card.action.trigger` (long connection) → Publish version | `cli_a5xxxxx:app_secret` |
+| **WeChat** | Scan QR code via iLink Bot (daemon handles this on startup) | Auto-obtained via QR scan |
+| **Discord** | [Developer Portal](https://discord.com/developers/applications) → New Application → Bot → Reset Token → Enable MESSAGE CONTENT INTENT | `MTQ4ODU1.GRPIaY.cv3...` |
 
-1. Create a private group, add your master bot
-2. Disable Group Privacy: @BotFather → `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**
-3. The bot auto-detects the group and shows a welcome guide
-4. Use `@master menu` to manage everything — add project bots, configure settings, manage users
+</details>
+
+**After setup:**
+
+| Platform | Next steps |
+|----------|-----------|
+| **Telegram** | Create a private group → add bot → disable Group Privacy in @BotFather → `@master menu` |
+| **Feishu** | Add bot to a group chat → `@bot menu` |
+| **WeChat** | Send `menu` to the bot (DM) → use `#projectname` for tasks |
+| **Discord** | Invite bot to server → `@bot menu` in a channel |
 
 <details>
 <summary><b>Detailed Setup Guide (step by step)</b></summary>
