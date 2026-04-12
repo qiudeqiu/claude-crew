@@ -419,7 +419,11 @@ export async function handleUserText(
 
   if (state.step === "user:awaitAdmin") {
     const idPattern =
-      getPlatform() === "feishu" ? /^ou_[a-zA-Z0-9]+$/ : /^\d+$/;
+      getPlatform() === "feishu"
+        ? /^ou_[a-zA-Z0-9]+$/
+        : getPlatform() === "wechat"
+          ? /^.+@im\.wechat$/
+          : /^\d+$/;
     if (!idPattern.test(input)) {
       await send(api, chatId, m.invalidId, {
         reply_markup: { inline_keyboard: cancelButton("u:l", lang) },
@@ -463,7 +467,11 @@ export async function handleUserText(
   if (state.step === "user:awaitUser") {
     const targetBot = state.data.targetBot;
     const idPattern =
-      getPlatform() === "feishu" ? /^ou_[a-zA-Z0-9]+$/ : /^\d+$/;
+      getPlatform() === "feishu"
+        ? /^ou_[a-zA-Z0-9]+$/
+        : getPlatform() === "wechat"
+          ? /^.+@im\.wechat$/
+          : /^\d+$/;
     if (!idPattern.test(input)) {
       await send(api, chatId, m.invalidId, {
         reply_markup: {

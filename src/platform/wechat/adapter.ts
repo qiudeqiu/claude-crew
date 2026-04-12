@@ -9,10 +9,14 @@
  * - WeChatBotAdapter: implements Platform per bot, delegates to router for sends
  */
 
+import { readFileSync, mkdirSync, writeFileSync } from "fs";
+import { join } from "path";
 import { WECHAT_BASE_URL, buildHeaders } from "./types.js";
-import type { WeChatMessage } from "./types.js";
+import type { WeChatMessage, GetUploadUrlResponse } from "./types.js";
 import { WeChatPoller } from "./poller.js";
 import { toMessage, parseTag } from "./events.js";
+import { encrypt, decrypt } from "./crypto.js";
+import { INBOX_DIR } from "../../config.js";
 import {
   formatMenu,
   matchNumberReply,
@@ -104,6 +108,96 @@ export class WeChatRouter {
     return { id: data.msg_id ?? "", chatId };
   }
 
+  /** Send a file (image or document) to a chat. */
+  async sendFile(
+    chatId: string,
+    filePath: string,
+    _caption?: string,
+  ): Promise<void> {
+    const contextToken = this.contextTokens.get(chatId);
+    if (!contextToken) return;
+
+    try {
+      const buf = readFileSync(filePath);
+      const ext = filePath.split(".").pop()?.toLowerCase() ?? "";
+      const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
+
+      // 1. Get upload URL
+      const uploadResp = await fetch(
+        `${WECHAT_BASE_URL}/ilink/bot/getuploadurl`,
+        {
+          method: "POST",
+          headers: buildHeaders(this.botToken),
+          body: JSON.stringify({}),
+        },
+      );
+      const uploadData = (await uploadResp.json()) as GetUploadUrlResponse;
+      if (uploadData.ret !== 0 || !uploadData.url) return;
+
+      // 2. Encrypt and upload to CDN
+      // Generate a random 16-byte AES key
+      const keyBuf = crypto.getRandomValues(new Uint8Array(16));
+      const aesKey = Buffer.from(keyBuf).toString("base64");
+      const encrypted = encrypt(buf, aesKey);
+
+      await fetch(uploadData.url, {
+        method: "PUT",
+        body: encrypted,
+      });
+
+      // 3. Send message with file reference
+      const msgType = isImage ? 2 : 4; // 2=image, 4=file
+      const itemType = isImage ? 2 : 4;
+      const fileName = filePath.split("/").pop() ?? "file";
+
+      const item = isImage
+        ? {
+            type: itemType,
+            image_item: { aes_key: aesKey, url: uploadData.url },
+          }
+        : {
+            type: itemType,
+            file_item: {
+              aes_key: aesKey,
+              url: uploadData.url,
+              file_name: fileName,
+            },
+          };
+
+      await fetch(`${WECHAT_BASE_URL}/ilink/bot/sendmessage`, {
+        method: "POST",
+        headers: buildHeaders(this.botToken),
+        body: JSON.stringify({
+          msg: {
+            to_user_id: chatId,
+            message_type: msgType,
+            message_state: 2,
+            context_token: contextToken,
+            item_list: [item],
+          },
+        }),
+      });
+    } catch {
+      // File send is best-effort
+    }
+  }
+
+  /** Download a file from WeChat CDN (AES decrypted). */
+  async downloadFile(url: string, aesKey: string): Promise<string | undefined> {
+    try {
+      mkdirSync(INBOX_DIR, { recursive: true });
+      const resp = await fetch(url);
+      if (!resp.ok) return undefined;
+      const encrypted = Buffer.from(await resp.arrayBuffer());
+      const decrypted = decrypt(encrypted, aesKey);
+      const path = join(INBOX_DIR, `${Date.now()}.bin`);
+      writeFileSync(path, decrypted);
+      return path;
+    } catch {
+      return undefined;
+    }
+  }
+
   /** Send typing indicator. */
   async sendTyping(chatId: string): Promise<void> {
     const contextToken = this.contextTokens.get(chatId);
@@ -131,10 +225,7 @@ export class WeChatRouter {
     const text = platformMsg.text;
 
     // 1. Check if it's a number reply to a pending menu (any bot)
-    for (const adapter of [
-      this.masterAdapter,
-      ...this.botAdapters.values(),
-    ]) {
+    for (const adapter of [this.masterAdapter, ...this.botAdapters.values()]) {
       if (adapter?.handleNumberReply(platformMsg)) return;
     }
 
@@ -188,7 +279,7 @@ export class WeChatRouter {
 // ── WeChatBotAdapter — per-bot Platform implementation ──
 // ══════════════════════════════════════
 
-export class WeChatBotAdapter implements Platform {
+export class WeChatBotAdapter implements Platform, FileCapable {
   private router: WeChatRouter;
   private messageHandlers: Array<(msg: PlatformMessage) => void> = [];
   private callbackHandlers: Array<(event: CallbackEvent) => void> = [];
@@ -227,10 +318,7 @@ export class WeChatBotAdapter implements Platform {
     // Callers will send new messages via sendOrEdit fallback
   }
 
-  async deleteMessage(
-    _chatId: string,
-    _msgId: string,
-  ): Promise<void> {
+  async deleteMessage(_chatId: string, _msgId: string): Promise<void> {
     // WeChat iLink has no delete API
   }
 
@@ -270,10 +358,7 @@ export class WeChatBotAdapter implements Platform {
 
   // ── Feedback ──
 
-  async answerCallback(
-    _callbackId: string,
-    _text?: string,
-  ): Promise<void> {
+  async answerCallback(_callbackId: string, _text?: string): Promise<void> {
     // No-op — callbacks are synthesized from number replies
   }
 
@@ -295,9 +380,21 @@ export class WeChatBotAdapter implements Platform {
 
   // ── Files ──
 
-  async downloadFile(_fileId: string): Promise<string | undefined> {
-    // TODO Phase 3: AES decrypt + download from CDN
-    return undefined;
+  async downloadFile(fileId: string): Promise<string | undefined> {
+    // fileId contains "url|aes_key" from toMessage
+    const sep = fileId.indexOf("|");
+    if (sep < 0) return undefined;
+    const url = fileId.slice(0, sep);
+    const aesKey = fileId.slice(sep + 1);
+    return this.router.downloadFile(url, aesKey);
+  }
+
+  async sendFile(
+    chatId: string,
+    path: string,
+    caption?: string,
+  ): Promise<void> {
+    await this.router.sendFile(chatId, path, caption);
   }
 
   // ── Events ──

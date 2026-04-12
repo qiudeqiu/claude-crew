@@ -25,7 +25,8 @@ export function toMessage(msg: WeChatMessage): PlatformMessage | null {
   let photoFileId: string | undefined;
   for (const item of msg.item_list ?? []) {
     if (item.type === 2 && item.image_item?.url) {
-      photoFileId = item.image_item.url;
+      // Encode as "url|aes_key" so downloadFile can decrypt
+      photoFileId = `${item.image_item.url}|${item.image_item.aes_key ?? ""}`;
       break;
     }
   }

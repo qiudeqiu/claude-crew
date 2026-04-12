@@ -8,6 +8,8 @@ const EXAMPLE_HOME =
 const isDiscord = () => getPlatform() === "discord";
 /** Is the current platform Feishu/Lark? */
 const isFeishu = () => getPlatform() === "feishu";
+/** Is the current platform WeChat? */
+const isWeChat = () => getPlatform() === "wechat";
 
 export type Lang = "en" | "zh";
 
@@ -33,11 +35,13 @@ export function common(lang: Lang) {
         save: "保存",
         cancelled: "\u274c 已取消。",
         noPermission: "\u26d4 无权限",
-        replyHint: isFeishu()
-          ? "\n\n\ud83d\udca1 请 @主控 发送"
-          : isDiscord()
+        replyHint: isWeChat()
+          ? "\n\n\ud83d\udca1 直接发送消息"
+          : isFeishu()
             ? "\n\n\ud83d\udca1 请 @主控 发送"
-            : "\n\n\ud83d\udca1 请回复此消息或 @主控 发送",
+            : isDiscord()
+              ? "\n\n\ud83d\udca1 请 @主控 发送"
+              : "\n\n\ud83d\udca1 请回复此消息或 @主控 发送",
       }
     : {
         confirm: "Confirm",
@@ -48,11 +52,13 @@ export function common(lang: Lang) {
         save: "Save",
         cancelled: "\u274c Cancelled.",
         noPermission: "\u26d4 No permission",
-        replyHint: isFeishu()
-          ? "\n\n\ud83d\udca1 Mention the master bot to respond"
-          : isDiscord()
+        replyHint: isWeChat()
+          ? "\n\n\ud83d\udca1 Send your message directly"
+          : isFeishu()
             ? "\n\n\ud83d\udca1 Mention the master bot to respond"
-            : "\n\n\ud83d\udca1 Reply to this message or mention the master bot",
+            : isDiscord()
+              ? "\n\n\ud83d\udca1 Mention the master bot to respond"
+              : "\n\n\ud83d\udca1 Reply to this message or mention the master bot",
       };
 }
 

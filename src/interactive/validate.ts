@@ -81,12 +81,49 @@ async function validateFeishuToken(
   }
 }
 
+/**
+ * Validate a WeChat iLink bot token.
+ * WeChat tokens come from QR code login — validate by calling getupdates.
+ */
+async function validateWeChatToken(
+  token: string,
+): Promise<{ ok: boolean; username?: string }> {
+  try {
+    const uin = btoa(String(crypto.getRandomValues(new Uint32Array(1))[0]));
+    const res = await fetch(
+      "https://ilinkai.weixin.qq.com/ilink/bot/getupdates",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          AuthorizationType: "ilink_bot_token",
+          "X-WECHAT-UIN": uin,
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          get_updates_buf: "",
+          base_info: { channel_version: "1.0.2" },
+        }),
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+    if (!res.ok) return { ok: false };
+    const data = (await res.json()) as { ret?: number };
+    return data.ret === 0
+      ? { ok: true, username: "wechat-bot" }
+      : { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export async function validateBotToken(
   token: string,
 ): Promise<{ ok: boolean; username?: string }> {
   const p = getPlatform();
   if (p === "discord") return validateDiscordToken(token);
   if (p === "feishu") return validateFeishuToken(token);
+  if (p === "wechat") return validateWeChatToken(token);
   return validateTelegramToken(token);
 }
 
@@ -157,14 +194,17 @@ export async function handleTokenValidation(
 ): Promise<boolean> {
   const token = text.trim();
 
-  // Telegram: 123456789:ABCdefGHI...  Discord: base64.base64.base64  Feishu: cli_xxx:secret
+  // Telegram: 123456789:ABCdefGHI...  Discord: base64.base64.base64
+  // Feishu: cli_xxx:secret  WeChat: QR code login (token is opaque string)
   const p = getPlatform();
   const tokenPattern =
     p === "discord"
       ? /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
       : p === "feishu"
         ? /^cli_[a-zA-Z0-9]+:.+$/
-        : /^\d+:[A-Za-z0-9_-]+$/;
+        : p === "wechat"
+          ? /^.{10,}$/ // WeChat tokens are opaque, just check min length
+          : /^\d+:[A-Za-z0-9_-]+$/;
   if (!tokenPattern.test(token)) {
     await send(api, chatId, msgs.invalidToken, cancelKb).catch(() => {});
     return true;
