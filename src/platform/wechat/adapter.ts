@@ -185,8 +185,13 @@ export class WeChatRouter {
         },
       );
       const uploadData = (await uploadResp.json()) as Record<string, unknown>;
-      const uploadParam = uploadData.upload_param as string | undefined;
-      if (!uploadParam) {
+      // API returns upload_full_url (complete CDN URL) or upload_param (needs assembly)
+      const cdnUrl =
+        (uploadData.upload_full_url as string) ??
+        (uploadData.upload_param
+          ? `https://novac2c.cdn.weixin.qq.com/c2c/upload?encrypted_query_param=${encodeURIComponent(uploadData.upload_param as string)}&filekey=${encodeURIComponent(filekey)}`
+          : undefined);
+      if (!cdnUrl) {
         console.error(
           `[wechat] getuploadurl failed: ${JSON.stringify(uploadData).slice(0, 200)}`,
         );
@@ -194,7 +199,6 @@ export class WeChatRouter {
       }
 
       // 2. Upload encrypted file to CDN
-      const cdnUrl = `https://novac2c.cdn.weixin.qq.com/c2c/upload?encrypted_query_param=${encodeURIComponent(uploadParam)}&filekey=${encodeURIComponent(filekey)}`;
       const cdnResp = await fetch(cdnUrl, {
         method: "POST",
         headers: { "Content-Type": "application/octet-stream" },
@@ -216,7 +220,9 @@ export class WeChatRouter {
             image_item: {
               media: {
                 encrypt_query_param: downloadParam,
-                aes_key: aesKeyBuf.toString("base64"),
+                aes_key: Buffer.from(aesKeyBuf.toString("hex")).toString(
+                  "base64",
+                ),
                 encrypt_type: 1,
               },
               mid_size: filesize,
@@ -227,7 +233,9 @@ export class WeChatRouter {
             file_item: {
               media: {
                 encrypt_query_param: downloadParam,
-                aes_key: aesKeyBuf.toString("base64"),
+                aes_key: Buffer.from(aesKeyBuf.toString("hex")).toString(
+                  "base64",
+                ),
                 encrypt_type: 1,
               },
               file_name: filePath.split("/").pop() ?? "file",
