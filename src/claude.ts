@@ -445,20 +445,30 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
   }
 
   // WeChat: wecom-cli for enterprise WeChat operations (only when enabled)
-  if (getPlatform() === "wechat" && loadPool().wecomEnabled) {
-    const publicHint = loadPool().wecomPublicDocs
-      ? " When creating documents, set sharing permissions to public so the user can open the link in personal WeChat."
-      : "";
+  if (getPlatform() === "wechat") {
+    if (loadPool().wecomEnabled) {
+      const publicHint = loadPool().wecomPublicDocs
+        ? " When creating documents, set sharing permissions to public so the user can open the link in personal WeChat."
+        : "";
+      parts.push(
+        "You have access to WeChat Work (企业微信) CLI tools via the Bash tool. " +
+          "Use `wecom-cli` commands for enterprise operations: " +
+          "doc (documents/spreadsheets), meeting (video conferences), " +
+          "schedule (calendar events), todo (task management), " +
+          "contact (member lookup), msg (messaging). " +
+          "Run `wecom-cli <command> --help` for usage details. " +
+          "Parameters are passed as JSON strings, e.g.: " +
+          '`wecom-cli doc create_doc \'{"spaceid":"...","name":"...","content":"..."}\'`' +
+          publicHint,
+      );
+    }
+    // WeChat: explicitly prohibit lark-cli (user may have it installed for Feishu)
     parts.push(
-      "You have access to WeChat Work (企业微信) CLI tools via the Bash tool. " +
-        "Use `wecom-cli` commands for enterprise operations: " +
-        "doc (documents/spreadsheets), meeting (video conferences), " +
-        "schedule (calendar events), todo (task management), " +
-        "contact (member lookup), msg (messaging). " +
-        "Run `wecom-cli <command> --help` for usage details. " +
-        "Parameters are passed as JSON strings, e.g.: " +
-        '`wecom-cli doc create_doc \'{"spaceid":"...","name":"...","content":"..."}\'`' +
-        publicHint,
+      "IMPORTANT: Do NOT use lark-cli or any Feishu/Lark tools. " +
+        "This is a WeChat session. " +
+        (loadPool().wecomEnabled
+          ? "Use wecom-cli for document/calendar/task operations instead."
+          : "Document creation tools are not available in this session."),
     );
   }
 
