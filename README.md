@@ -101,7 +101,7 @@ Use `/new` to reset when context gets stale, `/compact` to compress without losi
 | No push notifications | Every bot reply pushes to your phone |
 | Single repo limitation | One bot per project, unlimited projects |
 | Requires active terminal / tmux | Built-in daemon + watchdog + auto-start |
-| Context bloats after a day of use | Independent short-process sessions, `/compact` command |
+| Context bloats after a day of use | Auto-compact at 80% context usage, `/compact` command, `/new` to reset |
 | Restart = lost context | `--continue` resumes conversation, Claude Code auto-memory persists on disk |
 | Headless server auth fails | Supports API key — no browser needed |
 | Bot rejects when busy | Task queue — shows position, auto-processes when ready |
@@ -413,7 +413,7 @@ daemon.sh autostart      # Enable auto-start on login
 daemon.sh no-autostart   # Disable auto-start
 ```
 
-> **How it works:** As long as the daemon is running, all Telegram bots are online and responsive — no other processes needed. If your computer restarts or the daemon stops, bots go offline until the daemon is started again.
+> **How it works:** As long as the daemon is running, all bots are online and responsive — no other processes needed. If your computer restarts or the daemon stops, bots go offline until the daemon is started again.
 >
 > **If bots go offline after a reboot**, run this in terminal to bring them back:
 > ```bash
@@ -599,13 +599,19 @@ When a project bot modifies the daemon's own code (e.g., the `telegram-pool` pro
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| Bot not responding in group | Group Privacy enabled | @BotFather → Bot Settings → Group Privacy → **Turn off** |
+| Bot not responding in group | Group Privacy enabled (Telegram) | @BotFather → Bot Settings → Group Privacy → **Turn off** |
 | `409 Conflict` in logs | Another process polling same bot | `pkill -f "claude.*channels"` then `daemon.sh restart` |
 | Bot replies `(no output)` | Empty prompt or stdin timeout | Ensure message has content beyond @mention |
 | Progress stuck, no response | Claude session hung or timed out | `daemon.sh logs` to diagnose, then `daemon.sh restart` |
 | Daemon keeps crashing | Rapid crash loop | Watchdog gives up after 5 rapid crashes. Check logs, fix issue, restart |
 | Bot restarted itself | Project bot edited daemon code | Expected — watchdog auto-restarts, master bot notifies group |
 | Dashboard shows no data | No invocations since daemon start | Stats are in-memory, reset on restart. Make a call first |
+| Context overflow (API error) | Session accumulated too much context | Send `/new` to reset, or wait — auto-compact triggers at 80% |
+| Feishu: no events received | Missing permissions or bot not in group | Check `im:message.group_at_msg:readonly` permission, re-add bot to group |
+| Feishu: button click no response | Card callback not configured | Open Platform → Callbacks tab → Add `card.action.trigger` (long connection) |
+| WeChat: bot stops responding | Token expired or stale process | Restart daemon (re-scans QR if needed), kill stale `bun` processes |
+| WeChat: 10-msg limit hit | context_token quota exhausted | Send any message to the bot to refresh quota |
+| WeChat: used lark-cli instead of wecom-cli | Platform tool mismatch | Send `/new` to reset session — system prompt now blocks wrong tools |
 
 ## 🔒 Security & Privacy
 
@@ -663,21 +669,33 @@ This project runs as a background daemon with access to your filesystem. You sho
 - **Process supervision**: watchdog auto-restarts on crash, gives up after 5 rapid crashes
 - **Self-restart safety**: when a project bot modifies daemon code, it finishes work and replies before restarting
 
-## 🌐 Platform Roadmap
+## 🌐 Platform Support Details
 
-claude-crew currently supports **Telegram**. The architecture uses a platform abstraction layer (`Platform` interface) designed for horizontal multi-platform support.
+All four platforms share the same core logic — task execution, permissions, queuing, progress tracking. Platform differences are handled transparently in the adapter layer.
 
-| Platform | Status | Notes |
-|----------|--------|-------|
-| **Telegram** | Supported | Full feature parity, production-tested |
-| **Discord** | Planned | Adapter in development |
-| **Feishu (Lark)** | Planned | Architecture ready, adapter not started |
+| Platform | Routing | Interactive UI | File Sending | Document Tools | Status |
+|----------|---------|---------------|-------------|---------------|--------|
+| **Telegram** | @mention per bot | Inline keyboard buttons | Photos & documents | — | Production |
+| **Feishu/Lark** | @mention per bot | Card JSON 1.0 + delayed update API | Images via upload API | lark-cli (docs, sheets, wiki, tasks) | Tested |
+| **WeChat** | #tag per project | Number menus (auto-translated) | AES-encrypted CDN upload | wecom-cli (docs, meetings, calendar) | Tested |
+| **Discord** | @mention per bot | Button components | Attachments | — | Implemented |
 
-> The Platform interface (`src/platform/types.ts`) defines all capabilities — messaging, buttons, files, threads. Adding a new platform means implementing this interface. Core logic (task execution, permissions, queue, dashboard) is platform-agnostic.
+> The Platform interface (`src/platform/types.ts`) defines all capabilities — messaging, buttons, files, callbacks. Adding a new platform means implementing this interface. See `src/platform/*/adapter.ts` for examples.
 
 ## 📋 Changelog
 
-### v0.4.0 — Platform abstraction & resilience (current)
+### v0.5.0 — Multi-platform: Feishu, WeChat, file sending (current)
+
+- **Feishu/Lark adapter**: WSClient long-connection, Card JSON 1.0 interactive menus, delayed card update API for in-place UI updates, multi-bot routing via open_id, auto lark-cli initialization.
+- **WeChat iLink adapter**: Long-polling with cursor persistence, token persistence across restarts, #tag virtual bot routing (single connection, multiple projects), number-menu system (sendButtons auto-translated to numbered text), AES-128-ECB encrypted CDN image upload.
+- **WeChat document capability**: Enterprise WeChat (wecom-cli) integration — create documents, spreadsheets, calendar events, meetings, and todos. Toggle on/off from menu, guided setup with install detection.
+- **File sending**: Claude can send images/files to chat via `[[FILE:/path]]` marker in output. Works on all platforms — Telegram (sendPhoto), Feishu (image upload API), WeChat (AES-encrypted CDN), Discord (attachments).
+- **Auto-compact**: Context usage tracked per session. At 80% usage, automatically runs `/compact` to prevent overflow on next invocation. Solves the `claude -p` context explosion issue.
+- **Shared handler extraction**: `handler.ts` — shared message/callback routing for Discord, Feishu, and WeChat. Eliminates 600+ lines of duplication from daemon.ts.
+- **Platform tool isolation**: Feishu sessions block wecom-cli, WeChat sessions block lark-cli. Prevents wrong-platform tool usage.
+- **WeChat 10-message quota**: Tracks messages per context_token (max 10), warns at 9, silently drops at limit. Progress updates consolidated to single message.
+
+### v0.4.0 — Platform abstraction & resilience
 
 - **Three-tier permission system**: Owner (immutable, full control) → Admin (configurable menu permissions: bots/config/users/restart/cron) → User (per-bot access). Owner manages admins via button menu with per-permission toggles. Old flat `admins` array auto-migrated.
 - **Platform-segmented config**: `bot-pool.json` restructured — platform-specific fields (`owner`, `admins`, `bots`, `sharedGroupId`) nested under `telegram`/`discord` sections, shared settings at top level. Old flat format auto-migrated on startup.
