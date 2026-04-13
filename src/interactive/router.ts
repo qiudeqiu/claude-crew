@@ -365,6 +365,75 @@ async function handleMenuCallback(
   // WeChat enterprise toggle/public
   if (action === "wecom:toggle") {
     const pool = loadPool();
+    if (!pool.wecomEnabled) {
+      // Enabling — check if wecom-cli is installed and configured
+      const { execFileSync } = await import("child_process");
+      let installed = false;
+      try {
+        execFileSync("which", ["wecom-cli"], { timeout: 3000 });
+        installed = true;
+      } catch {
+        // not installed
+      }
+
+      if (!installed) {
+        const guide =
+          lang === "zh"
+            ? "\u26a0\ufe0f 未检测到 wecom-cli\n\n" +
+              "请先在终端安装：\n" +
+              "  npm install -g wecom-cli\n\n" +
+              "安装后回来点击「开启企微」"
+            : "\u26a0\ufe0f wecom-cli not found\n\n" +
+              "Install first:\n" +
+              "  npm install -g wecom-cli\n\n" +
+              "Then come back and enable";
+        await edit(api, chatId, messageId, guide, {
+          reply_markup: { inline_keyboard: menuButton(lang) },
+        }).catch(() => {});
+        return true;
+      }
+
+      // Check if configured — try running a simple command
+      let configured = false;
+      try {
+        execFileSync("wecom-cli", ["contact", "get_self"], {
+          timeout: 5000,
+          stdio: "pipe",
+        });
+        configured = true;
+      } catch {
+        // not configured or auth failed
+      }
+
+      if (!configured) {
+        const guide =
+          lang === "zh"
+            ? "\u26a0\ufe0f wecom-cli 未配置\n\n" +
+              "请在终端执行以下命令：\n" +
+              "  wecom-cli init\n\n" +
+              "按提示完成企业微信授权后，回来点击「确认已授权」"
+            : "\u26a0\ufe0f wecom-cli not configured\n\n" +
+              "Run in terminal:\n" +
+              "  wecom-cli init\n\n" +
+              "Complete authorization, then tap Confirm";
+        await edit(api, chatId, messageId, guide, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "zh" ? "\u2705 确认已授权" : "\u2705 Confirm",
+                  data: "m:wecom:toggle",
+                },
+                { text: `\u25c0\ufe0f ${c.back}`, data: "m:wecom" },
+              ],
+            ],
+          },
+        }).catch(() => {});
+        return true;
+      }
+    }
+
+    // Toggle
     savePool({ ...pool, wecomEnabled: !pool.wecomEnabled });
     log(`CONFIG: wecomEnabled = ${!pool.wecomEnabled} by ${userId}`);
     return await handleMenuCallback(
