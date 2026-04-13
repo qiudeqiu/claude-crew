@@ -453,6 +453,10 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
         : "";
       parts.push(
         "You have access to WeChat Work (企业微信) CLI tools via the Bash tool. " +
+          "IMPORTANT: When the user asks you to create documents, spreadsheets, reports, or any structured output, " +
+          "you MUST use `wecom-cli doc` to create it as a WeChat Work document — " +
+          "do NOT create local HTML/Markdown/CSV files instead. " +
+          "The user expects to receive a document link they can open in WeChat. " +
           "Use `wecom-cli` commands for enterprise operations: " +
           "doc (documents/spreadsheets), meeting (video conferences), " +
           "schedule (calendar events), todo (task management), " +
