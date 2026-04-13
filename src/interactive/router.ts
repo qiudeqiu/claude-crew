@@ -245,33 +245,36 @@ async function handleMenuCallback(
       const publicDocs = pool.wecomPublicDocs ?? false;
       const statusText =
         lang === "zh"
-          ? `\ud83c\udfe2 企业微信集成\n${SEPARATOR}\n\n` +
+          ? `\ud83d\udcc4 文档能力\n${SEPARATOR}\n\n` +
+            `通过企业微信为 Claude 提供文档创建和协作能力。\n` +
+            `开启后，Claude 可直接创建文档、表格、日程、会议和待办。\n\n` +
             `状态: ${enabled ? "\ud83d\udfe2 已开启" : "\u26aa 未开启"}\n` +
-            `公开文档: ${publicDocs ? "\ud83d\udfe2 是" : "\u26aa 否"}\n\n` +
+            `公开链接: ${publicDocs ? "\ud83d\udfe2 是（微信可直接打开）" : "\u26aa 否（需企业微信查看）"}\n\n` +
             (enabled
-              ? "\ud83d\udca1 Claude 可使用 wecom-cli 创建文档、日程、会议等\n" +
-                "发送 wecom-cli --help 给项目 bot 查看可用命令"
-              : "\ud83d\udca1 开启后，Claude 可通过企业微信创建文档、管理日程等")
-          : `\ud83c\udfe2 Enterprise WeChat Integration\n${SEPARATOR}\n\n` +
+              ? "\ud83d\udca1 对项目 bot 说「帮我创建一个文档」即可使用"
+              : "\ud83d\udca1 首次开启需要在终端完成企业微信授权")
+          : `\ud83d\udcc4 Document Capability\n${SEPARATOR}\n\n` +
+            `Powered by WeChat Work — gives Claude the ability to create and manage documents.\n` +
+            `When enabled, Claude can create docs, spreadsheets, schedules, meetings and tasks.\n\n` +
             `Status: ${enabled ? "\ud83d\udfe2 Enabled" : "\u26aa Disabled"}\n` +
-            `Public docs: ${publicDocs ? "\ud83d\udfe2 Yes" : "\u26aa No"}\n\n` +
+            `Public links: ${publicDocs ? "\ud83d\udfe2 Yes (viewable in WeChat)" : "\u26aa No (requires WeChat Work)"}\n\n` +
             (enabled
-              ? "\ud83d\udca1 Claude can use wecom-cli for docs, calendar, meetings etc."
-              : "\ud83d\udca1 Enable to let Claude create docs and manage schedules via WeChat Work");
+              ? '\ud83d\udca1 Tell a project bot "create a document" to use it'
+              : "\ud83d\udca1 First-time setup requires terminal authorization");
       const toggleLabel = enabled
         ? lang === "zh"
-          ? "\u23f8 关闭企微"
+          ? "\u23f8 关闭"
           : "\u23f8 Disable"
         : lang === "zh"
-          ? "\u25b6\ufe0f 开启企微"
+          ? "\u25b6\ufe0f 开启"
           : "\u25b6\ufe0f Enable";
       const publicLabel = publicDocs
         ? lang === "zh"
-          ? "\ud83d\udd12 文档改为私有"
-          : "\ud83d\udd12 Docs: private"
+          ? "\ud83d\udd12 改为私有链接"
+          : "\ud83d\udd12 Private links"
         : lang === "zh"
-          ? "\ud83c\udf10 文档改为公开"
-          : "\ud83c\udf10 Docs: public";
+          ? "\ud83c\udf10 改为公开链接"
+          : "\ud83c\udf10 Public links";
       const buttons = [
         [{ text: toggleLabel, data: "m:wecom:toggle" }],
         ...(enabled ? [[{ text: publicLabel, data: "m:wecom:public" }]] : []),
@@ -298,8 +301,14 @@ async function handleMenuCallback(
           { text: m.guideProject, data: "m:help:project" },
         ],
         [{ text: m.guideCron, data: "m:help:cron" }],
-        ...menuButton(lang),
       ];
+      // WeChat: add docs guide
+      if (getPlatform() === "wechat") {
+        guideButtons.push([
+          { text: "\ud83d\udcc4 文档能力", data: "m:help:docs" },
+        ]);
+      }
+      guideButtons.push(...menuButton(lang));
       await edit(api, chatId, messageId, m.helpText, {
         reply_markup: { inline_keyboard: guideButtons },
       }).catch(() => {});
@@ -469,12 +478,45 @@ async function handleMenuCallback(
       ],
     ];
     const masterName = getMasterName();
+    const docsGuide =
+      lang === "zh"
+        ? "\ud83d\udcc4 文档能力指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "通过企业微信为 Claude 提供文档协作能力。\n\n" +
+          "\ud83d\ude80 支持的操作:\n" +
+          "  \u2022 创建文档和表格\n" +
+          "  \u2022 创建和管理日程\n" +
+          "  \u2022 发起视频会议\n" +
+          "  \u2022 创建和管理待办事项\n" +
+          "  \u2022 查询通讯录\n\n" +
+          "\ud83d\udca1 使用方式:\n" +
+          "  直接对项目 bot 说「帮我写个周报文档」「创建明天的会议」\n" +
+          "  Claude 会自动通过企业微信完成操作并返回链接\n\n" +
+          "\u2699\ufe0f 配置:\n" +
+          "  在菜单 → 文档能力中开启/关闭\n" +
+          "  可设置文档为公开链接（微信可直接打开）或私有（需企业微信）\n\n" +
+          "\u26a0\ufe0f 首次使用需在终端执行 wecom-cli init 完成授权"
+        : "\ud83d\udcc4 Document Capability Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "Powered by WeChat Work — gives Claude document collaboration abilities.\n\n" +
+          "\ud83d\ude80 Supported operations:\n" +
+          "  \u2022 Create documents and spreadsheets\n" +
+          "  \u2022 Create and manage calendar events\n" +
+          "  \u2022 Start video meetings\n" +
+          "  \u2022 Create and manage todos\n" +
+          "  \u2022 Look up contacts\n\n" +
+          "\ud83d\udca1 Usage:\n" +
+          '  Tell a project bot "write a weekly report" or "schedule a meeting tomorrow"\n' +
+          "  Claude will complete the task via WeChat Work and return a link\n\n" +
+          "\u2699\ufe0f Config:\n" +
+          "  Enable/disable in Menu \u2192 Document Capability\n" +
+          "  Set docs to public (viewable in WeChat) or private (requires WeChat Work)\n\n" +
+          "\u26a0\ufe0f First-time setup: run wecom-cli init in terminal";
     const content: Record<string, string> = {
       start: m.helpStart,
       tips: m.helpTips,
       master: m.helpMaster,
       project: m.helpProject,
       cron: m.helpCron(masterName),
+      docs: docsGuide,
     };
     if (content[sub]) {
       await edit(api, chatId, messageId, content[sub], {

@@ -3,7 +3,7 @@ import type { Platform, Button } from "../platform/types.js";
 import type { Lang } from "./i18n.js";
 import type { AdminPermission } from "../types.js";
 import { common, menuMsg } from "./i18n.js";
-import { hasPermission } from "../config.js";
+import { hasPermission, getPlatform } from "../config.js";
 
 type Row = Button[];
 
@@ -147,10 +147,12 @@ export function mainMenuKeyboard(lang: Lang = "en", userId?: string): Row[] {
 
   const row1 = filterRow(gated);
   const row2 = [{ text: m.btnStatus, data: "m:status" }, ...filterRow(gated2)];
-  const row3 = [
-    { text: m.btnLang, data: "m:lang" },
-    { text: m.btnHelp, data: "m:help" },
-  ];
+  const row3: Button[] = [{ text: m.btnLang, data: "m:lang" }];
+  // WeChat only: docs capability before help
+  if (getPlatform() === "wechat") {
+    row3.push({ text: "\ud83d\udcc4 文档能力", data: "m:wecom" });
+  }
+  row3.push({ text: m.btnHelp, data: "m:help" });
 
   const rows: Row[] = [];
   if (row1.length > 0) rows.push(row1);
