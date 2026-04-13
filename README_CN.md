@@ -106,6 +106,7 @@
 | 无头服务器认证失败 | 支持 API key — 不需要浏览器 |
 | bot 忙时直接拒绝 | 任务队列 — 显示位置，就绪后自动处理 |
 | API key 过期→反复报错 | 熔断器 3 次失败后暂停，提示根因 |
+| SSH 暴露在公网被暴力破解 | 零开放端口 — 仅出站连接到 IM 平台 |
 
 ## 目录
 
@@ -612,6 +613,19 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 
 ## 🔒 安全与隐私
 
+### 零攻击面 — 无 SSH、无开放端口
+
+与 tmux/SSH 远程方案不同（暴露 22 端口面临暴力破解、凭证泄露和 0-day 漏洞风险），claude-crew 的 daemon **仅发起出站连接**到 IM 平台 API，不在你的机器上开放任何端口。认证、加密和 NAT 穿透全部由 IM 平台处理。
+
+| 方案 | 攻击面 | 认证方式 |
+|------|--------|---------|
+| **SSH + tmux** | 22 端口暴露在公网 | 密码/密钥（自行管理） |
+| **ngrok/cloudflared** | 隧道暴露服务 | 隧道提供商 token |
+| **VS Code Remote** | 底层走 SSH | 同 SSH 风险 |
+| **claude-crew** | **无开放端口** | IM 平台处理 |
+
+你的机器对端口扫描器完全不可见。唯一的网络流量是到 Telegram、飞书、微信或 Discord 服务器的出站轮询/WebSocket。
+
 ### 数据完全本地化
 
 所有数据存储在你的本地机器上 — **不会发送到任何第三方服务器**：
@@ -623,7 +637,7 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 | 项目源代码 | 你的本地目录 | 无 |
 
 唯一的外部通信：
-- **Telegram Bot API** — 收发消息（你的 bot、你的群组）
+- **IM 平台 API** — 通过 Telegram Bot API、飞书 WSClient、微信 iLink 或 Discord Gateway 收发消息
 - **Claude API** — 执行任务（通过你的订阅、API key 或云厂商）
 
 无数据分析、无遥测、无云端同步、无远程数据库。
@@ -634,8 +648,8 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 
 - **阅读源码** — 约 7200 行 TypeScript，无混淆无压缩。一个下午就能审完。
 - **从源码直接运行** — `bun run src/daemon.ts` 直接执行 TypeScript，没有编译产物。你看到什么就跑什么。
-- **极简依赖** — [grammY](https://grammy.dev)（Telegram）和 [discord.js](https://discord.js.org)（Discord），无隐藏包。查看 `package.json`。
-- **无外部网络请求** — 只和 Telegram Bot API 以及本地 `claude` CLI 通信。验证：`grep -r "fetch" src/` 只会看到 Telegram 文件下载。
+- **极简依赖** — [grammY](https://grammy.dev)（Telegram）、[discord.js](https://discord.js.org)（Discord）、[@larksuiteoapi/node-sdk](https://github.com/larksuite/node-sdk)（飞书）。微信使用原生 iLink API，零依赖。查看 `package.json`。
+- **无外部网络请求** — 只和 IM 平台 API 以及本地 `claude` CLI 通信。验证：`grep -r "fetch" src/` 只会看到平台 API 调用和文件下载。
 - **无数据收集** — 无 analytics，无 telemetry，无远程数据库。验证：`grep -r "analytics\|telemetry\|track" src/`
 - **运行时监控** — 查看所有网络连接：`lsof -i -p $(cat ~/.claude/channels/telegram/daemon.pid)`
 

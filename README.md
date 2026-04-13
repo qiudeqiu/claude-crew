@@ -106,6 +106,7 @@ Use `/new` to reset when context gets stale, `/compact` to compress without losi
 | Headless server auth fails | Supports API key — no browser needed |
 | Bot rejects when busy | Task queue — shows position, auto-processes when ready |
 | API key expires → repeated errors | Circuit breaker pauses after 3 failures, shows root cause |
+| SSH exposed to brute-force attacks | Zero open ports — outbound-only connections to IM platforms |
 
 ## Table of Contents
 
@@ -608,6 +609,19 @@ When a project bot modifies the daemon's own code (e.g., the `telegram-pool` pro
 
 ## 🔒 Security & Privacy
 
+### Zero attack surface — no SSH, no open ports
+
+Unlike tmux/SSH-based remote solutions that expose port 22 to the internet (inviting brute-force attacks, credential theft, and 0-day exploits), claude-crew's daemon **only makes outbound connections** to platform APIs. No ports are opened on your machine. Authentication, encryption, and NAT traversal are handled entirely by the IM platform.
+
+| Approach | Attack surface | Authentication |
+|----------|---------------|----------------|
+| **SSH + tmux** | Port 22 exposed to internet | Password/key (your responsibility) |
+| **ngrok/cloudflared** | Tunnel exposes a service | Token-based (tunnel provider) |
+| **VS Code Remote** | SSH under the hood | Same SSH risks |
+| **claude-crew** | **No open ports** | IM platform handles it |
+
+Your machine stays invisible to port scanners. The only network traffic is outbound polling/WebSocket to Telegram, Feishu, WeChat, or Discord servers.
+
 ### Data stays local
 
 All data is stored locally on your machine — **nothing is sent to third-party servers**:
@@ -619,7 +633,7 @@ All data is stored locally on your machine — **nothing is sent to third-party 
 | Project source code | Your local directories | Nobody |
 
 The only external communication is:
-- **Telegram Bot API** — sending/receiving messages (your bots, your group)
+- **IM Platform API** — sending/receiving messages via Telegram Bot API, Feishu WSClient, WeChat iLink, or Discord Gateway
 - **Claude API** — running Claude Code tasks (via your subscription, API key, or cloud provider)
 
 No analytics, no telemetry, no cloud sync, no remote database.
@@ -630,8 +644,8 @@ This project runs as a background daemon with access to your filesystem. You sho
 
 - **Read the source** — ~7200 lines of TypeScript, no minification, no obfuscation. Small enough to audit in an afternoon.
 - **Runs from source** — `bun run src/daemon.ts` executes the TypeScript directly. No compiled binaries, no build artifacts. What you read is what runs.
-- **Minimal dependencies** — [grammY](https://grammy.dev) (Telegram) and [discord.js](https://discord.js.org) (Discord). No hidden packages. Check `package.json`.
-- **No external network calls** — only communicates with Telegram Bot API and your local `claude` CLI. Verify: `grep -r "fetch" src/` shows only Telegram file downloads.
+- **Minimal dependencies** — [grammY](https://grammy.dev) (Telegram), [discord.js](https://discord.js.org) (Discord), [@larksuiteoapi/node-sdk](https://github.com/larksuite/node-sdk) (Feishu). WeChat uses the native iLink API with zero dependencies. Check `package.json`.
+- **No external network calls** — only communicates with IM platform APIs and your local `claude` CLI. Verify: `grep -r "fetch" src/` shows only platform API calls and file downloads.
 - **No data collection** — no analytics, no telemetry, no remote database. Verify: `grep -r "analytics\|telemetry\|track" src/`
 - **Monitor at runtime** — check all network connections: `lsof -i -p $(cat ~/.claude/channels/telegram/daemon.pid)`
 
