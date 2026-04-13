@@ -247,9 +247,12 @@ export function registerPlatformHandlers(
       imagePath = await adapter.downloadFile(msg.photoFileId);
     }
 
-    await adapter
+    // Instant acknowledgment — reaction on platforms that support it,
+    // otherwise typing indicator (faster than waiting for Claude to start)
+    void adapter
       .setReaction(msg.chatId, msg.id, "\uD83D\uDC40")
       .catch(() => {});
+    void adapter.sendTyping(msg.chatId).catch(() => {});
     const { invokeClaudeAndReply } = await import("./claude.js");
     void invokeClaudeAndReply(
       managed,

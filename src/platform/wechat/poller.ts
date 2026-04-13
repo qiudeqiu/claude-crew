@@ -39,12 +39,17 @@ export class WeChatPoller {
     }
   }
 
-  /** Start the polling loop. Initializes cursor first. */
+  /** Start the polling loop. Skips initCursor if saved cursor exists. */
   start(onMessage: (msg: WeChatMessage) => void): void {
     this.messageHandler = onMessage;
     this.running = true;
-    // Initialize cursor before starting message loop
-    this.initCursor().then(() => this.poll());
+    if (this.cursor) {
+      // Have saved cursor — start polling immediately (no 35s delay)
+      this.poll();
+    } else {
+      // No saved cursor — init first (one 35s poll to get cursor)
+      this.initCursor().then(() => this.poll());
+    }
   }
 
   /** Get initial cursor without processing messages (skip old messages). */
