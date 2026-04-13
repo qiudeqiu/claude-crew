@@ -101,7 +101,7 @@
 | 缺少推送通知 | 每条 bot 回复自动推送到手机 |
 | 单仓库限制 | 一个 bot 一个项目，无限项目 |
 | 需要保持终端 / tmux | 内置 daemon + watchdog + 开机自启 |
-| 长时间使用上下文膨胀变慢 | 独立短进程 session，`/compact` 命令压缩 |
+| 长时间使用上下文膨胀变慢 | 80% 时自动压缩上下文，`/compact` 命令，`/new` 重置 |
 | 重启后失忆 | 对话文件 + memory 文件持久化在磁盘 |
 | 无头服务器认证失败 | 支持 API key — 不需要浏览器 |
 | bot 忙时直接拒绝 | 任务队列 — 显示位置，就绪后自动处理 |
@@ -603,13 +603,19 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 
 | 问题 | 原因 | 解决 |
 |------|------|------|
-| 机器人在群里不响应 | Group Privacy 未关闭 | @BotFather → Bot Settings → Group Privacy → **Turn off** |
+| 机器人在群里不响应 | Group Privacy 未关闭（Telegram） | @BotFather → Bot Settings → Group Privacy → **Turn off** |
 | 日志出现 `409 Conflict` | 有其他进程在轮询同一个机器人 | `pkill -f "claude.*channels"` 然后 `daemon.sh restart` |
 | 机器人回复 `(无输出)` | 消息内容为空或 stdin 超时 | 确保消息除了 @提及外还有实际内容 |
 | 进度卡住没反应 | Claude 会话超时或崩溃 | `daemon.sh logs` 查看日志，然后 `daemon.sh restart` |
 | Daemon 持续崩溃 | 快速崩溃循环 | watchdog 连续 5 次崩溃后放弃。检查日志，修复后重启 |
 | 机器人自己重启了 | 项目机器人修改了 daemon 代码 | 正常现象 —— watchdog 自动重启，群里会收到通知 |
 | 看板无数据 | daemon 启动后未调用 | 统计在内存中，重启后重置。先发一次任务 |
+| 上下文溢出（API 报错） | 会话累积过多上下文 | 发送 `/new` 重置，或等待 — 80% 时自动压缩 |
+| 飞书：收不到消息 | 权限缺失或 bot 未在群里 | 检查 `im:message.group_at_msg:readonly` 权限，重新将 bot 加入群 |
+| 飞书：按钮点击无响应 | 卡片回调未配置 | 开放平台 → 回调配置 → 添加 `card.action.trigger`（长连接） |
+| 微信：bot 停止响应 | token 过期或残留进程 | 重启 daemon（需要时重新扫码），杀掉残留 `bun` 进程 |
+| 微信：10 条消息限制 | context_token 配额用完 | 给 bot 发一条消息刷新配额 |
+| 微信：用了飞书工具 | 平台工具不匹配 | 发送 `/new` 重置会话 — 系统提示已屏蔽错误工具 |
 
 ## 🔒 安全与隐私
 
@@ -667,21 +673,33 @@ daemon 在 **watchdog** 下运行，崩溃自动重启：
 - **进程守护**：watchdog 崩溃自动重启，连续崩溃 5 次后放弃
 - **自重启安全**：项目 bot 修改 daemon 代码时，先完成并回复，最后才重启
 
-## 🌐 平台支持计划
+## 🌐 平台支持详情
 
-claude-crew 目前支持 **Telegram**。架构使用平台抽象层（`Platform` 接口），设计上支持横向扩展多个 IM 平台。
+四个平台共享同一套核心逻辑 — 任务执行、权限、队列、进度追踪。平台差异在适配器层透明处理。
 
-| 平台 | 状态 | 说明 |
-|------|------|------|
-| **Telegram** | 已支持 | 完整功能，生产验证 |
-| **Discord** | 计划中 | 适配器开发中 |
-| **飞书 (Lark)** | 计划中 | 架构就绪，适配器未开始 |
+| 平台 | 路由方式 | 交互 UI | 文件发送 | 文档工具 | 状态 |
+|------|---------|---------|---------|---------|------|
+| **Telegram** | @mention 独立 bot | 内联键盘按钮 | 图片/文件 | — | 生产可用 |
+| **飞书/Lark** | @mention 独立 bot | 卡片交互 + 延迟更新 API | 图片上传 | lark-cli（文档、表格、知识库、任务） | 已测试 |
+| **微信** | #标签 虚拟项目 | 数字菜单（自动转换） | AES 加密 CDN 上传 | wecom-cli（文档、会议、日程） | 已测试 |
+| **Discord** | @mention 独立 bot | 按钮组件 | 附件 | — | 已实现 |
 
-> Platform 接口（`src/platform/types.ts`）定义了所有能力 — 消息、按钮、文件、线程。新增平台只需实现该接口。核心逻辑（任务执行、权限、队列、看板）与平台无关。
+> Platform 接口（`src/platform/types.ts`）定义了所有能力 — 消息、按钮、文件、回调。新增平台只需实现该接口。参见 `src/platform/*/adapter.ts`。
 
 ## 📋 更新日志
 
-### v0.4.0 — 平台抽象与运行时容错（当前版本）
+### v0.5.0 — 多平台：飞书、微信、文件发送（当前版本）
+
+- **飞书适配器**：WSClient 长连接、卡片交互菜单（Card JSON 1.0）、延迟更新 API 原地刷新卡片、多 bot 路由（open_id）、lark-cli 自动初始化。
+- **微信 iLink 适配器**：长轮询 + 游标持久化、token 重启复用、#标签虚拟 bot 路由（单连接多项目）、数字菜单系统（sendButtons 自动转换）、AES-128-ECB 加密 CDN 图片上传。
+- **微信文档能力**：企业微信（wecom-cli）集成 — 创建文档、表格、日程、会议、待办。菜单开关 + 首次安装检测引导。
+- **文件发送**：Claude 在输出中写 `[[FILE:/path]]` 标记，daemon 自动上传到 IM。全平台支持 — Telegram（sendPhoto）、飞书（图片上传 API）、微信（AES 加密 CDN）、Discord（附件）。
+- **自动压缩上下文**：每次任务完成后追踪上下文使用率，达到 80% 时自动执行 `/compact`，防止下次调用溢出。解决 `claude -p` 上下文爆炸问题。
+- **共享 handler 提取**：`handler.ts` — Discord、飞书、微信共享消息/回调路由，daemon.ts 减少 600+ 行重复代码。
+- **平台工具隔离**：飞书禁用 wecom-cli，微信禁用 lark-cli，防止跨平台工具误用。
+- **微信 10 条消息配额**：追踪每个 context_token 消息数（上限 10），第 9 条提醒，超限静默丢弃。进度更新合并为单条。
+
+### v0.4.0 — 平台抽象与运行时容错
 
 - **三级权限体系**：Owner（不可删除，全部权限）→ Admin（可配置菜单权限：机器人/配置/用户/重启/定时任务）→ User（per-bot 访问）。Owner 通过按钮菜单管理 Admin，支持逐项权限开关。旧 `admins` 数组自动迁移。
 - **平台分段配置**：`bot-pool.json` 重构 — 平台相关字段（`owner`、`admins`、`bots`、`sharedGroupId`）嵌套在 `telegram`/`discord` 段内，共享设置在顶层。旧格式启动时自动迁移。
