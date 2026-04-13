@@ -25,6 +25,7 @@ import {
   CIRCUIT_BREAKER_COOLDOWN_MS,
   CIRCUIT_BREAKER_MAX_FAILURES,
   MAX_TRUNCATION_RECOVERIES,
+  CONTEXT_AUTO_COMPACT_THRESHOLD,
   getMessageLimit,
 } from "./config.js";
 import { log } from "./logger.js";
@@ -443,8 +444,11 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
     );
   }
 
-  // WeChat: wecom-cli for enterprise WeChat operations
-  if (getPlatform() === "wechat") {
+  // WeChat: wecom-cli for enterprise WeChat operations (only when enabled)
+  if (getPlatform() === "wechat" && loadPool().wecomEnabled) {
+    const publicHint = loadPool().wecomPublicDocs
+      ? " When creating documents, set sharing permissions to public so the user can open the link in personal WeChat."
+      : "";
     parts.push(
       "You have access to WeChat Work (企业微信) CLI tools via the Bash tool. " +
         "Use `wecom-cli` commands for enterprise operations: " +
@@ -453,7 +457,8 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
         "contact (member lookup), msg (messaging). " +
         "Run `wecom-cli <command> --help` for usage details. " +
         "Parameters are passed as JSON strings, e.g.: " +
-        '`wecom-cli doc create_doc \'{"spaceid":"...","name":"...","content":"..."}\'`',
+        '`wecom-cli doc create_doc \'{"spaceid":"...","name":"...","content":"..."}\'`' +
+        publicHint,
     );
   }
 
@@ -789,9 +794,28 @@ export async function invokeClaudeAndReply(
     }
 
     accumulateStats(managed, result);
+    const ctxPct = result.contextWindow
+      ? result.contextUsed / result.contextWindow
+      : 0;
     log(
-      `DONE: ${project} — ${result.text.length} chars, $${result.costUSD.toFixed(4)}, context ${result.contextWindow ? Math.round((result.contextUsed / result.contextWindow) * 100) : "?"}%`,
+      `DONE: ${project} — ${result.text.length} chars, $${result.costUSD.toFixed(4)}, context ${result.contextWindow ? Math.round(ctxPct * 100) : "?"}%`,
     );
+
+    // ── Auto-compact: prevent context overflow on next invocation ──
+    if (ctxPct >= CONTEXT_AUTO_COMPACT_THRESHOLD && result.contextWindow) {
+      log(
+        `COMPACT: ${project} — context at ${Math.round(ctxPct * 100)}%, auto-compacting...`,
+      );
+      try {
+        await runClaude(dir, "/compact", {
+          resume: true,
+          model: botModel,
+        });
+        log(`COMPACT: ${project} — done`);
+      } catch (e) {
+        log(`COMPACT: ${project} — failed: ${e}`);
+      }
+    }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     log(`FAIL: ${project} — ${errMsg}`);

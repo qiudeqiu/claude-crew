@@ -51,6 +51,7 @@ export const CIRCUIT_BREAKER_COOLDOWN_MS = 300_000; // 5 min auto-recovery
 export const DENIAL_MAX_CONSECUTIVE = 5;
 export const DENIAL_WINDOW_MS = 60_000; // sliding window
 export const MAX_TRUNCATION_RECOVERIES = 2; // max auto-continue attempts
+export const CONTEXT_AUTO_COMPACT_THRESHOLD = 0.8; // auto-compact at 80% context usage
 
 /** Platform-aware message character limit */
 export function getMessageLimit(): number {
@@ -157,6 +158,8 @@ export function loadPool(): BotPool {
       language: raw.language,
       model: raw.model,
       sessionMode: raw.sessionMode,
+      wecomEnabled: raw.wecomEnabled,
+      wecomPublicDocs: raw.wecomPublicDocs,
     };
   }
 
@@ -194,6 +197,8 @@ export function savePool(pool: BotPool): void {
     language: pool.language,
     model: pool.model,
     sessionMode: pool.sessionMode,
+    wecomEnabled: pool.wecomEnabled,
+    wecomPublicDocs: pool.wecomPublicDocs,
   };
 
   writeFileSync(POOL_FILE, JSON.stringify(updated, null, 2) + "\n", {
