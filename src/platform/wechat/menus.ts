@@ -52,7 +52,11 @@ export function formatMenu(
   }
 
   lines.push("");
-  lines.push(lang === "zh" ? "回复数字选择" : "Reply with a number");
+  lines.push(
+    lang === "zh"
+      ? "回复数字选择（5 分钟内有效）"
+      : "Reply with a number (valid for 5 min)",
+  );
 
   return { formatted: lines.join("\n"), flatButtons: flat };
 }
