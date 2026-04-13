@@ -440,7 +440,8 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
         "IMPORTANT: Use `--as bot` flag by default (e.g. `lark-cli docs +create --as bot ...`). " +
         "Only use `--as user` if the user explicitly asks for docs under their own name AND user auth is configured. " +
         "If `--as user` fails with auth error, fall back to `--as bot`. " +
-        "Run `lark-cli <skill> --help` for usage details.",
+        "Run `lark-cli <skill> --help` for usage details. " +
+        "Do NOT use wecom-cli — this is a Feishu session.",
     );
   }
 
