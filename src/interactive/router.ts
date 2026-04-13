@@ -239,6 +239,50 @@ async function handleMenuCallback(
       return true;
     }
 
+    case "wecom": {
+      const pool = loadPool();
+      const enabled = pool.wecomEnabled ?? false;
+      const publicDocs = pool.wecomPublicDocs ?? false;
+      const statusText =
+        lang === "zh"
+          ? `\ud83c\udfe2 企业微信集成\n${SEPARATOR}\n\n` +
+            `状态: ${enabled ? "\ud83d\udfe2 已开启" : "\u26aa 未开启"}\n` +
+            `公开文档: ${publicDocs ? "\ud83d\udfe2 是" : "\u26aa 否"}\n\n` +
+            (enabled
+              ? "\ud83d\udca1 Claude 可使用 wecom-cli 创建文档、日程、会议等\n" +
+                "发送 wecom-cli --help 给项目 bot 查看可用命令"
+              : "\ud83d\udca1 开启后，Claude 可通过企业微信创建文档、管理日程等")
+          : `\ud83c\udfe2 Enterprise WeChat Integration\n${SEPARATOR}\n\n` +
+            `Status: ${enabled ? "\ud83d\udfe2 Enabled" : "\u26aa Disabled"}\n` +
+            `Public docs: ${publicDocs ? "\ud83d\udfe2 Yes" : "\u26aa No"}\n\n` +
+            (enabled
+              ? "\ud83d\udca1 Claude can use wecom-cli for docs, calendar, meetings etc."
+              : "\ud83d\udca1 Enable to let Claude create docs and manage schedules via WeChat Work");
+      const toggleLabel = enabled
+        ? lang === "zh"
+          ? "\u23f8 关闭企微"
+          : "\u23f8 Disable"
+        : lang === "zh"
+          ? "\u25b6\ufe0f 开启企微"
+          : "\u25b6\ufe0f Enable";
+      const publicLabel = publicDocs
+        ? lang === "zh"
+          ? "\ud83d\udd12 文档改为私有"
+          : "\ud83d\udd12 Docs: private"
+        : lang === "zh"
+          ? "\ud83c\udf10 文档改为公开"
+          : "\ud83c\udf10 Docs: public";
+      const buttons = [
+        [{ text: toggleLabel, data: "m:wecom:toggle" }],
+        ...(enabled ? [[{ text: publicLabel, data: "m:wecom:public" }]] : []),
+        ...menuButton(lang),
+      ];
+      await edit(api, chatId, messageId, statusText, {
+        reply_markup: { inline_keyboard: buttons },
+      }).catch(() => {});
+      return true;
+    }
+
     case "lang":
       await showLanguageSelector(api, chatId, lang, messageId);
       return true;
@@ -314,6 +358,32 @@ async function handleMenuCallback(
       chatId,
       userId,
       "m:cron",
+      messageId,
+    );
+  }
+
+  // WeChat enterprise toggle/public
+  if (action === "wecom:toggle") {
+    const pool = loadPool();
+    savePool({ ...pool, wecomEnabled: !pool.wecomEnabled });
+    log(`CONFIG: wecomEnabled = ${!pool.wecomEnabled} by ${userId}`);
+    return await handleMenuCallback(
+      managed,
+      chatId,
+      userId,
+      "m:wecom",
+      messageId,
+    );
+  }
+  if (action === "wecom:public") {
+    const pool = loadPool();
+    savePool({ ...pool, wecomPublicDocs: !pool.wecomPublicDocs });
+    log(`CONFIG: wecomPublicDocs = ${!pool.wecomPublicDocs} by ${userId}`);
+    return await handleMenuCallback(
+      managed,
+      chatId,
+      userId,
+      "m:wecom",
       messageId,
     );
   }
