@@ -443,6 +443,20 @@ function buildSystemPrompt(project: string, dir: string): string | undefined {
     );
   }
 
+  // WeChat: wecom-cli for enterprise WeChat operations
+  if (getPlatform() === "wechat") {
+    parts.push(
+      "You have access to WeChat Work (企业微信) CLI tools via the Bash tool. " +
+        "Use `wecom-cli` commands for enterprise operations: " +
+        "doc (documents/spreadsheets), meeting (video conferences), " +
+        "schedule (calendar events), todo (task management), " +
+        "contact (member lookup), msg (messaging). " +
+        "Run `wecom-cli <command> --help` for usage details. " +
+        "Parameters are passed as JSON strings, e.g.: " +
+        '`wecom-cli doc create_doc \'{"spaceid":"...","name":"...","content":"..."}\'`',
+    );
+  }
+
   // File sending instruction — all platforms
   parts.push(
     "To send a file (image, PDF, etc.) to the user in the chat, include this marker in your text output: " +
