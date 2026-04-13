@@ -8,6 +8,7 @@ import {
   saveCron,
   savePool,
   getMasterName,
+  getPlatform,
 } from "../config.js";
 import { getConversation, clearConversation } from "./state.js";
 import { menuOwners } from "../state.js";
@@ -49,7 +50,11 @@ export async function showMainMenu(
     projectBots.length > 0
       ? projectBots
           .filter((b) => b.assignedProject)
-          .map((b) => `  \u2022 ${b.assignedProject} (@${b.username ?? "?"})`)
+          .map((b) =>
+            getPlatform() === "wechat"
+              ? `  \u2022 #${b.assignedProject}`
+              : `  \u2022 ${b.assignedProject} (@${b.username ?? "?"})`,
+          )
           .join("\n")
       : m.none;
 

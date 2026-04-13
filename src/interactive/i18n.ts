@@ -94,11 +94,17 @@ export function menuMsg(lang: Lang) {
         projects: "\ud83d\udcc2 项目:",
         none: "  (无)",
         textCmds: (master: string) =>
-          `\ud83d\udc51 主控: @${master}\n\n` +
-          "\ud83d\udcdd 文字命令（发给主控）:\n" +
-          "  search <关键词> \u2014 跨项目搜索\n" +
-          "  cron list / add / del \u2014 定时任务\n" +
-          "  menu \u2014 呼出此菜单",
+          isWeChat()
+            ? "\ud83d\udcdd 文字命令（直接发送）:\n" +
+              "  search <关键词> \u2014 跨项目搜索\n" +
+              "  cron list / add / del \u2014 定时任务\n" +
+              "  menu \u2014 呼出此菜单\n\n" +
+              "\ud83d\udca1 发送 #项目名 + 消息 切换项目"
+            : `\ud83d\udc51 主控: @${master}\n\n` +
+              "\ud83d\udcdd 文字命令（发给主控）:\n" +
+              "  search <关键词> \u2014 跨项目搜索\n" +
+              "  cron list / add / del \u2014 定时任务\n" +
+              "  menu \u2014 呼出此菜单",
         btnBots: "\ud83e\udd16 机器人",
         btnConfig: "\u2699\ufe0f 配置",
         btnUsers: "\ud83d\udc65 用户",
@@ -247,11 +253,17 @@ export function menuMsg(lang: Lang) {
         projects: "\ud83d\udcc2 Projects:",
         none: "  (none)",
         textCmds: (master: string) =>
-          `\ud83d\udc51 Master: @${master}\n\n` +
-          "\ud83d\udcdd Text commands (send to master):\n" +
-          "  search <keyword> \u2014 Search across projects\n" +
-          "  cron list / add / del \u2014 Scheduled tasks\n" +
-          "  menu \u2014 Show this menu",
+          isWeChat()
+            ? "\ud83d\udcdd Text commands (send directly):\n" +
+              "  search <keyword> \u2014 Search across projects\n" +
+              "  cron list / add / del \u2014 Scheduled tasks\n" +
+              "  menu \u2014 Show this menu\n\n" +
+              "\ud83d\udca1 Send #project + message to switch projects"
+            : `\ud83d\udc51 Master: @${master}\n\n` +
+              "\ud83d\udcdd Text commands (send to master):\n" +
+              "  search <keyword> \u2014 Search across projects\n" +
+              "  cron list / add / del \u2014 Scheduled tasks\n" +
+              "  menu \u2014 Show this menu",
         btnBots: "\ud83e\udd16 Bots",
         btnConfig: "\u2699\ufe0f Config",
         btnUsers: "\ud83d\udc65 Users",
