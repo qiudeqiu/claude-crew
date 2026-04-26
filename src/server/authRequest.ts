@@ -218,7 +218,9 @@ export async function handleAuthRequest(
     await managed.platform.editButtons(ownerChatId, imMsgId, timeoutText, []).catch(() => {});
   }
 
-  responded = true;
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ status }));
+  if (!res.writableEnded) {
+    responded = true;
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status }));
+  }
 }
