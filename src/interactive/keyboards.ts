@@ -3,7 +3,7 @@ import type { Platform, Button } from "../platform/types.js";
 import type { Lang } from "./i18n.js";
 import type { AdminPermission } from "../types.js";
 import { common, menuMsg } from "./i18n.js";
-import { hasPermission, getPlatform } from "../config.js";
+import { hasPermission, getPlatform, loadPool } from "../config.js";
 
 type Row = Button[];
 
@@ -140,16 +140,20 @@ export function mainMenuKeyboard(lang: Lang = "en", userId?: string): Row[] {
     { btn: { text: m.btnRestart, data: "m:restart" }, perm: "restart" },
   ];
 
+  const platform = getPlatform();
+
   const filterRow = (items: typeof gated): Button[] =>
     items
       .filter((g) => !userId || hasPermission(userId, g.perm))
+      // WeChat: hide "users" button (no per-bot allowedUsers support)
+      .filter((g) => !(platform === "wechat" && g.perm === "users"))
       .map((g) => g.btn);
 
   const row1 = filterRow(gated);
   const row2 = [{ text: m.btnStatus, data: "m:status" }, ...filterRow(gated2)];
   const row3: Button[] = [{ text: m.btnLang, data: "m:lang" }];
   // WeChat only: docs capability before help
-  if (getPlatform() === "wechat") {
+  if (platform === "wechat") {
     row3.push({ text: "\ud83d\udcc4 文档能力", data: "m:wecom" });
   }
   row3.push({ text: m.btnHelp, data: "m:help" });
@@ -157,6 +161,11 @@ export function mainMenuKeyboard(lang: Lang = "en", userId?: string): Row[] {
   const rows: Row[] = [];
   if (row1.length > 0) rows.push(row1);
   if (row2.length > 0) rows.push(row2);
+  // Telegram/Feishu only: push toggle on its own row to avoid truncation
+  if (platform !== "wechat" && platform !== "discord") {
+    const pushEnabled = loadPool().pushAuthEnabled ?? false;
+    rows.push([{ text: pushEnabled ? m.btnPushAuthOn : m.btnPushAuthOff, data: "m:pushauth" }]);
+  }
   rows.push(row3);
   return rows;
 }

@@ -26,6 +26,14 @@ while true; do
   fi
 
   LAST_START=$NOW
+  # Inherit system HTTPS proxy if not already set
+  if [ -z "$HTTPS_PROXY" ] && [ -z "$ALL_PROXY" ]; then
+    SYS_PROXY=$(scutil --proxy 2>/dev/null | awk '/HTTPSProxy/{p=$3} /HTTPSPort/{port=$3} END{if(p && port) print "http://" p ":" port}')
+    if [ -n "$SYS_PROXY" ]; then
+      export HTTPS_PROXY="$SYS_PROXY"
+      export ALL_PROXY="$SYS_PROXY"
+    fi
+  fi
   cd "$DAEMON_DIR" && bun run "$DAEMON_SCRIPT"
   EXIT_CODE=$?
 

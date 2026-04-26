@@ -33,6 +33,7 @@ export const CRON_CHECK_INTERVAL_MS = 60_000;
 export const TYPING_INTERVAL_MS = 4_000;
 export const PROGRESS_THROTTLE_MS = 2_000;
 export const APPROVAL_TIMEOUT_MS = 120_000;
+export const DAEMON_HTTP_PORT = parseInt(process.env.CLAW_DAEMON_PORT ?? "3210", 10);
 export const BOT_START_STAGGER_MS = 2_000;
 export const CONVERSATION_TTL_MS = 300_000;
 export const CONVERSATION_CLEANUP_MS = 60_000;
@@ -160,6 +161,8 @@ export function loadPool(): BotPool {
       sessionMode: raw.sessionMode,
       wecomEnabled: raw.wecomEnabled,
       wecomPublicDocs: raw.wecomPublicDocs,
+      pushAuthEnabled: raw.pushAuthEnabled,
+      pushAuthFailMode: raw.pushAuthFailMode,
     };
   }
 
@@ -199,6 +202,8 @@ export function savePool(pool: BotPool): void {
     sessionMode: pool.sessionMode,
     wecomEnabled: pool.wecomEnabled,
     wecomPublicDocs: pool.wecomPublicDocs,
+    pushAuthEnabled: pool.pushAuthEnabled,
+    pushAuthFailMode: pool.pushAuthFailMode,
   };
 
   writeFileSync(POOL_FILE, JSON.stringify(updated, null, 2) + "\n", {

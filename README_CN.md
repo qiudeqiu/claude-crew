@@ -98,6 +98,7 @@
 |------|---------------------|
 | 空闲断连 | 无状态拉取架构 — 永不超时断连 |
 | 权限审批远程不可达 | approve 按钮直接发到群聊 |
+| 本机 CLI 任务授权提示卡住无人处理 | 开启**本地 CLI 授权推送** — 离开电脑时审批请求转发到 IM |
 | 缺少推送通知 | 每条 bot 回复自动推送到手机 |
 | 单仓库限制 | 一个 bot 一个项目，无限项目 |
 | 需要保持终端 / tmux | 内置 daemon + watchdog + 开机自启 |
@@ -375,6 +376,8 @@ bash scripts/daemon.sh restart
 | 切换项目 | 用另一个 `#标签` | `#web 更新首页` |
 | 管理操作 | 发送关键词 | `menu`、`bots`、`config` |
 
+> **注意**：微信 iLink Bot 基于企业微信私聊模型，不支持 per-bot `allowedUsers` 用户管理功能。所有企业成员均可使用 bot，访问控制通过管理员权限（`admins`）实现。
+
 ### 引用消息
 
 回复一条消息的同时 @机器人时，引用内容会自动包含：
@@ -393,13 +396,13 @@ bash scripts/daemon.sh restart
 | `@主控 setup` | 首次设置向导 |
 | `@主控 bots` | 管理项目机器人（添加/删除/配置） |
 | `@主控 config` | 通过按钮编辑全局设置 |
-| `@主控 users` | 管理管理员和用户权限 |
+| `@主控 users` | 管理管理员和用户权限（微信不支持） |
 | `@主控 status` | 强制刷新项目看板 |
 | `@主控 search <关键词>` | 跨项目搜索代码 |
 | `@主控 restart` | 重启 daemon（重新加载配置） |
 | `@主控 cron list` | 查看定时任务 |
-| `@主控 cron add @bot HH:MM 任务` | 每天定时执行 |
-| `@主控 cron add @bot */N 任务` | 每 N 分钟执行 |
+| `@主控 cron add @bot HH:MM 任务` | 每天定时执行（微信用 `#项目名`） |
+| `@主控 cron add @bot */N 任务` | 每 N 分钟执行（微信用 `#项目名`） |
 | `@主控 cron del <id>` | 删除定时任务 |
 
 > 菜单支持中英文切换，通过菜单中的「语言」按钮切换。
@@ -467,6 +470,38 @@ daemon.sh no-autostart   # 禁用开机自启
 | **成员**（在 `allowedUsers` 中） | 包含此用户 | ✅ | 该 bot 的 `accessLevel` + `permissionMode` |
 | **成员**（不在列表中） | 未包含此用户 | ❌ | 无权限 |
 | **其他人** | 任意 | ❌ | 拒绝并提示 |
+
+### 本地 CLI 授权推送
+
+> 仅 Telegram 和飞书支持。微信因平台限制无法主动推送，不支持此功能。
+
+当你**不在电脑旁**但本机有 Claude CLI 任务在运行时，授权提示会默默卡在终端无人处理。**本地 CLI 授权推送**将这些请求转发到 IM，让你远程审批。
+
+在主菜单切换：**🔔 本地 CLI 授权推送**。
+
+**工作原理：**
+
+1. `~/.claude/settings.json` 中的 `PreToolUse` Hook 拦截每次工具调用
+2. 将请求发送到 `localhost:3210` 上的 daemon
+3. Daemon 推送一条带**允许 / 拒绝**按钮的 IM 消息
+4. 你的决定在 120 秒内回传给 CLI
+
+**与 `permissionMode` 的区别：**
+
+| | `permissionMode` | 本地 CLI 授权推送 |
+|--|-----------------|-----------------|
+| **适用于** | 从 IM 发起的任务 | 本机 CLI 会话中运行的任务 |
+| **在哪里审批** | 任务所在的 IM 群聊 | IM，无论任务在哪里运行 |
+| **如何控制** | 在配置中按 bot 或全局设置 | 在主菜单切换 |
+
+**推送失败时的行为** — 在二级菜单中配置：
+
+| 模式 | 行为 |
+|------|------|
+| `open`（默认） | 推送失败或 IM 不可达时，操作自动通过 |
+| `block` | 推送失败时拒绝操作，Claude 任务中止 |
+
+> **提示：** 回到电脑旁后记得关闭，避免重复收到审批推送。
 
 ### bot-pool.json
 
@@ -539,6 +574,8 @@ daemon.sh no-autostart   # 禁用开机自启
 | `sessionTimeoutMinutes` | `10` | 单次 Claude 调用最大时长（分钟），超时自动终止。 |
 | `dashboardIntervalMinutes` | `30` | 置顶看板自动刷新间隔（分钟），修改需重启。 |
 | `masterExecute` | `false` | 允许 master bot 也执行 Claude 任务（不仅限管理命令）。 |
+| `pushAuthEnabled` | `false` | 将本机 Claude CLI 的授权请求转发到 IM 远程审批。在菜单中切换。仅 Telegram 和飞书支持。 |
+| `pushAuthFailMode` | `"open"` | 推送失败或 IM 不可达时的行为。`"open"` = 自动放行（默认）。`"block"` = 拒绝并中断任务。 |
 
 #### 单 Bot 配置
 

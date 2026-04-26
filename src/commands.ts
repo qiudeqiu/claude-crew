@@ -60,26 +60,27 @@ export function handleMasterCommand(
     );
   }
 
-  // Support both: cron add HH:MM task @bot  AND  cron add @bot HH:MM task
+  // Support: cron add @bot HH:MM task  /  cron add HH:MM task @bot  /  cron add #tag HH:MM task (WeChat)
   const cronAddOld = stripped.match(
     /^cron\s+add\s+@([\w-]+)\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)$/i,
   );
   const cronAddNew = stripped.match(
     /^cron\s+add\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)\s+@([\w-]+)$/i,
   );
+  const cronAddTag = stripped.match(
+    /^cron\s+add\s+#([\w-]+)\s+(\d{1,2}:\d{2}|\*\/\d+)\s+(.+)$/i,
+  );
   const cronAddMatch = cronAddOld
-    ? { botUser: cronAddOld[1], schedule: cronAddOld[2], prompt: cronAddOld[3] }
+    ? { botUser: cronAddOld[1], schedule: cronAddOld[2], prompt: cronAddOld[3], byTag: false }
     : cronAddNew
-      ? {
-          botUser: cronAddNew[3],
-          schedule: cronAddNew[1],
-          prompt: cronAddNew[2],
-        }
-      : null;
+      ? { botUser: cronAddNew[3], schedule: cronAddNew[1], prompt: cronAddNew[2], byTag: false }
+      : cronAddTag
+        ? { botUser: cronAddTag[1], schedule: cronAddTag[2], prompt: cronAddTag[3], byTag: true }
+        : null;
   if (cronAddMatch) {
-    const { botUser, schedule, prompt } = cronAddMatch;
+    const { botUser, schedule, prompt, byTag } = cronAddMatch;
 
-    // Resolve: accept both Telegram username and project name
+    // Resolve: accept @username, project name, or #tag (WeChat)
     const pool = loadPool();
     let resolvedUsername = botUser!;
     const directMatch = pool.bots.find(
@@ -92,7 +93,8 @@ export function handleMasterCommand(
       if (byProject?.username) {
         resolvedUsername = byProject.username;
       } else {
-        return `\u26a0\ufe0f Bot not found: @${botUser}\nUse the Telegram username or project name.`;
+        const prefix = byTag ? "#" : "@";
+        return `\u26a0\ufe0f Bot not found: ${prefix}${botUser}\nUse the bot username, project name, or #tag.`;
       }
     }
 

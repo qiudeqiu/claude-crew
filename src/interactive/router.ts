@@ -30,7 +30,7 @@ import {
 import { getLang, menuMsg, langMsg, common, type Lang } from "./i18n.js";
 import { updateDashboard } from "../dashboard.js";
 
-const INTERACTIVE_PREFIXES = ["o:", "b:", "c:", "u:", "m:", "x:"];
+const INTERACTIVE_PREFIXES = ["o:", "b:", "c:", "u:", "m:", "x:", "auth:"];
 
 // ── Main menu ──
 
@@ -106,6 +106,29 @@ export async function routeCallback(
   }
   if (!owner) {
     menuOwners.set(msgKey, userId);
+  }
+
+  // Auth request callbacks (auth:allow:<id> / auth:deny:<id>)
+  if (data.startsWith("auth:")) {
+    const parts = data.split(":");
+    const decision = parts[1] as "allow" | "deny";
+    const id = parts[2];
+    if ((decision === "allow" || decision === "deny") && id) {
+      const { resolveAuthRequest } = await import("../server/authRequestStore.js");
+      const req = resolveAuthRequest(id, decision);
+      const lang = getLang();
+      if (!req) {
+        const msg = lang === "zh" ? "已处理或已超时" : "Already handled or timed out";
+        if (cbId) await managed.platform.answerCallback(cbId, msg).catch(() => {});
+        return true;
+      }
+      const doneText = decision === "allow"
+        ? (lang === "zh" ? `✅ 已允许 — ${req.toolName}` : `✅ Allowed — ${req.toolName}`)
+        : (lang === "zh" ? `❌ 已拒绝 — ${req.toolName}` : `❌ Denied — ${req.toolName}`);
+      await managed.platform.editButtons(chatId, messageId, doneText, []).catch(() => {});
+      if (cbId) await managed.platform.answerCallback(cbId, "").catch(() => {});
+    }
+    return true;
   }
 
   if (data.startsWith("o:")) {
@@ -282,6 +305,81 @@ async function handleMenuCallback(
       ];
       await edit(api, chatId, messageId, statusText, {
         reply_markup: { inline_keyboard: buttons },
+      }).catch(() => {});
+      return true;
+    }
+
+    case "pushauth": {
+      const pool = loadPool();
+      const m = menuMsg(lang);
+      const enabled = pool.pushAuthEnabled ?? false;
+      const failMode = pool.pushAuthFailMode ?? "open";
+      const toggleBtn = enabled
+        ? { text: m.btnPushAuthToggleOff, data: "m:pushauth:toggle" }
+        : { text: m.btnPushAuthToggleOn, data: "m:pushauth:toggle" };
+      const failOpenBtn = { text: `${failMode === "open" ? "✓ " : ""}${m.btnFailOpen}`, data: "m:pushauth:failopen" };
+      const failBlockBtn = { text: `${failMode === "block" ? "✓ " : ""}${m.btnFailBlock}`, data: "m:pushauth:failblock" };
+      await edit(api, chatId, messageId, m.pushAuthSubmenu, {
+        reply_markup: {
+          inline_keyboard: [
+            [toggleBtn],
+            [failOpenBtn],
+            [failBlockBtn],
+            ...menuButton(lang),
+          ],
+        },
+      }).catch(() => {});
+      return true;
+    }
+
+    case "pushauth:toggle": {
+      const pool = loadPool();
+      const m = menuMsg(lang);
+      const enabling = !(pool.pushAuthEnabled ?? false);
+      savePool({ ...pool, pushAuthEnabled: enabling });
+      if (enabling) await send(api, chatId, m.pushAuthEnabled);
+      // Refresh submenu
+      const updated = loadPool();
+      const failMode = updated.pushAuthFailMode ?? "open";
+      const toggleBtn = enabling
+        ? { text: m.btnPushAuthToggleOff, data: "m:pushauth:toggle" }
+        : { text: m.btnPushAuthToggleOn, data: "m:pushauth:toggle" };
+      const failOpenBtn = { text: `${failMode === "open" ? "✓ " : ""}${m.btnFailOpen}`, data: "m:pushauth:failopen" };
+      const failBlockBtn = { text: `${failMode === "block" ? "✓ " : ""}${m.btnFailBlock}`, data: "m:pushauth:failblock" };
+      await edit(api, chatId, messageId, m.pushAuthSubmenu, {
+        reply_markup: {
+          inline_keyboard: [
+            [toggleBtn],
+            [failOpenBtn],
+            [failBlockBtn],
+            ...menuButton(lang),
+          ],
+        },
+      }).catch(() => {});
+      return true;
+    }
+
+    case "pushauth:failopen":
+    case "pushauth:failblock": {
+      const pool = loadPool();
+      const m = menuMsg(lang);
+      const newMode = action === "pushauth:failopen" ? "open" : "block";
+      savePool({ ...pool, pushAuthFailMode: newMode });
+      const enabled = pool.pushAuthEnabled ?? false;
+      const toggleBtn = enabled
+        ? { text: m.btnPushAuthToggleOff, data: "m:pushauth:toggle" }
+        : { text: m.btnPushAuthToggleOn, data: "m:pushauth:toggle" };
+      const failOpenBtn = { text: `${newMode === "open" ? "✓ " : ""}${m.btnFailOpen}`, data: "m:pushauth:failopen" };
+      const failBlockBtn = { text: `${newMode === "block" ? "✓ " : ""}${m.btnFailBlock}`, data: "m:pushauth:failblock" };
+      await edit(api, chatId, messageId, m.pushAuthSubmenu, {
+        reply_markup: {
+          inline_keyboard: [
+            [toggleBtn],
+            [failOpenBtn],
+            [failBlockBtn],
+            ...menuButton(lang),
+          ],
+        },
       }).catch(() => {});
       return true;
     }

@@ -2,7 +2,7 @@
 import type { Platform } from "../platform/types.js";
 import type { Button } from "../platform/types.js";
 import type { ManagedBot } from "../types.js";
-import { loadPool, savePool, hasPermission } from "../config.js";
+import { loadPool, savePool, hasPermission, getPlatform } from "../config.js";
 import { log } from "../logger.js";
 import {
   getConversation,
@@ -188,7 +188,7 @@ export async function showGlobalConfig(
     `\u23f0 sessionTimeout: ${pool.sessionTimeoutMinutes ?? 10} min\n   ${fd.st}\n\n` +
     `\ud83d\udcca dashboardInterval: ${pool.dashboardIntervalMinutes ?? 30} min \u26a1\n   ${fd.di}\n\n` +
     `\ud83e\udd16 model: ${pool.model || "(default)"}\n   ${fd.md}\n\n` +
-    `\ud83d\udd10 approvers: ${pool.approvers?.length ? pool.approvers.join(", ") : "(any admin)"}\n   ${fd.ap_list}\n\n` +
+    (getPlatform() !== "wechat" ? `\ud83d\udd10 approvers: ${pool.approvers?.length ? pool.approvers.join(", ") : "(any admin)"}\n   ${fd.ap_list}\n\n` : "") +
     `\ud83d\udd04 sessionMode: ${pool.sessionMode ?? "continue"}\n   ${fd.sm}`;
 
   const buttons: Button[][] = [
@@ -206,10 +206,9 @@ export async function showGlobalConfig(
       { text: "dashboardInterval \u26a1", data: "c:ge:di" },
       { text: "model", data: "c:ge:md" },
     ],
-    [
-      { text: "approvers", data: "c:ge:ap_list" },
-      { text: "sessionMode", data: "c:ge:sm" },
-    ],
+    ...(getPlatform() !== "wechat"
+      ? [[{ text: "approvers", data: "c:ge:ap_list" }, { text: "sessionMode", data: "c:ge:sm" }]]
+      : [[{ text: "sessionMode", data: "c:ge:sm" }]]),
     ...menuButton(lang),
   ];
 

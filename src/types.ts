@@ -51,6 +51,16 @@ export type BotPool = {
   approvers?: string[];
   /** Session context mode: "continue" resumes last session, "fresh" starts clean each time. */
   sessionMode?: "continue" | "fresh";
+  /** Whether to push local CLI auth requests to IM for remote approval. Default false. */
+  pushAuthEnabled?: boolean;
+  /** Behavior when push fails or daemon unreachable: "open" = auto-allow, "block" = deny. Default "open". */
+  pushAuthFailMode?: "open" | "block";
+  /** WeChat only: enterprise WeChat (wecom-cli) integration enabled. */
+  wecomEnabled?: boolean;
+  /** WeChat only: create documents with public link (viewable without enterprise WeChat). */
+  wecomPublicDocs?: boolean;
+  /** Whether to push local CLI auth requests to IM for remote approval. Default false. */
+  pushAuthEnabled?: boolean;
 };
 
 /** Platform-specific section in the on-disk config. */
@@ -83,6 +93,10 @@ export type RawBotPool = {
   language?: string;
   model?: string;
   sessionMode?: "continue" | "fresh";
+  wecomEnabled?: boolean;
+  wecomPublicDocs?: boolean;
+  pushAuthEnabled?: boolean;
+  pushAuthFailMode?: "open" | "block";
 };
 
 export type ManagedBot = {

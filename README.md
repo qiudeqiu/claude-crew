@@ -98,6 +98,7 @@ Use `/new` to reset when context gets stale, `/compact` to compress without losi
 |-----------|--------------------------|
 | Connection drops after idle | Stateless pull architecture — no idle timeout, ever |
 | Permission prompts unreachable remotely | Approve buttons sent directly to group chat |
+| Local CLI auth prompts block the terminal | Enable **Local CLI Auth Push** — approval requests forwarded to IM while you're away |
 | No push notifications | Every bot reply pushes to your phone |
 | Single repo limitation | One bot per project, unlimited projects |
 | Requires active terminal / tmux | Built-in daemon + watchdog + auto-start |
@@ -377,6 +378,8 @@ bash scripts/daemon.sh restart
 | Switch project | Use a different `#tag` | `#web update the homepage` |
 | Management | Send keyword | `menu`, `bots`, `config` |
 
+> **Note**: WeChat iLink Bot uses a private DM model — per-bot `allowedUsers` is not supported. All organization members can access the bot; access control is managed via admin permissions (`admins`).
+
 ### Master Bot Commands
 
 All master commands are accessible via **button menu** or text. Send `menu` to the master bot to open.
@@ -387,13 +390,13 @@ All master commands are accessible via **button menu** or text. Send `menu` to t
 | `@master setup` | First-time setup wizard |
 | `@master bots` | Manage project bots (add/remove/configure) |
 | `@master config` | Edit global settings via buttons |
-| `@master users` | Manage admins & per-bot users |
+| `@master users` | Manage admins & per-bot users (not supported on WeChat) |
 | `@master status` | Force-refresh project dashboard |
 | `@master search <keyword>` | Grep across all projects |
 | `@master restart` | Restart daemon (reloads config) |
 | `@master cron list` | List scheduled tasks |
-| `@master cron add @bot HH:MM task` | Daily task at HH:MM |
-| `@master cron add @bot */N task` | Every N minutes |
+| `@master cron add @bot HH:MM task` | Daily task at HH:MM (WeChat: use `#tag`) |
+| `@master cron add @bot */N task` | Every N minutes (WeChat: use `#tag`) |
 | `@master cron del <id>` | Delete task |
 
 > The menu supports English and Chinese. Switch language via the `Lang` button in the menu.
@@ -463,6 +466,38 @@ Combined with access control:
 | **Member** (in `allowedUsers`) | Lists this user | ✅ | Bot's `accessLevel` + `permissionMode` |
 | **Member** (not in list) | Doesn't list user | ❌ | No access |
 | **Others** | Any | ❌ | Rejected with permission hint |
+
+### Local CLI Auth Push
+
+> Telegram and Feishu only. WeChat cannot push proactively due to platform limitations.
+
+When you're **away from your computer** but have a Claude CLI task running locally, authorization prompts would normally block silently in the terminal. **Local CLI Auth Push** forwards those prompts to your IM so you can approve or deny them remotely.
+
+Toggle it from the main menu: **🔔 Local CLI Auth Push**.
+
+**How it works:**
+
+1. A `PreToolUse` hook in `~/.claude/settings.json` intercepts every tool call
+2. It sends the request to the daemon over `localhost:3210`
+3. The daemon pushes an approval message to your IM with **Allow / Deny** buttons
+4. Your decision is relayed back to the CLI within 120 seconds
+
+**Key distinctions:**
+
+| | `permissionMode` | Local CLI Auth Push |
+|--|-----------------|---------------------|
+| **Applies to** | Tasks initiated from IM | Tasks running in a local CLI session |
+| **Where approved** | In the IM chat where the task was started | In IM, regardless of where the task runs |
+| **Who controls it** | Set per-bot or globally in config | Toggle in main menu |
+
+**Failure behavior** — configurable in the submenu:
+
+| Mode | Behavior |
+|------|----------|
+| `open` (default) | If push fails or IM is unreachable, the action auto-proceeds |
+| `block` | If push fails, the action is denied and the Claude task is interrupted |
+
+> **Tip:** Turn this off when you're back at your computer to avoid duplicate approval prompts.
 
 ### bot-pool.json
 
@@ -535,6 +570,8 @@ All configurable via `@master config` button menu or directly in `bot-pool.json`
 | `sessionTimeoutMinutes` | `10` | Maximum duration per Claude invocation. Auto-killed if exceeded. |
 | `dashboardIntervalMinutes` | `30` | Dashboard auto-refresh interval (requires restart to change). |
 | `masterExecute` | `false` | Allow master bot to also run Claude tasks (not just admin commands). |
+| `pushAuthEnabled` | `false` | Forward local Claude CLI authorization requests to IM for remote approval. Toggle via menu. Telegram and Feishu only. |
+| `pushAuthFailMode` | `"open"` | Behavior when push fails or IM is unreachable. `"open"` = auto-allow (default). `"block"` = deny and interrupt the task. |
 
 #### Per-Bot Settings
 

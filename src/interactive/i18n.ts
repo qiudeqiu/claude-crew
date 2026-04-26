@@ -113,6 +113,24 @@ export function menuMsg(lang: Lang) {
         btnRestart: "\ud83d\udd04 重启",
         btnLang: "\ud83c\udf10 语言",
         btnHelp: "\ud83d\udcd6 指南",
+        btnPushAuthOn: "\ud83d\udd14 本地授权推送: 开启",
+        btnPushAuthOff: "\ud83d\udd15 本地授权推送: 关闭",
+        pushAuthEnabled:
+          "\ud83d\udd14 本地 CLI 授权推送已开启\n\n" +
+          "你在本机运行的 Claude 任务遇到需要确认的操作，\n" +
+          "会推送到这里让你审批。\n\n" +
+          "回到电脑后建议关闭，避免重复打扰。",
+        pushAuthSubmenu:
+          "\ud83d\udd14 本地 CLI 授权推送\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "当你不在电脑旁时，本机运行的 Claude 任务遇到需要确认的操作，\n" +
+          "会推送到这里让你远程审批。\n\n" +
+          "\u26a0\ufe0f 推送失败时的行为：\n" +
+          "\u2022 自动放行：推送失败或无法送达时，操作自动通过（适合信任环境）\n" +
+          "\u2022 保持中断：推送失败时操作被拒绝，Claude 任务中止（适合安全优先）",
+        btnFailOpen: "\u2705 自动放行（推荐）",
+        btnFailBlock: "\ud83d\udd12 保持中断",
+        btnPushAuthToggleOn: "\ud83d\udd14 开启推送",
+        btnPushAuthToggleOff: "\ud83d\udd15 关闭推送",
         helpText:
           "\ud83d\udcd6 使用指南\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
           `每个项目一个专属 bot，${mentionBot("zh")} 即可调度任务。\n` +
@@ -129,7 +147,8 @@ export function menuMsg(lang: Lang) {
           "  menu \u2014 打开管理菜单\n" +
           "  bots \u2014 管理项目 Bot\n" +
           "  config \u2014 全局配置\n" +
-          "  users \u2014 管理管理员和用户\n\n" +
+          (isWeChat() ? "" : "  users \u2014 管理管理员和用户\n") +
+          "\n" +
           (isWeChat()
             ? "其他命令:\n"
             : `文字命令（需 ${mentionMaster("zh")} + 命令）:\n`) +
@@ -222,30 +241,52 @@ export function menuMsg(lang: Lang) {
         restarting: "\ud83d\udd04 正在重启...",
         started: "\u2705 主控机器人已上线",
         noTasks: (master: string) =>
-          "\ud83d\udccb 没有定时任务\n\n" +
-          "\u2139\ufe0f 所有 cron 命令需 @主控 发送\n\n" +
-          "语法:\n" +
-          `  @${master} cron add @项目bot HH:MM 任务描述\n` +
-          "    \u2514 每天定时执行\n" +
-          `  @${master} cron add @项目bot */N 任务描述\n` +
-          "    \u2514 每 N 分钟执行一次\n\n" +
-          "示例:\n" +
-          `  @${master} cron add @api_bot 09:00 跑测试并汇报\n` +
-          `  @${master} cron add @monitor_bot */30 检查服务状态\n\n` +
-          "管理:\n" +
-          `  @${master} cron list \u2014 查看任务\n` +
-          `  @${master} cron del <id> \u2014 删除任务`,
+          isWeChat()
+            ? "\ud83d\udccb 没有定时任务\n\n" +
+              "语法:\n" +
+              "  cron add #项目名 HH:MM 任务描述\n" +
+              "    \u2514 每天定时执行\n" +
+              "  cron add #项目名 */N 任务描述\n" +
+              "    \u2514 每 N 分钟执行一次\n\n" +
+              "示例:\n" +
+              "  cron add #api 09:00 跑测试并汇报\n" +
+              "  cron add #monitor */30 检查服务状态\n\n" +
+              "管理:\n" +
+              "  cron list \u2014 查看任务\n" +
+              "  cron del <id> \u2014 删除任务"
+            : "\ud83d\udccb 没有定时任务\n\n" +
+              "\u2139\ufe0f 所有 cron 命令需 @主控 发送\n\n" +
+              "语法:\n" +
+              `  @${master} cron add @项目bot HH:MM 任务描述\n` +
+              "    \u2514 每天定时执行\n" +
+              `  @${master} cron add @项目bot */N 任务描述\n` +
+              "    \u2514 每 N 分钟执行一次\n\n" +
+              "示例:\n" +
+              `  @${master} cron add @api_bot 09:00 跑测试并汇报\n` +
+              `  @${master} cron add @monitor_bot */30 检查服务状态\n\n` +
+              "管理:\n" +
+              `  @${master} cron list \u2014 查看任务\n` +
+              `  @${master} cron del <id> \u2014 删除任务`,
         tasksTitle: "\ud83d\udccb 定时任务",
         last: "上次",
         cronGuide: (master: string) =>
-          "语法:\n" +
-          `  @${master} cron add @项目bot HH:MM 任务描述\n` +
-          "    \u2514 每天定时执行\n" +
-          `  @${master} cron add @项目bot */N 任务描述\n` +
-          "    \u2514 每 N 分钟执行一次\n\n" +
-          "管理:\n" +
-          `  @${master} cron list \u2014 查看任务\n` +
-          `  @${master} cron del <id> \u2014 删除任务`,
+          isWeChat()
+            ? "语法:\n" +
+              "  cron add #项目名 HH:MM 任务描述\n" +
+              "    \u2514 每天定时执行\n" +
+              "  cron add #项目名 */N 任务描述\n" +
+              "    \u2514 每 N 分钟执行一次\n\n" +
+              "管理:\n" +
+              "  cron list \u2014 查看任务\n" +
+              "  cron del <id> \u2014 删除任务"
+            : "语法:\n" +
+              `  @${master} cron add @项目bot HH:MM 任务描述\n` +
+              "    \u2514 每天定时执行\n" +
+              `  @${master} cron add @项目bot */N 任务描述\n` +
+              "    \u2514 每 N 分钟执行一次\n\n" +
+              "管理:\n" +
+              `  @${master} cron list \u2014 查看任务\n` +
+              `  @${master} cron del <id> \u2014 删除任务`,
       }
     : {
         title: "\ud83e\udd16 Claude Crew",
@@ -272,6 +313,24 @@ export function menuMsg(lang: Lang) {
         btnRestart: "\ud83d\udd04 Restart",
         btnLang: "\ud83c\udf10 Lang",
         btnHelp: "\ud83d\udcd6 Guide",
+        btnPushAuthOn: "\ud83d\udd14 Local Auth Push: On",
+        btnPushAuthOff: "\ud83d\udd15 Local Auth Push: Off",
+        pushAuthEnabled:
+          "\ud83d\udd14 Local CLI Auth Push enabled\n\n" +
+          "When Claude running on your machine needs to confirm an action,\n" +
+          "it will push the request here for your approval.\n\n" +
+          "Remember to turn it off when you\'re back at your computer.",
+        pushAuthSubmenu:
+          "\ud83d\udd14 Local CLI Auth Push\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
+          "When you're away from your computer, Claude tasks running locally\n" +
+          "will push authorization requests here for remote approval.\n\n" +
+          "\u26a0\ufe0f Behavior when push fails:\n" +
+          "\u2022 Auto-allow: if push fails or is unreachable, the action proceeds automatically (for trusted environments)\n" +
+          "\u2022 Stay blocked: if push fails, the action is denied and the Claude task is interrupted (security-first)",
+        btnFailOpen: "\u2705 Auto-allow (recommended)",
+        btnFailBlock: "\ud83d\udd12 Stay blocked",
+        btnPushAuthToggleOn: "\ud83d\udd14 Enable push",
+        btnPushAuthToggleOff: "\ud83d\udd15 Disable push",
         helpText:
           "\ud83d\udcd6 User Guide\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n" +
           `Each project gets a dedicated bot. ${mentionBot("en", "project")} to dispatch tasks.\n` +
@@ -288,7 +347,8 @@ export function menuMsg(lang: Lang) {
           "  menu \u2014 Open management menu\n" +
           "  bots \u2014 Manage project bots\n" +
           "  config \u2014 Global settings\n" +
-          "  users \u2014 Manage admins & users\n\n" +
+          (isWeChat() ? "" : "  users \u2014 Manage admins & users\n") +
+          "\n" +
           (isWeChat()
             ? "Other commands:\n"
             : `Text commands (${mentionMaster("en", master)} + command):\n`) +
@@ -376,30 +436,52 @@ export function menuMsg(lang: Lang) {
         restarting: "\ud83d\udd04 Restarting daemon...",
         started: "\u2705 Master bot is online",
         noTasks: (master: string) =>
-          "\ud83d\udccb No scheduled tasks\n\n" +
-          "\u2139\ufe0f All cron commands must be @sent to master\n\n" +
-          "Syntax:\n" +
-          `  @${master} cron add @bot HH:MM task\n` +
-          "    \u2514 Run daily at HH:MM\n" +
-          `  @${master} cron add @bot */N task\n` +
-          "    \u2514 Run every N minutes\n\n" +
-          "Examples:\n" +
-          `  @${master} cron add @api_bot 09:00 run tests\n` +
-          `  @${master} cron add @monitor_bot */30 health check\n\n` +
-          "Manage:\n" +
-          `  @${master} cron list \u2014 View tasks\n` +
-          `  @${master} cron del <id> \u2014 Delete a task`,
+          isWeChat()
+            ? "\ud83d\udccb No scheduled tasks\n\n" +
+              "Syntax:\n" +
+              "  cron add #project HH:MM task\n" +
+              "    \u2514 Run daily at HH:MM\n" +
+              "  cron add #project */N task\n" +
+              "    \u2514 Run every N minutes\n\n" +
+              "Examples:\n" +
+              "  cron add #api 09:00 run tests\n" +
+              "  cron add #monitor */30 health check\n\n" +
+              "Manage:\n" +
+              "  cron list \u2014 View tasks\n" +
+              "  cron del <id> \u2014 Delete a task"
+            : "\ud83d\udccb No scheduled tasks\n\n" +
+              "\u2139\ufe0f All cron commands must be @sent to master\n\n" +
+              "Syntax:\n" +
+              `  @${master} cron add @bot HH:MM task\n` +
+              "    \u2514 Run daily at HH:MM\n" +
+              `  @${master} cron add @bot */N task\n` +
+              "    \u2514 Run every N minutes\n\n" +
+              "Examples:\n" +
+              `  @${master} cron add @api_bot 09:00 run tests\n` +
+              `  @${master} cron add @monitor_bot */30 health check\n\n` +
+              "Manage:\n" +
+              `  @${master} cron list \u2014 View tasks\n` +
+              `  @${master} cron del <id> \u2014 Delete a task`,
         tasksTitle: "\ud83d\udccb Scheduled Tasks",
         last: "Last",
         cronGuide: (master: string) =>
-          "Syntax:\n" +
-          `  @${master} cron add @bot HH:MM task\n` +
-          "    \u2514 Run daily at HH:MM\n" +
-          `  @${master} cron add @bot */N task\n` +
-          "    \u2514 Run every N minutes\n\n" +
-          "Manage:\n" +
-          `  @${master} cron list \u2014 View tasks\n` +
-          `  @${master} cron del <id> \u2014 Delete task`,
+          isWeChat()
+            ? "Syntax:\n" +
+              "  cron add #project HH:MM task\n" +
+              "    \u2514 Run daily at HH:MM\n" +
+              "  cron add #project */N task\n" +
+              "    \u2514 Run every N minutes\n\n" +
+              "Manage:\n" +
+              "  cron list \u2014 View tasks\n" +
+              "  cron del <id> \u2014 Delete task"
+            : "Syntax:\n" +
+              `  @${master} cron add @bot HH:MM task\n` +
+              "    \u2514 Run daily at HH:MM\n" +
+              `  @${master} cron add @bot */N task\n` +
+              "    \u2514 Run every N minutes\n\n" +
+              "Manage:\n" +
+              `  @${master} cron list \u2014 View tasks\n` +
+              `  @${master} cron del <id> \u2014 Delete task`,
       };
 }
 

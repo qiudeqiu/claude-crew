@@ -13,6 +13,7 @@ import { DiscordAdapter } from "./platform/discord/adapter.js";
 import { FeishuAdapter } from "./platform/feishu/adapter.js";
 import { WeChatRouter, WeChatBotAdapter } from "./platform/wechat/adapter.js";
 import { registerPlatformHandlers } from "./handler.js";
+import { createServer } from "http";
 import {
   mkdirSync,
   existsSync,
@@ -39,6 +40,7 @@ import {
   RESTART_NOTIFY_DELAY_MS,
   CRON_CHECK_INTERVAL_MS,
   CONVERSATION_CLEANUP_MS,
+  DAEMON_HTTP_PORT,
 } from "./config.js";
 import { log } from "./logger.js";
 import { managedBots, botByUsername, daemon } from "./state.js";
@@ -361,3 +363,43 @@ main().catch((err) => {
   log(`FATAL: ${err}`);
   process.exit(1);
 });
+
+// ── Auth HTTP server (Telegram/Feishu only) ──
+async function startAuthServer(): Promise<void> {
+  const platform = loadPool().platform ?? "telegram";
+  if (platform === "wechat" || platform === "discord") return;
+
+  let authToken: string | null = null;
+  try {
+    const { readFileSync } = await import("fs");
+    authToken = readFileSync(
+      `${process.env.HOME}/.claude/hooks/.auth-token`,
+      "utf8",
+    ).trim();
+  } catch {
+    // Token file optional — skip auth if missing
+  }
+
+  const { handleAuthRequest } = await import("./server/authRequest.js");
+
+  const server = createServer(async (req, res) => {
+    if (req.method === "POST" && req.url === "/api/auth-request") {
+      await handleAuthRequest(req, res, authToken).catch((e) => {
+        log(`AUTH_SERVER: unhandled error — ${e}`);
+        if (!res.headersSent) {
+          res.writeHead(500);
+          res.end(JSON.stringify({ status: "deny" }));
+        }
+      });
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  });
+
+  server.listen(DAEMON_HTTP_PORT, "127.0.0.1", () => {
+    log(`Auth HTTP server listening on 127.0.0.1:${DAEMON_HTTP_PORT}`);
+  });
+}
+
+startAuthServer().catch((e) => log(`AUTH_SERVER: failed to start — ${e}`));
