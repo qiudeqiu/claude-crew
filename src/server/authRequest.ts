@@ -5,8 +5,13 @@ import { daemon, managedBots } from "../state.js";
 import { log } from "../logger.js";
 import {
   createAuthRequest,
+  cancelAuthRequest,
   updateMessageId,
+  getAuthRequest,
 } from "./authRequestStore.js";
+
+// Max time to wait for sendButtons before treating as failure
+const SEND_TIMEOUT_MS = 8_000;
 
 interface HookPayload {
   session_id?: string;
@@ -19,7 +24,6 @@ interface HookPayload {
 /** Find the best bot to push auth request for a given cwd. */
 function resolveBot(cwd: string) {
   const pool = loadPool();
-  // Prefix match with path separator guard
   const match = pool.bots.find(
     (b) =>
       b.role === "project" &&
@@ -54,7 +58,6 @@ export async function handleAuthRequest(
   res: ServerResponse,
   authToken: string | null,
 ): Promise<void> {
-  // Validate token if configured
   if (authToken) {
     const provided = req.headers["x-auth-token"];
     if (provided !== authToken) {
@@ -64,7 +67,6 @@ export async function handleAuthRequest(
     }
   }
 
-  // Read body
   const body = await new Promise<string>((resolve) => {
     let data = "";
     req.on("data", (chunk) => (data += chunk));
@@ -88,7 +90,6 @@ export async function handleAuthRequest(
 
   const { managed, project: botProject } = resolveBot(cwd);
   if (!managed) {
-    // No bot available — auto-allow (daemon not ready)
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ status: "allow" }));
     return;
@@ -140,6 +141,9 @@ export async function handleAuthRequest(
 
   const msgText = msgLines.filter(Boolean).join("\n");
 
+  let timedOut = false;
+  let imMsgId: string | number | undefined;
+
   const { id, promise } = createAuthRequest({
     sessionId,
     toolName,
@@ -147,6 +151,8 @@ export async function handleAuthRequest(
     cwd,
     project: displayProject,
     timeoutMs: APPROVAL_TIMEOUT_MS,
+    timeoutStatus: failStatus,
+    onTimeout: () => { timedOut = true; },
     botUsername: managed.config.username ?? "",
     chatId: ownerChatId,
   });
@@ -154,16 +160,26 @@ export async function handleAuthRequest(
   const allowLabel = lang === "zh" ? "✅ 允许" : "✅ Allow";
   const denyLabel = lang === "zh" ? "❌ 拒绝" : "❌ Deny";
 
+  // Send IM message with timeout guard
   try {
-    const sent = await managed.platform.sendButtons(ownerChatId, msgText, [
-      [
-        { text: allowLabel, data: `auth:allow:${id}` },
-        { text: denyLabel, data: `auth:deny:${id}` },
-      ],
+    const sent = await Promise.race([
+      managed.platform.sendButtons(ownerChatId, msgText, [
+        [
+          { text: allowLabel, data: `auth:allow:${id}` },
+          { text: denyLabel, data: `auth:deny:${id}` },
+        ],
+      ]),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("sendButtons timeout")), SEND_TIMEOUT_MS),
+      ),
     ]);
-    if (sent?.id) updateMessageId(id, sent.id);
+    if (sent?.id) {
+      updateMessageId(id, sent.id);
+      imMsgId = sent.id;
+    }
   } catch (e) {
     log(`AUTH: failed to push IM message — ${e}`);
+    cancelAuthRequest(id);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ status: failStatus }));
     return;
@@ -171,9 +187,38 @@ export async function handleAuthRequest(
 
   log(`AUTH: pending ${id} [${toolName}] from ${shortCwd}`);
 
+  // Track whether we've already responded (for connection-close guard)
+  let responded = false;
+
+  // If hook disconnects before we respond, cancel the pending request
+  req.on("close", () => {
+    if (!responded) {
+      log(`AUTH: hook disconnected for ${id}, cancelling`);
+      const pending = getAuthRequest(id);
+      if (pending) {
+        imMsgId = pending.messageId;
+        cancelAuthRequest(id);
+        // Update IM message to show cancelled
+        const cancelText = lang === "zh"
+          ? `🚫 已取消 — ${toolName}`
+          : `🚫 Cancelled — ${toolName}`;
+        managed.platform.editButtons(ownerChatId, imMsgId as string, cancelText, []).catch(() => {});
+      }
+    }
+  });
+
   const status = await promise;
   log(`AUTH: ${id} → ${status}`);
 
+  // On timeout, update IM message (user-click case is handled by router)
+  if (timedOut && imMsgId) {
+    const timeoutText = lang === "zh"
+      ? `⏱ 已超时 — ${toolName}`
+      : `⏱ Timed out — ${toolName}`;
+    await managed.platform.editButtons(ownerChatId, imMsgId, timeoutText, []).catch(() => {});
+  }
+
+  responded = true;
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ status }));
 }

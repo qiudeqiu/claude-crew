@@ -10,6 +10,7 @@ export interface PendingAuthRequest {
   project: string;
   createdAt: number;
   timeoutMs: number;
+  timeoutStatus: "allow" | "deny";
   resolve: (status: "allow" | "deny") => void;
   /** Which bot username pushed the IM message (for display) */
   botUsername: string;
@@ -24,6 +25,8 @@ const store = new Map<string, PendingAuthRequest>();
 export function createAuthRequest(
   params: Omit<PendingAuthRequest, "id" | "createdAt" | "resolve"> & {
     timeoutMs: number;
+    timeoutStatus: "allow" | "deny";
+    onTimeout?: () => void;
   },
 ): { id: string; promise: Promise<"allow" | "deny"> } {
   const id = randomUUID().slice(0, 8);
@@ -40,11 +43,11 @@ export function createAuthRequest(
   };
   store.set(id, req);
 
-  // Auto-deny on timeout
   setTimeout(() => {
     if (store.has(id)) {
       store.delete(id);
-      resolve("deny");
+      params.onTimeout?.();
+      resolve(params.timeoutStatus);
     }
   }, params.timeoutMs);
 
@@ -60,6 +63,13 @@ export function resolveAuthRequest(
   store.delete(id);
   req.resolve(status);
   return req;
+}
+
+export function cancelAuthRequest(id: string): void {
+  const req = store.get(id);
+  if (!req) return;
+  store.delete(id);
+  req.resolve(req.timeoutStatus);
 }
 
 export function getAuthRequest(id: string): PendingAuthRequest | undefined {
